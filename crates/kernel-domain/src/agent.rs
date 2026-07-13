@@ -200,3 +200,38 @@ impl AgentRecoveryReference {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{
+        AgentFailureCategory, AgentFailureReference, AgentFailureSeverity,
+        AgentRecoveryEvidenceReference, AgentRecoveryPlanReference, AgentRecoveryReference,
+    };
+    use crate::identifier::{AgentId, HumanId};
+    use crate::ownership::OwnerReference;
+
+    #[test]
+    fn agent_failure_reference_rejects_premature_recovery_eligibility_ces_b0_027_18() {
+        let error = AgentFailureReference::new(
+            AgentId::new("CX-AGT-000001").expect("agent"),
+            AgentFailureCategory::AuthorizationFailure,
+            AgentFailureSeverity::Critical,
+            true,
+        )
+        .expect_err("critical failures require supervisory handling first");
+        assert!(error
+            .to_string()
+            .contains("critical failures require supervisory handling"));
+    }
+
+    #[test]
+    fn agent_recovery_reference_requires_plan_and_evidence_ces_b0_027_19() {
+        let reference = AgentRecoveryReference::new(
+            AgentId::new("CX-AGT-000001").expect("agent"),
+            AgentRecoveryPlanReference::new("recovery-plan-001").expect("plan"),
+            OwnerReference::new(HumanId::new("CX-EMP-000001").expect("owner")),
+            AgentRecoveryEvidenceReference::new("recovery-evidence-001").expect("evidence"),
+        );
+        let _ = reference;
+    }
+}
