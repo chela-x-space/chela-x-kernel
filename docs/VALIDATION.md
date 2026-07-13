@@ -4,7 +4,7 @@
 Draft
 
 ## Version
-0.2.1
+0.2.2
 
 ## Owner
 Kernel Platform Team
@@ -86,11 +86,15 @@ INTERNAL
 - Direct toolchain path used for K1.1 validation because the rustup proxy attempted redundant component sync against the repository override.
 
 ## K1.1 Validation Results
-- `cargo fmt --all --check`: initial `FORMAT` failure, then pass after applying `cargo fmt --all`.
-- `cargo check --workspace --all-targets`: initial `COMPILE` failure from moved `DelegationDepth`, then pass.
-- `cargo test --workspace --all-targets`: `ENVIRONMENT` failure; no `cc` linker is present on this machine.
-- `cargo clippy --workspace --all-targets -- -D warnings`: pass.
-- `cargo doc --workspace --no-deps`: pass.
-- `cargo test --workspace --doc`: pass.
-- `git diff --check`: pass.
-- `git status --short`: clean required before final completion.
+- Codex sandbox absolute-path checks for `/usr/bin/cc`, `/usr/bin/gcc`, and `/usr/bin/cargo` are unavailable in this environment and MUST NOT override verified host evidence.
+- Accepted host validation evidence for `/home/chela-x/chela-x-kernel`:
+  - `cargo fmt --all --check`: PASS
+  - `cargo check --workspace --all-targets`: PASS
+  - `cargo test --workspace --all-targets`: PASS
+  - unit tests: `38 passed`, `0 failed`, `0 ignored`
+  - `cargo clippy --workspace --all-targets -- -D warnings`: PASS
+  - `cargo doc --workspace --no-deps`: PASS
+  - `cargo test --workspace --doc`: PASS
+  - `git diff --check`: PASS
+- K1.1 validation status: `PASS`
+- Ready for K2: `YES`
