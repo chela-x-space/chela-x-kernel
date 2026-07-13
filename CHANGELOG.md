@@ -4,7 +4,7 @@
 Draft
 
 ## Version
-0.2.1
+0.2.2
 
 ## Owner
 Kernel Platform Team
@@ -27,12 +27,18 @@ Kernel Platform Team
 ## Classification
 INTERNAL
 
+## 0.2.2
+- Accepted verified host validation evidence for K1.1 after the Codex sandbox could not access `/usr/bin/cc`, `/usr/bin/gcc`, or `/usr/bin/cargo` by absolute path.
+- Recorded K1.1 validation as `PASS` with `38 passed`, `0 failed`, and `0 ignored` unit tests.
+- Updated traceability evidence to use validated host results instead of the earlier sandbox linker blocker wording.
+- Finalized the K1 domain API freeze as `FROZEN FOR K2 CONSUMPTION` and marked Kernel as ready for K2.
+
 ## 0.2.1
 - Installed a stable Rust toolchain through `rustup` and verified direct toolchain execution.
 - Completed K1.1 domain API corrections, including authorization evaluation-order, policy, workflow, and agent failure or recovery reference primitives.
 - Replaced wide constructor signatures with validated spec structs for `AgentDefinition`, `DecisionRecord`, and `DelegationReference`.
 - Froze the K1 public API baseline in `docs/API.md` and `docs/API-FREEZE.md`.
-- Recorded real K1.1 validation evidence and the remaining unit-test linker blocker.
+- Recorded initial K1.1 validation evidence before final host-verified gate closure.
 
 ## 0.2.0
 - Replaced `kernel-bootstrap` with std-only `kernel-domain`.

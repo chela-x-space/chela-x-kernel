@@ -4,7 +4,7 @@
 Draft
 
 ## Version
-0.1.0
+0.1.1
 
 ## Owner
 Kernel Platform Team
@@ -32,6 +32,12 @@ INTERNAL
 
 ## Status Statement
 `FROZEN FOR K2 CONSUMPTION`
+
+## Validation State
+- K1.1 validation status: `PASS`
+- Validation source: accepted host verification for `/home/chela-x/chela-x-kernel`
+- Unit-test result: `38 passed`, `0 failed`, `0 ignored`
+- Ready for K2: `YES`
 
 ## Crate
 - name: `kernel-domain`
