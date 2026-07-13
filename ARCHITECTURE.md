@@ -4,13 +4,13 @@
 Draft
 
 ## Version
-0.1.0
+0.2.0
 
 ## Owner
 Kernel Platform Team
 
 ## Last Updated
-2026-07-13
+2026-07-14
 
 ## Applies To
 CHELA-X Kernel repository boundary and inherited dependency constraints.
@@ -42,9 +42,10 @@ Record the inherited architecture constraints that govern K0 bootstrap work.
 - Kernel MUST NOT depend on Runtime, SDK, or Media.
 - Circular dependencies are prohibited.
 
-## K0 Constraints
+## K0/K1 Constraints
 - K0 SHALL bootstrap repository structure, traceability, validation, and Rust workspace setup only.
-- K0 SHALL NOT introduce event bus, scheduler, database layer, network layer, or runtime orchestration.
+- K1 SHALL implement only stable domain primitives and pure validation logic derived from CES Book 0 RC1.
+- K0 and K1 SHALL NOT introduce event bus, scheduler, database layer, network layer, or runtime orchestration.
 - Any change to these boundaries requires approved architecture authority.
 
 ## Escalation

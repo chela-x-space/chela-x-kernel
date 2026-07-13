@@ -4,13 +4,13 @@
 Draft
 
 ## Version
-0.1.0
+0.2.0
 
 ## Owner
 Kernel Platform Team
 
 ## Last Updated
-2026-07-13
+2026-07-14
 
 ## Applies To
 All AI agents and automated engineering assistants operating in CHELA-X Kernel.
@@ -43,6 +43,7 @@ Define the operating contract for implementation work in CHELA-X Kernel under in
 
 ## Repository Rules
 - Kernel implementation is implementation-only until authorized otherwise.
+- Current authorized scope is `K1 Kernel Domain Model`.
 - Agents MUST NOT redesign architecture, change dependency direction, or infer missing architectural components.
 - If implementation requires architectural change, agents MUST stop and report `ADR REQUIRED`.
 - Agents MUST NOT modify frozen upstream repositories.

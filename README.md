@@ -4,13 +4,13 @@
 Draft
 
 ## Version
-0.1.0
+0.2.0
 
 ## Owner
 Kernel Platform Team
 
 ## Last Updated
-2026-07-13
+2026-07-14
 
 ## Applies To
 CHELA-X Kernel repository baseline, bootstrap, and future implementation work.
@@ -40,13 +40,23 @@ AI Engineering OS -> CHELA-X CES -> CHELA-X Kernel -> CHELA-X Runtime -> CHELA-X
 - CHELA-X Library provides the read-only retrieval index used for traceability and verification.
 
 ## Current Status
-`K0 Bootstrap`
+`K1 Domain Model Implemented`
 
 ## Constraints
 - Architecture is frozen.
 - No redesign may occur without an approved ADR.
-- No business logic is introduced in K0.
+- Runtime execution is not implemented.
+- No business logic, persistence, networking, or workflow execution is introduced in K1.
 - No frozen upstream repository may be modified by this repository.
+
+## Domain Scope
+- Stable identifiers
+- Enterprise ownership paths
+- Immutable identity primitives
+- Lifecycle state types
+- Authorization request record types
+- Decision record types
+- Authorization, agent, and delegation reference types
 
 ## References
 - [AGENTS.md](./AGENTS.md)

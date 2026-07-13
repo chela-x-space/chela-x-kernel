@@ -4,13 +4,13 @@
 Draft
 
 ## Version
-0.1.0
+0.2.0
 
 ## Owner
 Kernel Platform Team
 
 ## Last Updated
-2026-07-13
+2026-07-14
 
 ## Applies To
 Working implementation breakdown for CHELA-X Kernel after K0 bootstrap.
@@ -36,8 +36,8 @@ This breakdown is a working implementation plan only. It does not create archite
 - The phases below are therefore an implementation breakdown derived from reviewed CES requirements and must remain subordinate to Program governance.
 
 ## Working Breakdown
-- `K0 Baseline and Bootstrap`: repository initialization, baseline verification, traceability, and workspace setup.
-- `K1 Kernel Domain Model`: implement identifiers, registries, and core domain primitives required by reviewed CES sources.
+- `K0 Baseline and Bootstrap`: complete.
+- `K1 Kernel Domain Model`: domain primitives implemented in `crates/kernel-domain`; verification remains blocked until a Rust toolchain is available in the environment.
 - `K2 Kernel State and Lifecycle`: implement state, lifecycle, and replayable state lineage constrained by Chapters 11, 12, and 27.
 - `K3 Decision and Authorization Enforcement`: implement deterministic decision and authorization enforcement constrained by Chapters 22 and 26.
 - `K4 Agent and Delegation Runtime`: implement governed agent and delegation execution constrained by Chapters 27 and 29.
