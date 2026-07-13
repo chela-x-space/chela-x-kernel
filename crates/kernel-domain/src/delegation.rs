@@ -1,13 +1,10 @@
 use crate::agent::AgentReference;
-use crate::authorization::{
-    AuthorizationDecisionOutcome, AuthorizationDecisionReference, PermissionReference,
-};
+use crate::authorization::{AuthorizationDecisionReference, PermissionReference};
 use crate::errors::{DomainError, DomainResult};
-use crate::identifier::{
-    DelegationId, EnglishNamespace, NonEmptyText, PolicyId, StableVersion,
-};
+use crate::identifier::{DelegationId, EnglishNamespace, NonEmptyText, PolicyId, StableVersion};
 use crate::lifecycle::DelegationLifecycle;
 use crate::ownership::OwnershipPath;
+use crate::policy::PolicyEffect;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DelegationVersion(StableVersion);
@@ -15,6 +12,10 @@ pub struct DelegationVersion(StableVersion);
 impl DelegationVersion {
     pub fn new(value: impl Into<String>) -> DomainResult<Self> {
         Ok(Self(StableVersion::new("delegation_version", value)?))
+    }
+
+    pub fn as_str(&self) -> &str {
+        self.0.as_str()
     }
 }
 
@@ -80,6 +81,11 @@ impl DelegationScope {
                 "agent scope requires an agent identifier",
             ));
         }
+        if !matches!(kind, DelegationScopeKind::Agent) && agent_scope.is_some() {
+            return Err(DomainError::InvalidDelegationReference(
+                "non-agent delegation scope must not carry an agent identifier",
+            ));
+        }
         Ok(Self {
             kind,
             ownership_path,
@@ -89,6 +95,10 @@ impl DelegationScope {
 
     pub fn ownership_path(&self) -> &OwnershipPath {
         &self.ownership_path
+    }
+
+    pub fn kind(&self) -> &DelegationScopeKind {
+        &self.kind
     }
 }
 
@@ -108,7 +118,10 @@ pub struct DelegatedRightReference {
 }
 
 impl DelegatedRightReference {
-    pub fn new(permission: PermissionReference, responsibility: impl Into<String>) -> DomainResult<Self> {
+    pub fn new(
+        permission: PermissionReference,
+        responsibility: impl Into<String>,
+    ) -> DomainResult<Self> {
         Ok(Self {
             permission,
             responsibility: NonEmptyText::new("delegated_responsibility", responsibility)?,
@@ -125,20 +138,20 @@ impl DelegationConditionReference {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DelegationDepth(u16);
 
 impl DelegationDepth {
     pub fn new(value: i64) -> DomainResult<Self> {
-        if value < 0 {
+        if value <= 0 {
             return Err(DomainError::InvalidDelegationReference(
-                "delegation depth cannot be negative",
+                "delegation depth must be greater than zero",
             ));
         }
         Ok(Self(value as u16))
     }
 
-    pub fn value(self) -> u16 {
+    pub fn value(&self) -> u16 {
         self.0
     }
 }
@@ -146,12 +159,41 @@ impl DelegationDepth {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PolicyResultReference {
     policy_id: PolicyId,
-    outcome: AuthorizationDecisionOutcome,
+    effect: PolicyEffect,
+    explicit_deny: bool,
+    non_waivable: bool,
 }
 
 impl PolicyResultReference {
-    pub fn new(policy_id: PolicyId, outcome: AuthorizationDecisionOutcome) -> Self {
-        Self { policy_id, outcome }
+    pub fn new(
+        policy_id: PolicyId,
+        effect: PolicyEffect,
+        explicit_deny: bool,
+        non_waivable: bool,
+    ) -> DomainResult<Self> {
+        if explicit_deny && !matches!(effect, PolicyEffect::Deny) {
+            return Err(DomainError::InvalidPolicyReference(
+                "explicit deny can only be represented with a deny effect",
+            ));
+        }
+        Ok(Self {
+            policy_id,
+            effect,
+            explicit_deny,
+            non_waivable,
+        })
+    }
+
+    pub fn effect(&self) -> PolicyEffect {
+        self.effect
+    }
+
+    pub fn explicit_deny(&self) -> bool {
+        self.explicit_deny
+    }
+
+    pub fn non_waivable(&self) -> bool {
+        self.non_waivable
     }
 }
 
@@ -165,11 +207,21 @@ impl AuthoritySourceReference {
     pub fn new(
         policy_result: PolicyResultReference,
         authorization_decision: AuthorizationDecisionReference,
-    ) -> Self {
-        Self {
+    ) -> DomainResult<Self> {
+        if policy_result.explicit_deny() || !policy_result.effect().permits() {
+            return Err(DomainError::InvalidDelegationReference(
+                "delegation authority source requires a permitting policy result",
+            ));
+        }
+        if authorization_decision.outcome().is_denied() {
+            return Err(DomainError::InvalidDelegationReference(
+                "delegation authority source requires an allowing authorization decision",
+            ));
+        }
+        Ok(Self {
             policy_result,
             authorization_decision,
-        }
+        })
     }
 }
 
@@ -180,7 +232,9 @@ pub struct SeparationOfDutiesConflict {
 
 impl SeparationOfDutiesConflict {
     pub fn new(rule: impl Into<String>) -> DomainResult<Self> {
-        Ok(Self { rule: NonEmptyText::new("sod_rule", rule)? })
+        Ok(Self {
+            rule: NonEmptyText::new("sod_rule", rule)?,
+        })
     }
 }
 
@@ -202,64 +256,63 @@ pub struct DelegationReference {
     separation_of_duties: Option<SeparationOfDutiesConflict>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DelegationReferenceSpec {
+    pub delegation_id: DelegationId,
+    pub namespace: EnglishNamespace,
+    pub version: DelegationVersion,
+    pub delegator: DelegatorReference,
+    pub delegate: DelegateReference,
+    pub beneficiary: BeneficiaryReference,
+    pub authority_source: AuthoritySourceReference,
+    pub scope: DelegationScope,
+    pub delegated_rights: Vec<DelegatedRightReference>,
+    pub delegated_tasks: Vec<DelegatedTaskReference>,
+    pub conditions: Vec<DelegationConditionReference>,
+    pub depth: DelegationDepth,
+    pub lifecycle: DelegationLifecycle,
+    pub separation_of_duties: Option<SeparationOfDutiesConflict>,
+}
+
 impl DelegationReference {
-    #[allow(clippy::too_many_arguments)]
-    pub fn new(
-        delegation_id: DelegationId,
-        namespace: EnglishNamespace,
-        version: DelegationVersion,
-        delegator: DelegatorReference,
-        delegate: DelegateReference,
-        beneficiary: BeneficiaryReference,
-        authority_source: AuthoritySourceReference,
-        scope: DelegationScope,
-        delegated_rights: Vec<DelegatedRightReference>,
-        delegated_tasks: Vec<DelegatedTaskReference>,
-        conditions: Vec<DelegationConditionReference>,
-        depth: DelegationDepth,
-        lifecycle: DelegationLifecycle,
-        separation_of_duties: Option<SeparationOfDutiesConflict>,
-    ) -> DomainResult<Self> {
-        if delegator.agent_id() == delegate.agent_id() {
+    pub fn new(spec: DelegationReferenceSpec) -> DomainResult<Self> {
+        if spec.depth.value() > 1 && spec.conditions.is_empty() {
             return Err(DomainError::InvalidDelegationReference(
-                "delegator and delegate must remain distinct references",
+                "re-delegation depth greater than one requires explicit policy authorization evidence",
             ));
         }
-        if depth.value() == 0 && matches!(lifecycle, DelegationLifecycle::Active) {
-            return Err(DomainError::InvalidDelegationReference(
-                "active delegation depth must represent at least one delegation hop",
-            ));
-        }
-        if delegated_rights.is_empty() && delegated_tasks.is_empty() {
+        if spec.delegated_rights.is_empty() && spec.delegated_tasks.is_empty() {
             return Err(DomainError::InvalidDelegationReference(
                 "delegation must define delegated rights or tasks",
             ));
         }
         Ok(Self {
-            delegation_id,
-            namespace,
-            version,
-            delegator,
-            delegate,
-            beneficiary,
-            authority_source,
-            scope,
-            delegated_rights,
-            delegated_tasks,
-            conditions,
-            depth,
-            lifecycle,
-            separation_of_duties,
+            delegation_id: spec.delegation_id,
+            namespace: spec.namespace,
+            version: spec.version,
+            delegator: spec.delegator,
+            delegate: spec.delegate,
+            beneficiary: spec.beneficiary,
+            authority_source: spec.authority_source,
+            scope: spec.scope,
+            delegated_rights: spec.delegated_rights,
+            delegated_tasks: spec.delegated_tasks,
+            conditions: spec.conditions,
+            depth: spec.depth,
+            lifecycle: spec.lifecycle,
+            separation_of_duties: spec.separation_of_duties,
         })
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::agent::{AgentCategory, AgentDefinition, AgentReference, AgentRuntimeReference, AgentType};
+    use crate::agent::{
+        AgentCategory, AgentDefinition, AgentReference, AgentRuntimeReference, AgentType,
+    };
     use crate::authorization::{
-        ActionVerb, AuthorizationDecisionOutcome, AuthorizationDecisionReference, PermissionEffectIntent,
-        PermissionReference,
+        ActionVerb, AuthorizationDecisionOutcome, AuthorizationDecisionReference,
+        PermissionEffectIntent, PermissionReference,
     };
     use crate::identifier::{
         AgentId, AgentUuid, AuthorizationDecisionId, DelegationId, EnglishNamespace, EnterpriseId,
@@ -268,11 +321,12 @@ mod tests {
     use crate::identity::AgentIdentity;
     use crate::lifecycle::{AgentLifecycle, DelegationLifecycle};
     use crate::ownership::{OrganizationalContext, OwnerReference, OwnershipPath};
+    use crate::policy::PolicyEffect;
 
     use super::{
         AuthoritySourceReference, BeneficiaryReference, DelegateReference, DelegatedRightReference,
-        DelegationDepth, DelegationReference, DelegationScope, DelegationScopeKind, DelegationVersion,
-        DelegatorReference, PolicyResultReference,
+        DelegationDepth, DelegationReference, DelegationReferenceSpec, DelegationScope,
+        DelegationScopeKind, DelegationVersion, DelegatorReference, PolicyResultReference,
     };
 
     fn agent_reference(agent_suffix: &str) -> AgentReference {
@@ -294,16 +348,16 @@ mod tests {
             AgentLifecycle::Active,
         )
         .expect("identity");
-        let definition = AgentDefinition::new(
-            identity.clone(),
-            AgentUuid::new("CX-UUID-00000001").expect("uuid"),
-            "Kernel Agent",
-            AgentType::new("Supervisor").expect("type"),
-            AgentCategory::new("Operations").expect("category"),
+        let definition = AgentDefinition::new(crate::agent::AgentDefinitionSpec {
+            identity: identity.clone(),
+            agent_uuid: AgentUuid::new("CX-UUID-00000001").expect("uuid"),
+            agent_name: "Kernel Agent".to_owned(),
+            agent_type: AgentType::new("Supervisor").expect("type"),
+            agent_category: AgentCategory::new("Operations").expect("category"),
             owner,
-            context,
-            AgentRuntimeReference::new("runtime-ref").expect("runtime"),
-        )
+            organizational_context: context,
+            runtime_reference: AgentRuntimeReference::new("runtime-ref").expect("runtime"),
+        })
         .expect("definition");
         let _ = definition;
         AgentReference::new(identity)
@@ -322,25 +376,38 @@ mod tests {
     fn delegation_creates_valid_reference_ces_b0_029_1() {
         let delegator = DelegatorReference::new(agent_reference("000001"));
         let delegate = DelegateReference::new(agent_reference("000002"));
-        let delegation = DelegationReference::new(
-            DelegationId::new("CX-DEL-000001").expect("id"),
-            EnglishNamespace::new("delegation_namespace", "enterprise.delegation").expect("namespace"),
-            DelegationVersion::new("1.0.0").expect("version"),
+        let delegation = DelegationReference::new(DelegationReferenceSpec {
+            delegation_id: DelegationId::new("CX-DEL-000001").expect("id"),
+            namespace: EnglishNamespace::new("delegation_namespace", "enterprise.delegation")
+                .expect("namespace"),
+            version: DelegationVersion::new("1.0.0").expect("version"),
             delegator,
-            delegate.clone(),
-            BeneficiaryReference::Delegate(delegate),
-            AuthoritySourceReference::new(
+            delegate: delegate.clone(),
+            beneficiary: BeneficiaryReference::Delegate(delegate),
+            authority_source: AuthoritySourceReference::new(
                 PolicyResultReference::new(
                     PolicyId::new("CX-POL-000001").expect("policy"),
-                    AuthorizationDecisionOutcome::Allow,
-                ),
+                    PolicyEffect::Permit,
+                    false,
+                    false,
+                )
+                .expect("policy result"),
                 AuthorizationDecisionReference::new(
                     AuthorizationDecisionId::new("CX-AUTHDEC-000001").expect("decision"),
+                    crate::identifier::AuthorizationRequestId::new("CX-AUTHREQ-000001")
+                        .expect("request"),
                     PolicyId::new("CX-POL-000001").expect("policy"),
                     AuthorizationDecisionOutcome::Allow,
-                ),
-            ),
-            DelegationScope::new(
+                    crate::authorization::AuthorizationEvaluationOrderVersion::new("1.0.0")
+                        .expect("order version"),
+                    crate::authorization::MatchedPolicyEvidenceReference::new("policy-set-v1")
+                        .expect("policy evidence"),
+                    "2026-07-14T00:00:00Z",
+                )
+                .expect("authorization decision"),
+            )
+            .expect("authority source"),
+            scope: DelegationScope::new(
                 DelegationScopeKind::Workspace,
                 OwnershipPath::new(
                     EnterpriseId::new("CX-ENT-000001").expect("enterprise"),
@@ -352,21 +419,25 @@ mod tests {
                 None,
             )
             .expect("scope"),
-            vec![DelegatedRightReference::new(permission(), "approve workflow").expect("right")],
-            vec![],
-            vec![],
-            DelegationDepth::new(1).expect("depth"),
-            DelegationLifecycle::Accepted,
-            None,
-        )
+            delegated_rights: vec![
+                DelegatedRightReference::new(permission(), "approve workflow").expect("right"),
+            ],
+            delegated_tasks: vec![],
+            conditions: vec![],
+            depth: DelegationDepth::new(1).expect("depth"),
+            lifecycle: DelegationLifecycle::Accepted,
+            separation_of_duties: None,
+        })
         .expect("delegation");
         let _ = delegation;
     }
 
     #[test]
     fn delegation_rejects_invalid_depth_ces_b0_029_9() {
-        let error = DelegationDepth::new(-1).expect_err("negative depth must fail");
-        assert!(error.to_string().contains("delegation depth cannot be negative"));
+        let error = DelegationDepth::new(0).expect_err("zero depth must fail");
+        assert!(error
+            .to_string()
+            .contains("delegation depth must be greater than zero"));
     }
 
     #[test]
@@ -383,31 +454,46 @@ mod tests {
             None,
         )
         .expect_err("agent scope without id must fail");
-        assert!(error.to_string().contains("agent scope requires an agent identifier"));
+        assert!(error
+            .to_string()
+            .contains("agent scope requires an agent identifier"));
     }
 
     #[test]
-    fn delegation_rejects_self_delegation_traceability_k1() {
+    fn delegation_requires_explicit_policy_evidence_for_redelegation_ces_b0_029_9() {
         let agent = agent_reference("000001");
-        let error = DelegationReference::new(
-            DelegationId::new("CX-DEL-000001").expect("id"),
-            EnglishNamespace::new("delegation_namespace", "enterprise.delegation").expect("namespace"),
-            DelegationVersion::new("1.0.0").expect("version"),
-            DelegatorReference::new(agent.clone()),
-            DelegateReference::new(agent.clone()),
-            BeneficiaryReference::Delegate(DelegateReference::new(agent)),
-            AuthoritySourceReference::new(
+        let error = DelegationReference::new(DelegationReferenceSpec {
+            delegation_id: DelegationId::new("CX-DEL-000001").expect("id"),
+            namespace: EnglishNamespace::new("delegation_namespace", "enterprise.delegation")
+                .expect("namespace"),
+            version: DelegationVersion::new("1.0.0").expect("version"),
+            delegator: DelegatorReference::new(agent.clone()),
+            delegate: DelegateReference::new(agent.clone()),
+            beneficiary: BeneficiaryReference::Delegate(DelegateReference::new(agent)),
+            authority_source: AuthoritySourceReference::new(
                 PolicyResultReference::new(
                     PolicyId::new("CX-POL-000001").expect("policy"),
-                    AuthorizationDecisionOutcome::Allow,
-                ),
+                    PolicyEffect::Permit,
+                    false,
+                    false,
+                )
+                .expect("policy result"),
                 AuthorizationDecisionReference::new(
                     AuthorizationDecisionId::new("CX-AUTHDEC-000001").expect("decision"),
+                    crate::identifier::AuthorizationRequestId::new("CX-AUTHREQ-000001")
+                        .expect("request"),
                     PolicyId::new("CX-POL-000001").expect("policy"),
                     AuthorizationDecisionOutcome::Allow,
-                ),
-            ),
-            DelegationScope::new(
+                    crate::authorization::AuthorizationEvaluationOrderVersion::new("1.0.0")
+                        .expect("order version"),
+                    crate::authorization::MatchedPolicyEvidenceReference::new("policy-set-v1")
+                        .expect("policy evidence"),
+                    "2026-07-14T00:00:00Z",
+                )
+                .expect("authorization decision"),
+            )
+            .expect("authority source"),
+            scope: DelegationScope::new(
                 DelegationScopeKind::Workspace,
                 OwnershipPath::new(
                     EnterpriseId::new("CX-ENT-000001").expect("enterprise"),
@@ -419,14 +505,18 @@ mod tests {
                 None,
             )
             .expect("scope"),
-            vec![DelegatedRightReference::new(permission(), "approve workflow").expect("right")],
-            vec![],
-            vec![],
-            DelegationDepth::new(1).expect("depth"),
-            DelegationLifecycle::Accepted,
-            None,
-        )
-        .expect_err("self-delegation must fail");
-        assert!(error.to_string().contains("delegator and delegate must remain distinct references"));
+            delegated_rights: vec![
+                DelegatedRightReference::new(permission(), "approve workflow").expect("right"),
+            ],
+            delegated_tasks: vec![],
+            conditions: vec![],
+            depth: DelegationDepth::new(2).expect("depth"),
+            lifecycle: DelegationLifecycle::Accepted,
+            separation_of_duties: None,
+        })
+        .expect_err("re-delegation without explicit authorization evidence must fail");
+        assert!(error
+            .to_string()
+            .contains("re-delegation depth greater than one"));
     }
 }

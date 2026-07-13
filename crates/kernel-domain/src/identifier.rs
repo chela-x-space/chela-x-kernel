@@ -21,9 +21,17 @@ fn validate_prefixed_identifier(
     let expected = "fixed prefix followed by digits";
     let suffix = value
         .strip_prefix(prefix)
-        .ok_or_else(|| DomainError::InvalidIdentifier { kind, value: value.clone(), expected })?;
+        .ok_or_else(|| DomainError::InvalidIdentifier {
+            kind,
+            value: value.clone(),
+            expected,
+        })?;
     if suffix.len() != digits || !suffix.chars().all(|char| char.is_ascii_digit()) {
-        return Err(DomainError::InvalidIdentifier { kind, value, expected });
+        return Err(DomainError::InvalidIdentifier {
+            kind,
+            value,
+            expected,
+        });
     }
     Ok(value)
 }
@@ -88,8 +96,18 @@ define_identifier!(PrincipalId, "PrincipalId", "CX-PRN-", 6);
 define_identifier!(RoleId, "RoleId", "CX-ROLE-", 6);
 define_identifier!(PermissionId, "PermissionId", "CX-PERM-", 6);
 define_identifier!(ScopeId, "ScopeId", "CX-SCP-", 6);
-define_identifier!(AuthorizationRequestId, "AuthorizationRequestId", "CX-AUTHREQ-", 6);
-define_identifier!(AuthorizationDecisionId, "AuthorizationDecisionId", "CX-AUTHDEC-", 6);
+define_identifier!(
+    AuthorizationRequestId,
+    "AuthorizationRequestId",
+    "CX-AUTHREQ-",
+    6
+);
+define_identifier!(
+    AuthorizationDecisionId,
+    "AuthorizationDecisionId",
+    "CX-AUTHDEC-",
+    6
+);
 define_identifier!(AuditEvidenceId, "AuditEvidenceId", "CX-AUD-", 6);
 define_identifier!(DelegationId, "DelegationId", "CX-DEL-", 6);
 define_identifier!(PolicyId, "PolicyId", "CX-POL-", 6);

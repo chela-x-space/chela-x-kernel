@@ -80,8 +80,14 @@ impl OwnershipPath {
         let enterprise = self.enterprise_id.as_str();
         let workspace = self.workspace_id.as_ref().map(WorkspaceId::as_str);
         let project = self.project_id.as_ref().map(ProjectId::as_str);
-        let unit = self.organizational_unit_id.as_ref().map(OrganizationUnitId::as_str);
-        workspace == Some(enterprise) || project == workspace || unit == workspace || unit == project
+        let unit = self
+            .organizational_unit_id
+            .as_ref()
+            .map(OrganizationUnitId::as_str);
+        workspace == Some(enterprise)
+            || project == workspace
+            || unit == workspace
+            || unit == project
     }
 }
 
@@ -93,7 +99,10 @@ pub struct OrganizationalContext {
 
 impl OrganizationalContext {
     pub fn new(ownership_path: OwnershipPath, owner: OwnerReference) -> Self {
-        Self { ownership_path, owner }
+        Self {
+            ownership_path,
+            owner,
+        }
     }
 
     pub fn ownership_path(&self) -> &OwnershipPath {
@@ -133,7 +142,14 @@ mod tests {
         .expect("valid hierarchy");
         let owner = OwnerReference::new(HumanId::new("CX-EMP-000001").expect("owner"));
         let context = OrganizationalContext::new(path, owner);
-        assert_eq!(context.ownership_path().project_id().expect("project").as_str(), "CX-PROJ-000001");
+        assert_eq!(
+            context
+                .ownership_path()
+                .project_id()
+                .expect("project")
+                .as_str(),
+            "CX-PROJ-000001"
+        );
     }
 
     #[test]
@@ -145,7 +161,10 @@ mod tests {
             None,
         )
         .expect_err("project without workspace must fail");
-        assert_eq!(error.to_string(), "invalid ownership path: project scope requires a parent workspace");
+        assert_eq!(
+            error.to_string(),
+            "invalid ownership path: project scope requires a parent workspace"
+        );
     }
 
     #[test]

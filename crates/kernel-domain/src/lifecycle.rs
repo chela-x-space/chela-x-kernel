@@ -145,12 +145,24 @@ impl DelegationLifecycle {
             (self, target),
             (Self::Draft, Self::Requested)
                 | (Self::Requested, Self::PolicyValidated | Self::Rejected)
-                | (Self::PolicyValidated, Self::AuthorizationValidated | Self::Rejected)
-                | (Self::AuthorizationValidated, Self::PendingAcceptance | Self::Active | Self::Rejected)
+                | (
+                    Self::PolicyValidated,
+                    Self::AuthorizationValidated | Self::Rejected
+                )
+                | (
+                    Self::AuthorizationValidated,
+                    Self::PendingAcceptance | Self::Active | Self::Rejected
+                )
                 | (Self::PendingAcceptance, Self::Accepted | Self::Rejected)
                 | (Self::Accepted, Self::Active | Self::Rejected)
-                | (Self::Active, Self::Suspended | Self::Revoked | Self::Expired | Self::Completed)
-                | (Self::Suspended, Self::Active | Self::Revoked | Self::Expired)
+                | (
+                    Self::Active,
+                    Self::Suspended | Self::Revoked | Self::Expired | Self::Completed
+                )
+                | (
+                    Self::Suspended,
+                    Self::Active | Self::Revoked | Self::Expired
+                )
                 | (Self::Completed, Self::Archived)
                 | (Self::Rejected, Self::Archived)
                 | (Self::Revoked, Self::Archived)
@@ -208,12 +220,27 @@ impl WorkflowState {
             (self, target),
             (Self::Draft, Self::Defined)
                 | (Self::Defined, Self::Validated | Self::Archived)
-                | (Self::Validated, Self::Approved | Self::Defined | Self::Archived)
+                | (
+                    Self::Validated,
+                    Self::Approved | Self::Defined | Self::Archived
+                )
                 | (Self::Approved, Self::Ready | Self::Archived)
-                | (Self::Ready, Self::Running | Self::Cancelled | Self::Archived)
-                | (Self::Running, Self::Paused | Self::Waiting | Self::Completed | Self::Failed | Self::Cancelled)
-                | (Self::Paused, Self::Running | Self::Cancelled | Self::Archived)
-                | (Self::Waiting, Self::Running | Self::Failed | Self::Cancelled | Self::Archived)
+                | (
+                    Self::Ready,
+                    Self::Running | Self::Cancelled | Self::Archived
+                )
+                | (
+                    Self::Running,
+                    Self::Paused | Self::Waiting | Self::Completed | Self::Failed | Self::Cancelled
+                )
+                | (
+                    Self::Paused,
+                    Self::Running | Self::Cancelled | Self::Archived
+                )
+                | (
+                    Self::Waiting,
+                    Self::Running | Self::Failed | Self::Cancelled | Self::Archived
+                )
                 | (Self::Failed, Self::Ready | Self::Archived)
                 | (Self::Completed, Self::Archived)
                 | (Self::Cancelled, Self::Archived)
@@ -253,22 +280,30 @@ mod tests {
 
     #[test]
     fn delegation_allows_specified_transition_ces_b0_029_11() {
-        assert!(DelegationLifecycle::Draft.can_transition_to(DelegationLifecycle::Requested).is_ok());
+        assert!(DelegationLifecycle::Draft
+            .can_transition_to(DelegationLifecycle::Requested)
+            .is_ok());
     }
 
     #[test]
     fn delegation_rejects_unspecified_transition_ces_b0_029_11() {
-        assert!(DelegationLifecycle::Draft.can_transition_to(DelegationLifecycle::Active).is_err());
+        assert!(DelegationLifecycle::Draft
+            .can_transition_to(DelegationLifecycle::Active)
+            .is_err());
     }
 
     #[test]
     fn workflow_terminal_state_rejects_reactivation_ces_b0_030_9() {
-        assert!(WorkflowState::Archived.can_transition_to(WorkflowState::Running).is_err());
+        assert!(WorkflowState::Archived
+            .can_transition_to(WorkflowState::Running)
+            .is_err());
     }
 
     #[test]
     fn workflow_allows_documented_transition_ces_b0_030_9() {
-        assert!(WorkflowState::Ready.can_transition_to(WorkflowState::Running).is_ok());
+        assert!(WorkflowState::Ready
+            .can_transition_to(WorkflowState::Running)
+            .is_ok());
     }
 
     #[test]

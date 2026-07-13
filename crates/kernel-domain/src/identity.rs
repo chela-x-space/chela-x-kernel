@@ -137,7 +137,10 @@ mod tests {
             AgentLifecycle::Deleted,
         )
         .expect_err("deleted identity must fail");
-        assert_eq!(error.to_string(), "invalid identity: new agent identity cannot begin in Deleted state");
+        assert_eq!(
+            error.to_string(),
+            "invalid identity: new agent identity cannot begin in Deleted state"
+        );
     }
 
     #[test]

@@ -1,7 +1,7 @@
 use crate::errors::{DomainError, DomainResult};
 use crate::identifier::{
-    AuthorizationDecisionId, EnterpriseId, NonEmptyText, PermissionId, PolicyId, PrincipalId,
-    RoleId, ScopeId,
+    AuditEvidenceId, AuthorizationDecisionId, AuthorizationRequestId, EnterpriseId, NonEmptyText,
+    PermissionId, PolicyId, PrincipalId, RoleId, ScopeId, StableVersion,
 };
 use crate::ownership::OwnershipPath;
 
@@ -32,6 +32,10 @@ impl PrincipalLifecycleStateReference {
     pub fn new(value: impl Into<String>) -> DomainResult<Self> {
         Ok(Self(NonEmptyText::new("principal_lifecycle_state", value)?))
     }
+
+    pub fn as_str(&self) -> &str {
+        self.0.as_str()
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -41,13 +45,17 @@ impl CredentialStatusReference {
     pub fn new(value: impl Into<String>) -> DomainResult<Self> {
         Ok(Self(NonEmptyText::new("credential_status", value)?))
     }
+
+    pub fn as_str(&self) -> &str {
+        self.0.as_str()
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AuthorizationPrincipalReference {
     principal_id: PrincipalId,
     principal_type: AuthorizationPrincipalType,
-    bound_identity_id: String,
+    bound_identity_id: NonEmptyText,
     enterprise_id: EnterpriseId,
     lifecycle_state: PrincipalLifecycleStateReference,
     credential_status: CredentialStatusReference,
@@ -65,7 +73,7 @@ impl AuthorizationPrincipalReference {
         Ok(Self {
             principal_id,
             principal_type,
-            bound_identity_id: NonEmptyText::new("bound_identity_id", bound_identity_id)?.to_string(),
+            bound_identity_id: NonEmptyText::new("bound_identity_id", bound_identity_id)?,
             enterprise_id,
             lifecycle_state,
             credential_status,
@@ -79,6 +87,22 @@ impl AuthorizationPrincipalReference {
     pub fn enterprise_id(&self) -> &EnterpriseId {
         &self.enterprise_id
     }
+
+    pub fn principal_type(&self) -> AuthorizationPrincipalType {
+        self.principal_type
+    }
+
+    pub fn bound_identity_id(&self) -> &str {
+        self.bound_identity_id.as_str()
+    }
+
+    pub fn lifecycle_state(&self) -> &PrincipalLifecycleStateReference {
+        &self.lifecycle_state
+    }
+
+    pub fn credential_status(&self) -> &CredentialStatusReference {
+        &self.credential_status
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -89,7 +113,18 @@ pub struct RoleReference {
 
 impl RoleReference {
     pub fn new(role_id: RoleId, enterprise_id: EnterpriseId) -> Self {
-        Self { role_id, enterprise_id }
+        Self {
+            role_id,
+            enterprise_id,
+        }
+    }
+
+    pub fn role_id(&self) -> &RoleId {
+        &self.role_id
+    }
+
+    pub fn enterprise_id(&self) -> &EnterpriseId {
+        &self.enterprise_id
     }
 }
 
@@ -100,6 +135,10 @@ impl ActionVerb {
     pub fn new(value: impl Into<String>) -> DomainResult<Self> {
         Ok(Self(NonEmptyText::new("action_verb", value)?))
     }
+
+    pub fn as_str(&self) -> &str {
+        self.0.as_str()
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -109,6 +148,10 @@ impl ResourceType {
     pub fn new(value: impl Into<String>) -> DomainResult<Self> {
         Ok(Self(NonEmptyText::new("resource_type", value)?))
     }
+
+    pub fn as_str(&self) -> &str {
+        self.0.as_str()
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -117,6 +160,10 @@ pub struct PermissionEffectIntent(NonEmptyText);
 impl PermissionEffectIntent {
     pub fn new(value: impl Into<String>) -> DomainResult<Self> {
         Ok(Self(NonEmptyText::new("permission_effect_intent", value)?))
+    }
+
+    pub fn as_str(&self) -> &str {
+        self.0.as_str()
     }
 }
 
@@ -146,6 +193,18 @@ impl PermissionReference {
     pub fn permission_id(&self) -> &PermissionId {
         &self.permission_id
     }
+
+    pub fn action_verb(&self) -> &ActionVerb {
+        &self.action_verb
+    }
+
+    pub fn resource_type(&self) -> &ResourceType {
+        &self.resource_type
+    }
+
+    pub fn effect_intent(&self) -> &PermissionEffectIntent {
+        &self.effect_intent
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -174,7 +233,10 @@ impl ScopeReference {
     ) -> DomainResult<Self> {
         let has_workspace = ownership_path.workspace_id().is_some();
         let has_project = ownership_path.project_id().is_some();
-        let has_resource = resource_id.as_ref().map(|value| !value.trim().is_empty()).unwrap_or(false);
+        let has_resource = resource_id
+            .as_ref()
+            .map(|value| !value.trim().is_empty())
+            .unwrap_or(false);
         match level {
             ScopeLevel::Enterprise if has_workspace || has_project || has_resource => {
                 return Err(DomainError::InvalidAuthorizationReference(
@@ -191,7 +253,9 @@ impl ScopeReference {
                     "project scope requires a project and forbids resource identifiers",
                 ));
             }
-            ScopeLevel::OrganizationalUnit if ownership_path.organizational_unit_id().is_none() || has_resource => {
+            ScopeLevel::OrganizationalUnit
+                if ownership_path.organizational_unit_id().is_none() || has_resource =>
+            {
                 return Err(DomainError::InvalidAuthorizationReference(
                     "organizational unit scope requires an organizational unit and forbids resource identifiers",
                 ));
@@ -215,8 +279,20 @@ impl ScopeReference {
         self.ownership_path.enterprise_id()
     }
 
+    pub fn scope_id(&self) -> &ScopeId {
+        &self.scope_id
+    }
+
+    pub fn level(&self) -> ScopeLevel {
+        self.level
+    }
+
     pub fn ownership_path(&self) -> &OwnershipPath {
         &self.ownership_path
+    }
+
+    pub fn resource_id(&self) -> Option<&str> {
+        self.resource_id.as_deref()
     }
 }
 
@@ -256,6 +332,14 @@ impl AuthorizationTarget {
     pub fn scope(&self) -> &ScopeReference {
         &self.scope
     }
+
+    pub fn resource_type(&self) -> &ResourceType {
+        &self.resource_type
+    }
+
+    pub fn resource_identifier(&self) -> &str {
+        self.resource_identifier.as_str()
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -268,32 +352,177 @@ pub enum AuthorizationDecisionOutcome {
     DenyValidation,
 }
 
+impl AuthorizationDecisionOutcome {
+    pub fn is_denied(self) -> bool {
+        !matches!(self, Self::Allow)
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AuthorizationEvaluationStep {
+    VerifyPrincipalIdentityAndLifecycle,
+    VerifyTenantIsolationAndScopeLineage,
+    ResolveExplicitDenials,
+    ResolveDirectGrants,
+    ResolveInheritedGrants,
+    ResolveRequestedPermissionMatch,
+    ApplySeparationOfDutiesConflicts,
+    EmitFinalDecisionAndEvidence,
+}
+
+impl AuthorizationEvaluationStep {
+    pub fn ordered() -> [Self; 8] {
+        [
+            Self::VerifyPrincipalIdentityAndLifecycle,
+            Self::VerifyTenantIsolationAndScopeLineage,
+            Self::ResolveExplicitDenials,
+            Self::ResolveDirectGrants,
+            Self::ResolveInheritedGrants,
+            Self::ResolveRequestedPermissionMatch,
+            Self::ApplySeparationOfDutiesConflicts,
+            Self::EmitFinalDecisionAndEvidence,
+        ]
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AuthorizationEvaluationOrderVersion(StableVersion);
+
+impl AuthorizationEvaluationOrderVersion {
+    pub fn new(value: impl Into<String>) -> DomainResult<Self> {
+        Ok(Self(StableVersion::new(
+            "authorization_evaluation_order_version",
+            value,
+        )?))
+    }
+
+    pub fn as_str(&self) -> &str {
+        self.0.as_str()
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct MatchedPolicyEvidenceReference(NonEmptyText);
+
+impl MatchedPolicyEvidenceReference {
+    pub fn new(value: impl Into<String>) -> DomainResult<Self> {
+        Ok(Self(NonEmptyText::new("matched_policy_evidence", value)?))
+    }
+
+    pub fn as_str(&self) -> &str {
+        self.0.as_str()
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AuthorizationDecisionReference {
     decision_id: AuthorizationDecisionId,
+    request_id: AuthorizationRequestId,
     policy_id: PolicyId,
     outcome: AuthorizationDecisionOutcome,
+    evaluation_order_version: AuthorizationEvaluationOrderVersion,
+    matched_policy_evidence: MatchedPolicyEvidenceReference,
+    decided_at: NonEmptyText,
 }
 
 impl AuthorizationDecisionReference {
     pub fn new(
         decision_id: AuthorizationDecisionId,
+        request_id: AuthorizationRequestId,
         policy_id: PolicyId,
         outcome: AuthorizationDecisionOutcome,
-    ) -> Self {
-        Self {
+        evaluation_order_version: AuthorizationEvaluationOrderVersion,
+        matched_policy_evidence: MatchedPolicyEvidenceReference,
+        decided_at: impl Into<String>,
+    ) -> DomainResult<Self> {
+        Ok(Self {
             decision_id,
+            request_id,
             policy_id,
             outcome,
+            evaluation_order_version,
+            matched_policy_evidence,
+            decided_at: NonEmptyText::new("authorization_decided_at", decided_at)?,
+        })
+    }
+
+    pub fn decision_id(&self) -> &AuthorizationDecisionId {
+        &self.decision_id
+    }
+
+    pub fn request_id(&self) -> &AuthorizationRequestId {
+        &self.request_id
+    }
+
+    pub fn policy_id(&self) -> &PolicyId {
+        &self.policy_id
+    }
+
+    pub fn outcome(&self) -> AuthorizationDecisionOutcome {
+        self.outcome
+    }
+
+    pub fn evaluation_order_version(&self) -> &AuthorizationEvaluationOrderVersion {
+        &self.evaluation_order_version
+    }
+
+    pub fn matched_policy_evidence(&self) -> &MatchedPolicyEvidenceReference {
+        &self.matched_policy_evidence
+    }
+
+    pub fn decided_at(&self) -> &str {
+        self.decided_at.as_str()
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AuthorizationAuditEvidenceReference {
+    audit_evidence_id: AuditEvidenceId,
+    decision_id: AuthorizationDecisionId,
+    principal_id: PrincipalId,
+    scope_id: ScopeId,
+    policy_version: StableVersion,
+    matched_rules: Vec<MatchedPolicyEvidenceReference>,
+    outcome: AuthorizationDecisionOutcome,
+}
+
+impl AuthorizationAuditEvidenceReference {
+    pub fn new(
+        audit_evidence_id: AuditEvidenceId,
+        decision_id: AuthorizationDecisionId,
+        principal_id: PrincipalId,
+        scope_id: ScopeId,
+        policy_version: StableVersion,
+        matched_rules: Vec<MatchedPolicyEvidenceReference>,
+        outcome: AuthorizationDecisionOutcome,
+    ) -> DomainResult<Self> {
+        if matched_rules.is_empty() {
+            return Err(DomainError::InvalidAuthorizationReference(
+                "authorization audit evidence requires matched rule references",
+            ));
         }
+        Ok(Self {
+            audit_evidence_id,
+            decision_id,
+            principal_id,
+            scope_id,
+            policy_version,
+            matched_rules,
+            outcome,
+        })
+    }
+
+    pub fn audit_evidence_id(&self) -> &AuditEvidenceId {
+        &self.audit_evidence_id
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::{
-        ActionVerb, AuthorizationPrincipalReference, AuthorizationPrincipalType, AuthorizationSubject,
-        AuthorizationTarget, CredentialStatusReference, PermissionEffectIntent, PermissionReference,
+        ActionVerb, AuthorizationEvaluationStep, AuthorizationPrincipalReference,
+        AuthorizationPrincipalType, AuthorizationSubject, AuthorizationTarget,
+        CredentialStatusReference, PermissionEffectIntent, PermissionReference,
         PrincipalLifecycleStateReference, ResourceType, ScopeLevel, ScopeReference,
     };
     use crate::identifier::{EnterpriseId, PermissionId, PrincipalId, ScopeId};
@@ -332,7 +561,9 @@ mod tests {
             None,
         )
         .expect_err("project scope without project must fail");
-        assert!(error.to_string().contains("project scope requires a project"));
+        assert!(error
+            .to_string()
+            .contains("project scope requires a project"));
     }
 
     #[test]
@@ -370,6 +601,23 @@ mod tests {
             ResourceType::new("workflow").expect("resource type"),
             PermissionEffectIntent::new("Permit").expect("effect"),
         );
-        assert_eq!(AuthorizationSubject::Principal(principal).enterprise_id(), target.scope().enterprise_id());
+        assert_eq!(
+            AuthorizationSubject::Principal(principal).enterprise_id(),
+            target.scope().enterprise_id()
+        );
+    }
+
+    #[test]
+    fn authorization_evaluation_order_matches_ces_b0_026_5() {
+        let steps = AuthorizationEvaluationStep::ordered();
+        assert_eq!(steps.len(), 8);
+        assert_eq!(
+            steps[0],
+            AuthorizationEvaluationStep::VerifyPrincipalIdentityAndLifecycle
+        );
+        assert_eq!(
+            steps[7],
+            AuthorizationEvaluationStep::EmitFinalDecisionAndEvidence
+        );
     }
 }

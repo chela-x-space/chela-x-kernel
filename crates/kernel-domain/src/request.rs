@@ -64,17 +64,18 @@ impl AuthorizationRequestRecord {
 
 #[cfg(test)]
 mod tests {
+    use super::{AuthorizationRequestRecord, TimeReference};
     use crate::authorization::{
-        ActionVerb, AuthorizationPrincipalReference, AuthorizationPrincipalType, AuthorizationSubject,
-        AuthorizationTarget, CredentialStatusReference, PermissionEffectIntent, PermissionReference,
-        PrincipalLifecycleStateReference, ResourceType, ScopeLevel, ScopeReference,
+        ActionVerb, AuthorizationPrincipalReference, AuthorizationPrincipalType,
+        AuthorizationSubject, AuthorizationTarget, CredentialStatusReference,
+        PermissionEffectIntent, PermissionReference, PrincipalLifecycleStateReference,
+        ResourceType, ScopeLevel, ScopeReference,
     };
     use crate::identifier::{
         AuthorizationRequestId, EnterpriseId, PermissionId, PrincipalId, ProjectId, ScopeId,
         WorkspaceId,
     };
     use crate::ownership::OwnershipPath;
-    use super::{AuthorizationRequestRecord, TimeReference};
 
     fn valid_subject() -> AuthorizationSubject {
         AuthorizationSubject::Principal(
@@ -174,7 +175,9 @@ mod tests {
             "approve workflow transition",
         )
         .expect_err("enterprise mismatch must fail");
-        assert!(error.to_string().contains("requester enterprise must match target scope enterprise"));
+        assert!(error
+            .to_string()
+            .contains("requester enterprise must match target scope enterprise"));
     }
 
     #[test]
