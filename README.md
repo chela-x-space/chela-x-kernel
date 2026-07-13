@@ -4,7 +4,7 @@
 Draft
 
 ## Version
-0.2.0
+0.2.1
 
 ## Owner
 Kernel Platform Team
@@ -40,11 +40,15 @@ AI Engineering OS -> CHELA-X CES -> CHELA-X Kernel -> CHELA-X Runtime -> CHELA-X
 - CHELA-X Library provides the read-only retrieval index used for traceability and verification.
 
 ## Current Status
-`K1 Domain Model Implemented`
+`K1.1 Domain API Frozen For K2 Consumption`
 
 ## Constraints
 - Architecture is frozen.
 - No redesign may occur without an approved ADR.
+- K1 domain model is implemented.
+- K1.1 validation is `PASS WITH BLOCKERS`.
+- Runtime execution is not implemented.
+- Domain API baseline is frozen for K2 consumers.
 - Runtime execution is not implemented.
 - No business logic, persistence, networking, or workflow execution is introduced in K1.
 - No frozen upstream repository may be modified by this repository.
@@ -56,7 +60,7 @@ AI Engineering OS -> CHELA-X CES -> CHELA-X Kernel -> CHELA-X Runtime -> CHELA-X
 - Lifecycle state types
 - Authorization request record types
 - Decision record types
-- Authorization, agent, and delegation reference types
+- Authorization, agent, delegation, policy, and workflow reference types
 
 ## References
 - [AGENTS.md](./AGENTS.md)

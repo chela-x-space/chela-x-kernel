@@ -4,7 +4,7 @@
 Draft
 
 ## Version
-0.2.0
+0.2.1
 
 ## Owner
 Kernel Platform Team
@@ -37,7 +37,8 @@ This breakdown is a working implementation plan only. It does not create archite
 
 ## Working Breakdown
 - `K0 Baseline and Bootstrap`: complete.
-- `K1 Kernel Domain Model`: domain primitives implemented in `crates/kernel-domain`; verification remains blocked until a Rust toolchain is available in the environment.
+- `K1 Kernel Domain Model`: implemented in `crates/kernel-domain`.
+- `K1.1 Domain API Freeze and Validation Gate`: domain API reviewed and frozen for K2 consumption; validation is `PASS WITH BLOCKERS` because unit-test linking requires a system `cc` or equivalent runtime linker environment that is not present on this machine.
 - `K2 Kernel State and Lifecycle`: implement state, lifecycle, and replayable state lineage constrained by Chapters 11, 12, and 27.
 - `K3 Decision and Authorization Enforcement`: implement deterministic decision and authorization enforcement constrained by Chapters 22 and 26.
 - `K4 Agent and Delegation Runtime`: implement governed agent and delegation execution constrained by Chapters 27 and 29.

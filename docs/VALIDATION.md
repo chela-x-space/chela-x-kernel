@@ -4,7 +4,7 @@
 Draft
 
 ## Version
-0.2.0
+0.2.1
 
 ## Owner
 Kernel Platform Team
@@ -13,7 +13,7 @@ Kernel Platform Team
 2026-07-14
 
 ## Applies To
-Validation commands and baseline verification for CHELA-X Kernel K0.
+Validation commands and K1.1 verification for CHELA-X Kernel.
 
 ## Review Cycle
 Quarterly
@@ -47,6 +47,7 @@ INTERNAL
 - `cargo test --workspace --all-targets`
 - `cargo clippy --workspace --all-targets -- -D warnings`
 - `cargo doc --workspace --no-deps`
+- `cargo test --workspace --doc`
 - `git diff --check`
 
 ## Build Commands
@@ -60,20 +61,36 @@ INTERNAL
 
 ## Test Commands
 - `cargo test --workspace --all-targets`
+- `cargo test --workspace --doc`
 - `cargo doc --workspace --no-deps`
 
 ## Repository Clean Check
 - `git status --short`
 
+## Toolchain
+- `rustc 1.97.0 (2d8144b78 2026-07-07)`
+- `cargo 1.97.0 (c980f4866 2026-06-30)`
+- `stable-x86_64-unknown-linux-gnu`
+- `rustfmt 1.9.0-stable (2d8144b788 2026-07-07)`
+- `clippy 0.1.97 (2d8144b788 2026-07-07)`
+
 ## Baseline Verification Results
 - Frozen upstream repository status checks were clean at baseline verification time.
 - CES tag `book0-rc1` resolved to `6f131072b0ef0e871b929a67ab558409acca4ed6`.
 - Library validation passed and retrieval queries succeeded for Kernel-relevant topics.
-- Rust toolchain discovery results:
-  - `rustc`: not found
-  - `cargo`: not found
-  - `rustup`: not found
 - Rust installation attempts:
   - `snap install rustup --classic`: blocked by environment permission on `/usr/bin/snap`
   - `curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain stable --profile minimal`: blocked because `curl` is not installed
-- Code validation remains an environment blocker until a usable Rust toolchain is available.
+  - `python3` download of `rustup-init`: succeeded
+  - `/tmp/rustup-init -y --default-toolchain stable --profile minimal`: succeeded
+- Direct toolchain path used for K1.1 validation because the rustup proxy attempted redundant component sync against the repository override.
+
+## K1.1 Validation Results
+- `cargo fmt --all --check`: initial `FORMAT` failure, then pass after applying `cargo fmt --all`.
+- `cargo check --workspace --all-targets`: initial `COMPILE` failure from moved `DelegationDepth`, then pass.
+- `cargo test --workspace --all-targets`: `ENVIRONMENT` failure; no `cc` linker is present on this machine.
+- `cargo clippy --workspace --all-targets -- -D warnings`: pass.
+- `cargo doc --workspace --no-deps`: pass.
+- `cargo test --workspace --doc`: pass.
+- `git diff --check`: pass.
+- `git status --short`: clean required before final completion.

@@ -4,7 +4,7 @@
 Draft
 
 ## Version
-0.2.0
+0.2.1
 
 ## Owner
 Kernel Platform Team
@@ -26,6 +26,13 @@ Kernel Platform Team
 
 ## Classification
 INTERNAL
+
+## 0.2.1
+- Installed a stable Rust toolchain through `rustup` and verified direct toolchain execution.
+- Completed K1.1 domain API corrections, including authorization evaluation-order, policy, workflow, and agent failure or recovery reference primitives.
+- Replaced wide constructor signatures with validated spec structs for `AgentDefinition`, `DecisionRecord`, and `DelegationReference`.
+- Froze the K1 public API baseline in `docs/API.md` and `docs/API-FREEZE.md`.
+- Recorded real K1.1 validation evidence and the remaining unit-test linker blocker.
 
 ## 0.2.0
 - Replaced `kernel-bootstrap` with std-only `kernel-domain`.
