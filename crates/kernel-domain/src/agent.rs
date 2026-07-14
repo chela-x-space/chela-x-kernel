@@ -177,6 +177,22 @@ impl AgentFailureReference {
             recovery_eligible,
         })
     }
+
+    pub fn agent_id(&self) -> &AgentId {
+        &self.agent_id
+    }
+
+    pub fn category(&self) -> AgentFailureCategory {
+        self.category
+    }
+
+    pub fn severity(&self) -> AgentFailureSeverity {
+        self.severity
+    }
+
+    pub fn recovery_eligible(&self) -> bool {
+        self.recovery_eligible
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -218,6 +234,14 @@ impl AgentRecoveryReference {
             supervising_owner,
             evidence,
         }
+    }
+
+    pub fn agent_id(&self) -> &AgentId {
+        &self.agent_id
+    }
+
+    pub fn supervising_owner(&self) -> &OwnerReference {
+        &self.supervising_owner
     }
 }
 

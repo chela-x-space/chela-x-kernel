@@ -74,9 +74,16 @@ pub use policy::{
 };
 pub use request::{AuthorizationRequestRecord, TimeReference};
 pub use runtime::{
-    AgentRegistration, AgentRegistrationSpec, AgentRegistry, CapabilityDescriptor,
-    CapabilityDescriptorSpec, HeartbeatRecord, HeartbeatRecordSpec, LeaseRecord, LeaseRecordSpec,
-    PresenceState, RuntimeEntity, RuntimeEntitySpec, RuntimeHealth,
+    assess_heartbeat, assess_recovery_eligibility, assess_runtime_health, evaluate_lease,
+    supervise_runtime, AgentRegistration, AgentRegistrationSpec, AgentRegistry,
+    CapabilityDescriptor, CapabilityDescriptorSpec, HeartbeatAssessment, HeartbeatFreshness,
+    HeartbeatFreshnessPolicy, HeartbeatObservationSpec, HeartbeatRecord, HeartbeatRecordOutcome,
+    HeartbeatRecordSpec, HeartbeatUpdateResult, LeaseAssessment, LeaseIssuanceSpec, LeasePolicy,
+    LeaseRecord, LeaseRecordSpec, LeaseRejectionReason, LeaseRenewalOutcome, LeaseRenewalRequest,
+    LeaseRenewalResult, LeaseValidity, PresenceState, RecoveryEligibility, RecoveryRejectionReason,
+    RuntimeEntity, RuntimeEntitySpec, RuntimeFailureObservation, RuntimeHealth,
+    RuntimeStateSnapshot, SupervisorAction, SupervisorEvidenceReference, SupervisorObservation,
+    SupervisorOutcome, SupervisorStep, SupervisorTrace, SupervisorTraceStep,
 };
 pub use state::{
     validate_agent_transition, validate_decision_transition, validate_delegation_transition,
