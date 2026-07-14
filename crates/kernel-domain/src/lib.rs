@@ -11,6 +11,7 @@ pub mod lifecycle;
 pub mod ownership;
 pub mod policy;
 pub mod request;
+pub mod state;
 pub mod workflow;
 
 pub use agent::{
@@ -59,6 +60,29 @@ pub use policy::{
     PolicyAuditEvidenceReference, PolicyEffect, PolicyEvaluationOrderVersion, PolicyEvaluationStep,
 };
 pub use request::{AuthorizationRequestRecord, TimeReference};
+pub use state::{
+    validate_agent_transition, validate_decision_transition, validate_delegation_transition,
+    validate_enterprise_transition, validate_human_transition,
+    validate_organizational_unit_transition, validate_ownership_transition,
+    validate_project_transition, validate_workflow_transition, validate_workspace_transition,
+    AgentLifecycleGuards, AgentStateSnapshot, AgentTransitionOutcome, AgentTransitionRequest,
+    AgentTransitionStateSnapshot, AllowedTransition, DecisionLifecycleGuards,
+    DecisionStateSnapshot, DecisionTransitionOutcome, DecisionTransitionRequest,
+    DelegationLifecycleGuards, DelegationStateSnapshot, DelegationTransitionOutcome,
+    DelegationTransitionRequest, EnterpriseLifecycleGuards, EnterpriseStateSnapshot,
+    EnterpriseTransitionOutcome, EnterpriseTransitionRequest, HumanLifecycleGuards,
+    HumanStateSnapshot, HumanTransitionOutcome, HumanTransitionRequest, NoOpTransition,
+    OrganizationalUnitLifecycleGuards, OrganizationalUnitStateSnapshot,
+    OrganizationalUnitTransitionOutcome, OrganizationalUnitTransitionRequest,
+    OwnershipLifecycleGuards, OwnershipStateSnapshot, OwnershipTransitionOutcome,
+    OwnershipTransitionRequest, ProjectLifecycleGuards, ProjectStateSnapshot,
+    ProjectTransitionOutcome, ProjectTransitionRequest, RejectedTransition, StateSequence,
+    StateSnapshot, TransitionAuthorityReference, TransitionEvidenceReference, TransitionOutcome,
+    TransitionReasonReference, TransitionRejectionReason, WorkflowFailureCode,
+    WorkflowLifecycleGuards, WorkflowStateSnapshot, WorkflowTransitionOutcome,
+    WorkflowTransitionRequest, WorkflowTransitionStateSnapshot, WorkspaceLifecycleGuards,
+    WorkspaceStateSnapshot, WorkspaceTransitionOutcome, WorkspaceTransitionRequest,
+};
 pub use workflow::{
     WorkflowAuditEvidenceReference, WorkflowRecoveryReference, WorkflowRetryLimit,
     WorkflowRetryPolicyReference,
