@@ -4,7 +4,7 @@
 Draft
 
 ## Version
-0.2.4
+0.2.5
 
 ## Owner
 Kernel Platform Team
@@ -40,7 +40,7 @@ AI Engineering OS -> CHELA-X CES -> CHELA-X Kernel -> CHELA-X Runtime -> CHELA-X
 - CHELA-X Library provides the read-only retrieval index used for traceability and verification.
 
 ## Current Status
-`K2 Implementation Complete; Canonical Host Validation Pending`
+`K2 State And Lifecycle Complete And Host-Validated`
 
 ## Constraints
 - Architecture is frozen.
@@ -49,10 +49,11 @@ AI Engineering OS -> CHELA-X CES -> CHELA-X Kernel -> CHELA-X Runtime -> CHELA-X
 - K1.1 validation is `PASS`.
 - Domain API freeze status is `FROZEN FOR K2 CONSUMPTION`.
 - Ready for K2 is `YES`.
+- Ready for K3 is `YES`.
 - K2 implementation is additive in `crates/kernel-domain/src/state.rs`.
 - K2 implementation is complete.
 - K2 architecture review passed.
-- K2 awaits canonical host validation.
+- K2 canonical host validation passed.
 - Codex sandbox linker isolation is not a project blocker.
 - K3 has not started.
 - Runtime execution is not implemented.

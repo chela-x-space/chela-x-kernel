@@ -4,7 +4,7 @@
 Draft
 
 ## Version
-0.2.4
+0.2.5
 
 ## Owner
 Kernel Platform Team
@@ -26,6 +26,12 @@ Kernel Platform Team
 
 ## Classification
 INTERNAL
+
+## 0.2.5
+- Finalized K2 canonical host validation with `cargo fmt`, `cargo check`, `cargo test`, `cargo clippy`, `cargo doc`, `cargo test --doc`, and `git diff --check` all passing.
+- Recorded canonical host unit-test evidence as `58 passed`, `0 failed`, `0 ignored`.
+- Promoted supported K2 traceability entries from `IMPLEMENTED` to `VERIFIED`.
+- Marked K2 complete while preserving that K3 has not started.
 
 ## 0.2.4
 - Clarified the repository-local validation authority policy for host, approved CI, and Codex sandbox evidence.

@@ -4,7 +4,7 @@
 Draft
 
 ## Version
-0.2.4
+0.2.5
 
 ## Owner
 Kernel Platform Team
@@ -131,6 +131,15 @@ This precedence applies only when the higher-authority validation was actually e
 ## K2 Validation Results
 - K2 implementation status: `COMPLETE`
 - K2 architecture review: `PASS`
+- Canonical host validation evidence:
+  - `cargo fmt --all --check`: `PASS`
+  - `cargo check --workspace --all-targets`: `PASS`
+  - `cargo test --workspace --all-targets`: `PASS`
+  - unit tests: `58 passed`, `0 failed`, `0 ignored`
+  - `cargo clippy --workspace --all-targets -- -D warnings`: `PASS`
+  - `cargo doc --workspace --no-deps`: `PASS`
+  - `cargo test --workspace --doc`: `PASS`
+  - `git diff --check`: `PASS`
 - Codex sandbox validation evidence:
   - `cargo fmt --all --check`: `PASS`
   - `cargo check --workspace --all-targets`: `PASS`
@@ -144,9 +153,9 @@ This precedence applies only when the higher-authority validation was actually e
   - `command -v clang`: not found
   - direct `cargo test --workspace --all-targets` fails with `linker 'cc' not found`
   - forcing `rust-lld` also fails because system libraries `-lc`, `-lm`, `-lpthread`, `-ldl`, `-lrt`, and `-lutil` are unavailable to the linker
-- Host validation status: `PENDING`
-- K2 validation status: `AWAITING HOST VALIDATION`
-- Overall K2 status: `PASS WITH HOST VALIDATION PENDING`
+- Host validation status: `PASS`
+- K2 validation status: `PASS`
+- Overall K2 status: `PASS`
 
 ## Required Canonical Host Validation Commands
 - `cd /home/chela-x/chela-x-kernel`
@@ -163,4 +172,4 @@ This precedence applies only when the higher-authority validation was actually e
 - Previous K1 tests: `38`
 - New K2 tests: `20`
 - Expected total: `58`
-- This count is expected and not yet canonical host-verified for K2.
+- Canonical host-verified K2 total: `58`
