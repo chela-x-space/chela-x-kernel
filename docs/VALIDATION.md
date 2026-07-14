@@ -4,7 +4,7 @@
 Draft
 
 ## Version
-0.2.3
+0.2.4
 
 ## Owner
 Kernel Platform Team
@@ -67,6 +67,35 @@ INTERNAL
 ## Repository Clean Check
 - `git status --short`
 
+## Validation Authority
+Host Validation
+    ↓
+Approved CI Validation
+    ↓
+Codex Sandbox Validation
+
+This precedence applies only when the higher-authority validation was actually executed and evidence exists.
+
+## Validation Result Categories
+- `HOST`
+- `CI`
+- `CODEX SANDBOX`
+- `ENVIRONMENT LIMITATION`
+- `CODE DEFECT`
+- `TEST DEFECT`
+
+## Validation Authority Policy
+- Host validation is canonical when it has actually been executed and evidence is supplied.
+- CI validation is canonical when an approved CI pipeline exists and completes successfully.
+- Codex sandbox validation is supplementary and environment-limited.
+- A Codex sandbox failure caused only by missing tools, linker access, network isolation, or filesystem isolation must not override a successful host or CI validation result.
+- Host validation must not be claimed unless the commands were actually executed and their results were provided.
+- When host and sandbox results differ, record both.
+- Host or CI result determines the project validation status.
+- Sandbox result is recorded as environment evidence only.
+- Code failures discovered in any environment remain real defects and must not be ignored.
+- Environment limitations must never be mislabeled as implementation defects.
+
 ## Toolchain
 - `rustc 1.97.0 (2d8144b78 2026-07-07)`
 - `cargo 1.97.0 (c980f4866 2026-06-30)`
@@ -100,18 +129,38 @@ INTERNAL
 - Ready for K2: `YES`
 
 ## K2 Validation Results
-- Local repository validation for the K2 worktree:
-  - `cargo fmt --all --check`: PASS
-  - `cargo check --workspace --all-targets`: PASS
-  - `cargo clippy --workspace --all-targets -- -D warnings`: PASS
-  - `cargo doc --workspace --no-deps`: PASS
-  - `cargo test --workspace --doc`: PASS
-  - `cargo test --workspace --all-targets`: BLOCKED by environment prerequisite
-- Native test blocker details:
+- K2 implementation status: `COMPLETE`
+- K2 architecture review: `PASS`
+- Codex sandbox validation evidence:
+  - `cargo fmt --all --check`: `PASS`
+  - `cargo check --workspace --all-targets`: `PASS`
+  - `cargo clippy --workspace --all-targets -- -D warnings`: `PASS`
+  - `cargo doc --workspace --no-deps`: `PASS`
+  - `cargo test --workspace --doc`: `PASS`
+  - `cargo test --workspace --all-targets`: `ENVIRONMENT LIMITATION`
+- Codex sandbox environment evidence:
   - `command -v cc`: not found
   - `command -v gcc`: not found
   - `command -v clang`: not found
   - direct `cargo test --workspace --all-targets` fails with `linker 'cc' not found`
   - forcing `rust-lld` also fails because system libraries `-lc`, `-lm`, `-lpthread`, `-ldl`, `-lrt`, and `-lutil` are unavailable to the linker
-- K2 validation status: `BLOCKED`
-- K2 PASS may only be reported after a native linker toolchain is installed and `cargo test --workspace --all-targets` passes.
+- Host validation status: `PENDING`
+- K2 validation status: `AWAITING HOST VALIDATION`
+- Overall K2 status: `PASS WITH HOST VALIDATION PENDING`
+
+## Required Canonical Host Validation Commands
+- `cd /home/chela-x/chela-x-kernel`
+- `cargo fmt --all --check`
+- `cargo check --workspace --all-targets`
+- `cargo test --workspace --all-targets`
+- `cargo clippy --workspace --all-targets -- -D warnings`
+- `cargo doc --workspace --no-deps`
+- `cargo test --workspace --doc`
+- `git diff --check`
+- `git status --short`
+
+## Expected K2 Test Baseline
+- Previous K1 tests: `38`
+- New K2 tests: `20`
+- Expected total: `58`
+- This count is expected and not yet canonical host-verified for K2.

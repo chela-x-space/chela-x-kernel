@@ -27,6 +27,13 @@ Kernel Platform Team
 ## Classification
 INTERNAL
 
+## Delivery Status
+- Implementation Status: `COMPLETE`
+- Architecture Review: `PASS`
+- Host Validation: `PENDING`
+- Codex Sandbox Validation: `PARTIAL — native unit-test linking unavailable`
+- Overall Status: `PASS WITH HOST VALIDATION PENDING`
+
 ## Scope
 K2 adds deterministic state snapshots, transition requests, transition validation, transition outcomes, lifecycle guards, terminal-state protection, failure-state representation, and transition references for the frozen K1 lifecycle types.
 

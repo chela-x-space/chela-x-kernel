@@ -4,7 +4,7 @@
 Draft
 
 ## Version
-0.2.3
+0.2.4
 
 ## Owner
 Kernel Platform Team
@@ -39,13 +39,19 @@ This breakdown is a working implementation plan only. It does not create archite
 - `K0 Baseline and Bootstrap`: complete.
 - `K1 Kernel Domain Model`: implemented in `crates/kernel-domain`.
 - `K1.1 Domain API Freeze and Validation Gate`: complete; validation is `PASS`, API freeze status is `FROZEN FOR K2 CONSUMPTION`, and readiness for K2 is `YES`.
-- `K2 Kernel State and Lifecycle`: implemented additively in `crates/kernel-domain/src/state.rs`; final PASS is blocked by the missing native linker required for `cargo test --workspace --all-targets`.
+- `K2 Kernel State and Lifecycle`: implementation complete in `crates/kernel-domain/src/state.rs`; validation gate remains open pending canonical CHELA-X host execution.
 - `K3 Decision and Authorization Enforcement`: implement deterministic decision and authorization enforcement constrained by Chapters 22 and 26.
 - `K4 Agent and Delegation Runtime`: implement governed agent and delegation execution constrained by Chapters 27 and 29.
 - `K5 Workflow Execution`: implement downstream workflow execution constrained by Chapters 28 to 30.
 - `K6 Security, Audit and Recovery`: implement audit, failure, and recovery controls constrained by Chapters 24, 27, and 30.
 - `K7 Integration and Conformance`: verify cross-domain conformance against CES, Program dependency rules, and Library traceability.
 - `K8 Release Candidate`: prepare Kernel RC validation, release metadata, and repository freeze inputs.
+
+## Remaining K2 Validation Gate
+- Run full K2 validation on the CHELA-X host.
+- Confirm all `58` tests execute successfully.
+- Update K2 traceability from `IMPLEMENTED` to `VERIFIED` where supported.
+- Finalize K2 `PASS` status.
 
 ## References
 - [TRACEABILITY.md](./TRACEABILITY.md)
