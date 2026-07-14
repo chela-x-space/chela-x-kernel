@@ -655,18 +655,10 @@ pub fn evaluate_authorization(
             decisive = Some((
                 map_rejection_to_outcome(&reason),
                 reason,
-                decisive_policy_id(
-                    &permission_match.matched_policies,
-                    policy_match.policy_id.as_ref(),
-                    input,
-                )
-                .expect("decisive policy id"),
-                decision_policy_ids(
-                    &permission_match.matched_policies,
-                    policy_match.policy_id.as_ref(),
-                    input,
-                )
-                .expect("decision policy ids"),
+                decisive_policy_id(policy_match.policy_id.as_ref(), input)
+                    .expect("decisive policy id"),
+                decision_policy_ids(policy_match.policy_id.as_ref(), input)
+                    .expect("decision policy ids"),
                 permission_step_evidence.clone(),
             ));
         }
@@ -694,18 +686,10 @@ pub fn evaluate_authorization(
             decisive = Some((
                 AuthorizationDecisionOutcome::DenySeparationOfDuties,
                 reason,
-                decisive_policy_id(
-                    &permission_match.matched_policies,
-                    policy_match.policy_id.as_ref(),
-                    input,
-                )
-                .expect("decisive policy id"),
-                decision_policy_ids(
-                    &permission_match.matched_policies,
-                    policy_match.policy_id.as_ref(),
-                    input,
-                )
-                .expect("decision policy ids"),
+                decisive_policy_id(policy_match.policy_id.as_ref(), input)
+                    .expect("decisive policy id"),
+                decision_policy_ids(policy_match.policy_id.as_ref(), input)
+                    .expect("decision policy ids"),
                 permission_match.matched_evidence.clone(),
             ));
         }
@@ -718,18 +702,10 @@ pub fn evaluate_authorization(
             (
                 AuthorizationDecisionOutcome::Allow,
                 AuthorizationRejectionReason::DenyByDefault,
-                decisive_policy_id(
-                    &permission_match.matched_policies,
-                    policy_match.policy_id.as_ref(),
-                    input,
-                )
-                .expect("decisive policy id"),
-                decision_policy_ids(
-                    &permission_match.matched_policies,
-                    policy_match.policy_id.as_ref(),
-                    input,
-                )
-                .expect("decision policy ids"),
+                decisive_policy_id(policy_match.policy_id.as_ref(), input)
+                    .expect("decisive policy id"),
+                decision_policy_ids(policy_match.policy_id.as_ref(), input)
+                    .expect("decision policy ids"),
                 permission_match.matched_evidence.clone(),
             )
         };
@@ -739,13 +715,13 @@ pub fn evaluate_authorization(
         Some(rejection_reason)
     };
 
-    let decisive_evidence =
-        evidence
-            .first()
-            .cloned()
-            .ok_or(DomainError::MissingAuthorizationEvidence(
-                "authorization evaluation requires decisive evidence",
-            ))?;
+    let decisive_evidence = governing_policy_evidence(
+        &decisive_policy_id,
+        &evidence,
+        policy_match.policy_id.as_ref(),
+        &policy_match.matched_evidence,
+        input,
+    )?;
     let all_evidence = dedupe_evidence(evidence);
     let decision = AuthorizationDecisionReference::new(
         input.decision_ids.decision_id.clone(),
@@ -1115,11 +1091,13 @@ fn resolve_permission_match(
         .iter()
         .chain(inherited_grants.iter())
         .collect::<Vec<_>>();
-    let mut matched_evidence = matched_grants
-        .iter()
-        .map(|grant| grant.evidence.clone())
-        .collect::<Vec<_>>();
-    matched_evidence.extend(policy_match.matched_evidence.clone());
+    let mut matched_evidence = policy_match.matched_evidence.clone();
+    matched_evidence.extend(
+        matched_grants
+            .iter()
+            .map(|grant| grant.evidence.clone())
+            .collect::<Vec<_>>(),
+    );
     let mut matched_policies = matched_grants
         .iter()
         .map(|grant| grant.policy_id.clone())
@@ -1373,20 +1351,6 @@ fn fallback_policy_id(input: &AuthorizationEvaluationInput) -> DomainResult<Poli
         .or_else(|| {
             input
                 .context
-                .direct_grants
-                .first()
-                .map(|grant| grant.policy_id.clone())
-        })
-        .or_else(|| {
-            input
-                .context
-                .inherited_grants
-                .first()
-                .map(|grant| grant.policy_id.clone())
-        })
-        .or_else(|| {
-            input
-                .context
                 .explicit_denials
                 .first()
                 .map(|deny| deny.policy_id.clone())
@@ -1407,20 +1371,6 @@ fn fallback_policy_evidence(
         .or_else(|| {
             input
                 .context
-                .direct_grants
-                .first()
-                .map(|grant| grant.evidence.clone())
-        })
-        .or_else(|| {
-            input
-                .context
-                .inherited_grants
-                .first()
-                .map(|grant| grant.evidence.clone())
-        })
-        .or_else(|| {
-            input
-                .context
                 .explicit_denials
                 .first()
                 .map(|deny| deny.evidence.clone())
@@ -1435,14 +1385,11 @@ fn fallback_policy_ids(input: &AuthorizationEvaluationInput) -> DomainResult<Vec
 }
 
 fn decisive_policy_id(
-    matched_policy_ids: &[PolicyId],
     policy_id: Option<&PolicyId>,
     input: &AuthorizationEvaluationInput,
 ) -> DomainResult<PolicyId> {
-    matched_policy_ids
-        .first()
+    policy_id
         .cloned()
-        .or_else(|| policy_id.cloned())
         .or_else(|| fallback_policy_id(input).ok())
         .ok_or(DomainError::MissingAuthorizationEvidence(
             "authorization evaluation requires at least one policy-backed rule reference",
@@ -1450,11 +1397,10 @@ fn decisive_policy_id(
 }
 
 fn decision_policy_ids(
-    matched_policy_ids: &[PolicyId],
     policy_id: Option<&PolicyId>,
     input: &AuthorizationEvaluationInput,
 ) -> DomainResult<Vec<PolicyId>> {
-    let mut policy_ids = matched_policy_ids.to_vec();
+    let mut policy_ids = Vec::new();
     if let Some(policy_id) = policy_id {
         policy_ids.push(policy_id.clone());
     }
@@ -1464,6 +1410,44 @@ fn decision_policy_ids(
     let mut seen = BTreeSet::new();
     policy_ids.retain(|policy_id| seen.insert(policy_id.as_str().to_owned()));
     Ok(policy_ids)
+}
+
+fn governing_policy_evidence(
+    decisive_policy_id: &PolicyId,
+    evidence: &[MatchedPolicyEvidenceReference],
+    policy_match_id: Option<&PolicyId>,
+    policy_match_evidence: &[MatchedPolicyEvidenceReference],
+    input: &AuthorizationEvaluationInput,
+) -> DomainResult<MatchedPolicyEvidenceReference> {
+    if policy_match_id == Some(decisive_policy_id) {
+        return policy_match_evidence.first().cloned().ok_or(
+            DomainError::MissingAuthorizationEvidence(
+                "authorization evaluation requires matched evidence for the governing policy",
+            ),
+        );
+    }
+    if let Some(deny) = input
+        .context
+        .explicit_denials
+        .iter()
+        .find(|deny| &deny.policy_id == decisive_policy_id)
+    {
+        return Ok(deny.evidence.clone());
+    }
+    if let Some(policy) = input
+        .context
+        .policies
+        .iter()
+        .find(|policy| &policy.policy_id == decisive_policy_id)
+    {
+        return Ok(policy.evidence.clone());
+    }
+    evidence
+        .first()
+        .cloned()
+        .ok_or(DomainError::MissingAuthorizationEvidence(
+            "authorization evaluation requires decisive evidence",
+        ))
 }
 
 fn dedupe_evidence(
@@ -2596,6 +2580,42 @@ mod tests {
             .matched_rules()
             .iter()
             .any(|evidence| evidence.as_str() == "EVID-POL-DENY-001"));
+    }
+
+    #[test]
+    fn authorization_explicit_deny_preserves_governing_policy_evidence_ces_b0_028_7() {
+        let mut context = base_context();
+        context.direct_grants.push(direct_permission_grant());
+        context.explicit_denials.push(explicit_deny());
+        context
+            .policies
+            .push(policy_record(PolicyEffect::Permit, 1, "EVID-POL-001"));
+        let input = AuthorizationEvaluationInput {
+            request: request_with(
+                AuthorizationPrincipalType::Employee,
+                "Active",
+                permission("CX-PERM-000001", "approve", "workflow"),
+                target("CX-PROJ-000001"),
+            ),
+            context,
+            decision_ids: decision_ids(),
+            decision_construction: Some(decision_construction()),
+        };
+        let left = evaluate_authorization(&input).expect("left");
+        let right = evaluate_authorization(&input).expect("right");
+        assert_eq!(left.outcome, AuthorizationDecisionOutcome::DenyExplicit);
+        assert_eq!(
+            left.decision.matched_policy_evidence().as_str(),
+            "EVID-DENY-001"
+        );
+        assert_eq!(
+            left.decision.matched_policy_evidence().as_str(),
+            right.decision.matched_policy_evidence().as_str()
+        );
+        assert_ne!(
+            left.decision.matched_policy_evidence().as_str(),
+            "EVID-GRANT-001"
+        );
     }
 
     #[test]
