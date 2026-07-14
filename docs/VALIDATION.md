@@ -4,7 +4,7 @@
 Draft
 
 ## Version
-0.2.2
+0.2.3
 
 ## Owner
 Kernel Platform Team
@@ -13,7 +13,7 @@ Kernel Platform Team
 2026-07-14
 
 ## Applies To
-Validation commands and K1.1 verification for CHELA-X Kernel.
+Validation commands and K1.1 or K2 verification for CHELA-X Kernel.
 
 ## Review Cycle
 Quarterly
@@ -98,3 +98,20 @@ INTERNAL
   - `git diff --check`: PASS
 - K1.1 validation status: `PASS`
 - Ready for K2: `YES`
+
+## K2 Validation Results
+- Local repository validation for the K2 worktree:
+  - `cargo fmt --all --check`: PASS
+  - `cargo check --workspace --all-targets`: PASS
+  - `cargo clippy --workspace --all-targets -- -D warnings`: PASS
+  - `cargo doc --workspace --no-deps`: PASS
+  - `cargo test --workspace --doc`: PASS
+  - `cargo test --workspace --all-targets`: BLOCKED by environment prerequisite
+- Native test blocker details:
+  - `command -v cc`: not found
+  - `command -v gcc`: not found
+  - `command -v clang`: not found
+  - direct `cargo test --workspace --all-targets` fails with `linker 'cc' not found`
+  - forcing `rust-lld` also fails because system libraries `-lc`, `-lm`, `-lpthread`, `-ldl`, `-lrt`, and `-lutil` are unavailable to the linker
+- K2 validation status: `BLOCKED`
+- K2 PASS may only be reported after a native linker toolchain is installed and `cargo test --workspace --all-targets` passes.

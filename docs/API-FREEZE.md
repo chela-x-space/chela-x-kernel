@@ -4,7 +4,7 @@
 Draft
 
 ## Version
-0.1.1
+0.2.0
 
 ## Owner
 Kernel Platform Team
@@ -55,6 +55,7 @@ INTERNAL
 - `ownership`
 - `policy`
 - `request`
+- `state`
 - `workflow`
 
 ## Public Types
@@ -62,6 +63,7 @@ INTERNAL
 - ownership path and organizational context values
 - identity and lifecycle enums or references
 - authorization, decision, agent, delegation, policy, and workflow pure reference types
+- state snapshots, transition request or outcome records, lifecycle guard structs, workflow failure codes, and lifecycle validation functions
 - spec structs for `AgentDefinition`, `DecisionRecord`, and `DelegationReference`
 
 ## Intentionally Private Types
@@ -78,6 +80,10 @@ INTERNAL
 - `CES-B0-027.7#normative-specification`
 - `CES-B0-027.15#normative-specification`
 - `CES-B0-029.4#normative-specification`
+- `CES-B0-029.11#normative-specification`
+- `CES-B0-029.12#normative-specification`
+- `CES-B0-029.13#normative-specification`
+- `CES-B0-030.13#normative-specification`
 - `CES-B0-029.20#normative-specification`
 - `CES-B0-030.17#normative-specification`
 - `CES-B0-030.18#normative-specification`

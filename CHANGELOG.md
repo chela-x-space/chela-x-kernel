@@ -4,7 +4,7 @@
 Draft
 
 ## Version
-0.2.2
+0.2.3
 
 ## Owner
 Kernel Platform Team
@@ -26,6 +26,12 @@ Kernel Platform Team
 
 ## Classification
 INTERNAL
+
+## 0.2.3
+- Added the additive K2 `kernel-domain::state` module for deterministic state snapshots, transition requests, transition outcomes, lifecycle guards, and workflow failure codes.
+- Enforced CES-traced lifecycle validation for enterprise, workspace, project, organizational-unit, ownership, human, agent, decision, delegation, and workflow state changes.
+- Added K2 traceability, API, implementation-plan, and validation documentation, including deferred-semantics notes where CES does not define a resume path.
+- Recorded the current environment blocker for native test linking because `cc`, `gcc`, and `clang` are unavailable.
 
 ## 0.2.2
 - Accepted verified host validation evidence for K1.1 after the Codex sandbox could not access `/usr/bin/cc`, `/usr/bin/gcc`, or `/usr/bin/cargo` by absolute path.

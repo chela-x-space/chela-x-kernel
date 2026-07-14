@@ -4,7 +4,7 @@
 Draft
 
 ## Version
-0.2.2
+0.2.3
 
 ## Owner
 Kernel Platform Team
@@ -39,7 +39,7 @@ This breakdown is a working implementation plan only. It does not create archite
 - `K0 Baseline and Bootstrap`: complete.
 - `K1 Kernel Domain Model`: implemented in `crates/kernel-domain`.
 - `K1.1 Domain API Freeze and Validation Gate`: complete; validation is `PASS`, API freeze status is `FROZEN FOR K2 CONSUMPTION`, and readiness for K2 is `YES`.
-- `K2 Kernel State and Lifecycle`: implement state, lifecycle, and replayable state lineage constrained by Chapters 11, 12, and 27.
+- `K2 Kernel State and Lifecycle`: implemented additively in `crates/kernel-domain/src/state.rs`; final PASS is blocked by the missing native linker required for `cargo test --workspace --all-targets`.
 - `K3 Decision and Authorization Enforcement`: implement deterministic decision and authorization enforcement constrained by Chapters 22 and 26.
 - `K4 Agent and Delegation Runtime`: implement governed agent and delegation execution constrained by Chapters 27 and 29.
 - `K5 Workflow Execution`: implement downstream workflow execution constrained by Chapters 28 to 30.

@@ -4,7 +4,7 @@
 Draft
 
 ## Version
-0.1.0
+0.2.0
 
 ## Owner
 Kernel Platform Team
@@ -28,7 +28,7 @@ Kernel Platform Team
 INTERNAL
 
 ## Purpose And Scope
-This document defines the frozen K1.1 public API baseline for `kernel-domain`. It covers only pure domain types, constructors, invariants, and CES traceability. Runtime behavior is out of scope.
+This document defines the frozen K1.1 public API baseline plus the additive K2 state API for `kernel-domain`. It covers only pure domain types, constructors, invariants, lifecycle validation, and CES traceability. Runtime behavior is out of scope.
 
 ## K1 API Stability Statement
 The K1.1 domain API is frozen for K2 consumption. Breaking changes require either a CES-backed defect correction or an approved ADR.
@@ -45,6 +45,7 @@ The K1.1 domain API is frozen for K2 consumption. Breaking changes require eithe
 - `ownership`
 - `policy`
 - `request`
+- `state`
 - `workflow`
 
 ## Public Type Catalogue
@@ -58,17 +59,18 @@ The K1.1 domain API is frozen for K2 consumption. Breaking changes require eithe
 - `delegation`: delegator, delegate, beneficiary, scope, right, task, condition, authority-source, depth, and `DelegationReference`.
 - `policy`: `PolicyEffect`, evaluation-order, and audit-evidence references.
 - `workflow`: retry, recovery, and audit-evidence references.
+- `state`: lifecycle guard structs, state snapshots, transition request records, transition outcome records, reason or authority or evidence references, deterministic sequence values, workflow failure codes, and lifecycle validation functions.
 
 ## CES Source References
 - `CES-B0-011#11.2-principle`
 - `CES-B0-012#12.2-lifecycle`
-- `CES-B0-022.1`, `CES-B0-022.6`
+- `CES-B0-022.1`, `CES-B0-022.5`, `CES-B0-022.6`
 - `CES-B0-025.1` to `CES-B0-025.5`
 - `CES-B0-026.1`, `CES-B0-026.3`, `CES-B0-026.5`, `CES-B0-026.6`, `CES-B0-026.8`
 - `CES-B0-027.1`, `CES-B0-027.2`, `CES-B0-027.7`, `CES-B0-027.15`, `CES-B0-027.18`, `CES-B0-027.19`
 - `CES-B0-028.7`, `CES-B0-028.9`, `CES-B0-028.12`
-- `CES-B0-029.4`, `CES-B0-029.9`, `CES-B0-029.20`
-- `CES-B0-030.9`, `CES-B0-030.14`, `CES-B0-030.17`, `CES-B0-030.18`
+- `CES-B0-029.4`, `CES-B0-029.9`, `CES-B0-029.11`, `CES-B0-029.12`, `CES-B0-029.13`, `CES-B0-029.20`
+- `CES-B0-030.9`, `CES-B0-030.13`, `CES-B0-030.14`, `CES-B0-030.17`, `CES-B0-030.18`
 
 ## Invariants
 - Stable identifiers are immutable after construction.
@@ -94,9 +96,9 @@ The K1.1 domain API is frozen for K2 consumption. Breaking changes require eithe
 - Stable identifiers are private fields with accessor methods.
 - No public setter mutates identity-bearing fields.
 - Records and references contain no clocks, randomness, I/O, or execution behavior.
+- Transition validation is exposed through pure functions and immutable outcome records.
 
 ## Runtime Consumers Expected In Later Phases
-- K2 state and lifecycle lineage
 - K3 authorization and decision enforcement
 - K4 agent and delegation runtime
 - K5 workflow execution
@@ -111,10 +113,11 @@ The K1.1 domain API is frozen for K2 consumption. Breaking changes require eithe
 - authorization evaluation
 - delegation resolution
 - audit storage
+- runtime execution
 
 ## Known Deferred Semantics
-- agent lifecycle transition rules beyond the CES-defined terminal and prerequisite semantics
 - authorization evaluation execution
 - policy conflict resolution execution
 - workflow retry or recovery execution
-- linker-dependent unit-test execution on this machine
+- enterprise reactivation semantics beyond explicit CES definition
+- linker-dependent native test execution on this machine because `cc` is unavailable
