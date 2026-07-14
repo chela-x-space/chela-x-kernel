@@ -4,7 +4,7 @@
 Draft
 
 ## Version
-0.4.0
+0.5.0
 
 ## Owner
 Kernel Platform Team
@@ -31,13 +31,15 @@ INTERNAL
 `K1 Domain API Baseline`
 
 ## Status Statement
-`FROZEN FOR K2/K3/K4.1 CONSUMPTION`
+`FROZEN FOR K2/K3/K4.1/K4.2 CONSUMPTION`
 
 ## Validation State
 - K1.1 validation status: `PASS`
 - Validation source: accepted host verification for `/home/chela-x/chela-x-kernel`
 - Unit-test result: `38 passed`, `0 failed`, `0 ignored`
 - Ready for K2: `YES`
+- K3 host validation status: `PASS`
+- K4.1 host validation status: `PASS`
 
 ## Crate
 - name: `kernel-domain`
@@ -66,7 +68,7 @@ INTERNAL
 - identity and lifecycle enums or references
 - authorization, decision, agent, delegation, policy, and workflow pure reference types
 - deterministic enforcement input, output, trace, and spec types
-- deterministic runtime registry, capability, heartbeat, lease, and presence spec types
+- deterministic runtime registry, capability, heartbeat, heartbeat-freshness, lease, recovery-eligibility, runtime snapshot, supervisor, and presence spec types
 - state snapshots, transition request or outcome records, lifecycle guard structs, workflow failure codes, and lifecycle validation functions
 - spec structs for `AgentDefinition`, `DecisionRecord`, `DelegationReference`, `AuthorizationGrantRecord`, `AuthorizationPolicyRecord`, `CapabilityDescriptor`, `RuntimeEntity`, `LeaseRecord`, `HeartbeatRecord`, and `AgentRegistration`
 

@@ -4,7 +4,7 @@
 Draft
 
 ## Version
-0.4.0
+0.5.0
 
 ## Owner
 Kernel Platform Team
@@ -40,9 +40,10 @@ This breakdown is a working implementation plan only. It does not create archite
 - `K1 Kernel Domain Model`: implemented in `crates/kernel-domain`.
 - `K1.1 Domain API Freeze and Validation Gate`: complete; validation is `PASS`, API freeze status is `FROZEN FOR K2 CONSUMPTION`, and readiness for K2 is `YES`.
 - `K2 Kernel State and Lifecycle`: complete; implementation and canonical host validation passed.
-- `K3 Decision and Authorization Enforcement`: implemented in `crates/kernel-domain/src/enforcement.rs`; canonical host validation remains pending.
-- `K4.1 Agent Registry Foundation`: implemented in `crates/kernel-domain/src/runtime.rs`; canonical host validation remains pending.
-- `K4.2 Agent Runtime And Delegation Execution`: not started.
+- `K3 Decision and Authorization Enforcement`: complete; canonical host validation passed.
+- `K4.1 Agent Registry Foundation`: complete; canonical host validation passed.
+- `K4.2 Runtime Lifecycle Control And Supervision`: implemented in `crates/kernel-domain/src/runtime.rs`; Codex sandbox native unit-test linking remains blocked, so canonical host validation is pending.
+- `K4.3 Runtime Event Model`: not started.
 - `K5 Workflow Execution`: implement downstream workflow execution constrained by Chapters 28 to 30.
 - `K6 Security, Audit and Recovery`: implement audit, failure, and recovery controls constrained by Chapters 24, 27, and 30.
 - `K7 Integration and Conformance`: verify cross-domain conformance against CES, Program dependency rules, and Library traceability.

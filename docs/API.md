@@ -4,7 +4,7 @@
 Draft
 
 ## Version
-0.4.0
+0.5.0
 
 ## Owner
 Kernel Platform Team
@@ -28,7 +28,7 @@ Kernel Platform Team
 INTERNAL
 
 ## Purpose And Scope
-This document defines the frozen K1.1 public API baseline plus the additive K2 state API, additive K3 enforcement API, and additive K4.1 runtime registry API for `kernel-domain`. It covers only pure domain types, constructors, invariants, lifecycle validation, deterministic authorization enforcement, deterministic runtime registration, and CES traceability. Runtime execution is out of scope.
+This document defines the frozen K1.1 public API baseline plus the additive K2 state API, additive K3 enforcement API, additive K4.1 runtime registry API, and additive K4.2 runtime supervision API for `kernel-domain`. It covers only pure domain types, constructors, invariants, lifecycle validation, deterministic authorization enforcement, deterministic runtime registration, deterministic runtime supervision, and CES traceability. Runtime execution is out of scope.
 
 ## K1 API Stability Statement
 The K1.1 domain API is frozen for K2 consumption. Breaking changes require either a CES-backed defect correction or an approved ADR.
@@ -60,7 +60,7 @@ The K1.1 domain API is frozen for K2 consumption. Breaking changes require eithe
 - `agent`: agent definition, type, category, runtime, failure, and recovery references.
 - `delegation`: delegator, delegate, beneficiary, scope, right, task, condition, authority-source, depth, and `DelegationReference`.
 - `enforcement`: authorization evaluation context, grants, explicit denials, role-permission bindings, policy records, authority requirements, delegation bindings, deterministic trace results, and optional decision construction inputs.
-- `runtime`: runtime identifiers, runtime entities, immutable agent registrations, capability descriptors, lease records, heartbeat records, presence states, runtime health, and deterministic registry lookup or update primitives.
+- `runtime`: runtime identifiers, runtime entities, immutable agent registrations, capability descriptors, heartbeat freshness policies and assessments, heartbeat records and update results, lease policies and renewal records, presence states, runtime health assessments, runtime state snapshots, supervisor traces and outcomes, and deterministic registry lookup or update primitives.
 - `policy`: `PolicyEffect`, evaluation-order, and audit-evidence references.
 - `workflow`: retry, recovery, and audit-evidence references.
 - `state`: lifecycle guard structs, state snapshots, transition request records, transition outcome records, reason or authority or evidence references, deterministic sequence values, workflow failure codes, and lifecycle validation functions.
@@ -71,7 +71,10 @@ The K1.1 domain API is frozen for K2 consumption. Breaking changes require eithe
 - `CES-B0-022.1`, `CES-B0-022.5`, `CES-B0-022.6`
 - `CES-B0-025.1` to `CES-B0-025.5`
 - `CES-B0-026.1`, `CES-B0-026.3`, `CES-B0-026.5`, `CES-B0-026.6`, `CES-B0-026.8`
-- `CES-B0-027.1`, `CES-B0-027.2`, `CES-B0-027.7`, `CES-B0-027.15`, `CES-B0-027.18`, `CES-B0-027.19`
+- `CES-B0-015#15.2-principle`
+- `CES-B0-022.3`, `CES-B0-022.11`
+- `CES-B0-024.1`, `CES-B0-024.6`
+- `CES-B0-027.1`, `CES-B0-027.2`, `CES-B0-027.7`, `CES-B0-027.8`, `CES-B0-027.10`, `CES-B0-027.12`, `CES-B0-027.13`, `CES-B0-027.15`, `CES-B0-027.16`, `CES-B0-027.18`, `CES-B0-027.19`, `CES-B0-027.21`, `CES-B0-027.22`
 - `CES-B0-028.7`, `CES-B0-028.9`, `CES-B0-028.12`
 - `CES-B0-029.4`, `CES-B0-029.9`, `CES-B0-029.11`, `CES-B0-029.12`, `CES-B0-029.13`, `CES-B0-029.20`
 - `CES-B0-030.9`, `CES-B0-030.13`, `CES-B0-030.14`, `CES-B0-030.17`, `CES-B0-030.18`
@@ -118,6 +121,7 @@ The K1.1 domain API is frozen for K2 consumption. Breaking changes require eithe
 - delegation resolution
 - audit storage
 - runtime execution
+- supervisor action execution
 
 ## Known Deferred Semantics
 - delegation chain resolution beyond one supplied bound

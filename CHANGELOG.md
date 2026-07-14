@@ -4,7 +4,7 @@
 Draft
 
 ## Version
-0.4.0
+0.5.0
 
 ## Owner
 Kernel Platform Team
@@ -26,6 +26,13 @@ Kernel Platform Team
 
 ## Classification
 INTERNAL
+
+## 0.5.0
+- Finalized K3 and K4.1 canonical host validation evidence as `108 passed`, `0 failed`, and `0 ignored`.
+- Added additive K4.2 runtime lifecycle control primitives for validated heartbeat ingestion, heartbeat freshness classification, lease assessment and renewal, deterministic runtime health assessment, immutable runtime state snapshots, recovery eligibility, and pure supervisor outcomes.
+- Added validated registry operations that apply heartbeat, lease, presence, and supervisor updates atomically without introducing runtime execution, scheduling, or background workers.
+- Added K4.2 CES-traceable tests for heartbeat, freshness, lease, health, supervisor, and registry consistency invariants.
+- Recorded K4.2 sandbox validation evidence: `cargo fmt`, `cargo check`, `cargo clippy`, `cargo doc`, and `cargo test --doc` pass; native `cargo test --all-targets` remains blocked in this environment because linker `cc` is unavailable.
 
 ## 0.4.0
 - Corrected K3 authorization enforcement so permit policies no longer authorize requests without a matching grant scope, and deny decision construction now preserves governing policy references for explicit and non-policy denials.

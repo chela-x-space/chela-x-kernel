@@ -4,7 +4,7 @@
 Draft
 
 ## Version
-0.4.0
+0.5.0
 
 ## Owner
 Kernel Platform Team
@@ -13,7 +13,7 @@ Kernel Platform Team
 2026-07-15
 
 ## Applies To
-Validation commands and K1.1, K2, K3, or K4.1 verification for CHELA-X Kernel.
+Validation commands and K1.1, K2, K3, K4.1, or K4.2 verification for CHELA-X Kernel.
 
 ## Review Cycle
 Quarterly
@@ -160,12 +160,14 @@ This precedence applies only when the higher-authority validation was actually e
 ## K3 Validation Results
 - K3 implementation status: `COMPLETE`
 - K3 architecture review: `PASS`
-- Canonical host validation follow-up exposed two K3 enforcement defects while validating the post-K4.1 workspace:
-  - `authorization_constructs_deny_decision_ces_b0_026_6`
-  - `authorization_rejects_target_outside_permission_scope_ces_b0_026_3`
-- K3 correction status:
-  - deny-decision construction now accepts deterministic governing policy references for auditable non-policy denials
-  - policy permits no longer authorize requests without a matching scoped grant
+- Canonical host validation evidence:
+  - `cargo fmt --all --check`: `PASS`
+  - `cargo check --workspace --all-targets`: `PASS`
+  - `cargo test --workspace --all-targets`: `PASS`
+  - unit tests: `108 passed`, `0 failed`, `0 ignored`
+  - `cargo clippy --workspace --all-targets -- -D warnings`: `PASS`
+  - `cargo doc --workspace --no-deps`: `PASS`
+  - `cargo test --workspace --doc`: `PASS`
 - Codex sandbox validation evidence:
   - `cargo fmt --all --check`: `PASS`
   - `cargo check --workspace --all-targets`: `PASS`
@@ -175,13 +177,20 @@ This precedence applies only when the higher-authority validation was actually e
   - `cargo test --workspace --all-targets`: `ENVIRONMENT LIMITATION`
 - Codex sandbox environment evidence:
 - direct `cargo test --workspace --all-targets` fails with `linker 'cc' not found`
-- K3 host validation status: `PENDING`
-- K3 validation status: `PASS WITH HOST TEST VALIDATION PENDING`
+- K3 host validation status: `PASS`
+- K3 validation status: `PASS`
 
 ## K4.1 Validation Results
 - K4.1 implementation status: `COMPLETE`
 - K4.1 architecture review: `PASS`
-- K4.1 canonical host validation remains blocked from final acceptance until the corrected K3 tests are rerun and the full workspace returns green.
+- Canonical host validation evidence:
+  - `cargo fmt --all --check`: `PASS`
+  - `cargo check --workspace --all-targets`: `PASS`
+  - `cargo test --workspace --all-targets`: `PASS`
+  - unit tests: `108 passed`, `0 failed`, `0 ignored`
+  - `cargo clippy --workspace --all-targets -- -D warnings`: `PASS`
+  - `cargo doc --workspace --no-deps`: `PASS`
+  - `cargo test --workspace --doc`: `PASS`
 - Codex sandbox validation evidence:
   - `cargo fmt --all --check`: `PASS`
   - `cargo check --workspace --all-targets`: `PASS`
@@ -191,8 +200,23 @@ This precedence applies only when the higher-authority validation was actually e
   - `cargo test --workspace --all-targets`: `ENVIRONMENT LIMITATION`
 - Codex sandbox environment evidence:
   - direct `cargo test --workspace --all-targets` fails with `linker 'cc' not found`
-- K4.1 host validation status: `PENDING`
-- K4.1 validation status: `PASS WITH HOST TEST VALIDATION PENDING`
+- K4.1 host validation status: `PASS`
+- K4.1 validation status: `PASS`
+
+## K4.2 Validation Results
+- K4.2 implementation status: `COMPLETE`
+- K4.2 architecture review: `PASS`
+- Codex sandbox validation evidence:
+  - `cargo fmt --all --check`: `PASS`
+  - `cargo check --workspace --all-targets`: `PASS`
+  - `cargo clippy --workspace --all-targets -- -D warnings`: `PASS`
+  - `cargo doc --workspace --no-deps`: `PASS`
+  - `cargo test --workspace --doc`: `PASS`
+  - `cargo test --workspace --all-targets`: `ENVIRONMENT LIMITATION`
+- Codex sandbox environment evidence:
+  - direct `cargo test --workspace --all-targets` fails with `linker 'cc' not found`
+- K4.2 host validation status: `PENDING`
+- K4.2 validation status: `IMPLEMENTED; HOST VALIDATION PENDING`
 
 ## Required Canonical Host Validation Commands
 - `cd /home/chela-x/chela-x-kernel`
@@ -222,3 +246,9 @@ This precedence applies only when the higher-authority validation was actually e
 - New K4.1 tests: `16`
 - Expected total: `102`
 - Sandbox compile baseline: `102` tests discovered in source
+
+## Expected K4.2 Test Baseline
+- Previous tests after K4.1 and K3 correction: `108`
+- New K4.2 tests: `35`
+- Expected total: `143`
+- Sandbox compile baseline: `143` tests discovered in source

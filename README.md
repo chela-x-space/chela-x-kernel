@@ -4,7 +4,7 @@
 Draft
 
 ## Version
-0.4.0
+0.5.0
 
 ## Owner
 Kernel Platform Team
@@ -40,7 +40,7 @@ AI Engineering OS -> CHELA-X CES -> CHELA-X Kernel -> CHELA-X Runtime -> CHELA-X
 - CHELA-X Library provides the read-only retrieval index used for traceability and verification.
 
 ## Current Status
-`K4.1 Agent Registry Foundation Implemented`
+`K4.2 Runtime Lifecycle Control Implemented`
 
 ## Constraints
 - Architecture is frozen.
@@ -57,11 +57,13 @@ AI Engineering OS -> CHELA-X CES -> CHELA-X Kernel -> CHELA-X Runtime -> CHELA-X
 - Codex sandbox linker isolation is not a project blocker.
 - K3 implementation is additive in `crates/kernel-domain/src/enforcement.rs`.
 - K3 implementation is complete.
-- K3 canonical host validation is pending because native unit-test linking still requires a host with `cc`.
+- K3 canonical host validation passed with `108 passed`, `0 failed`, `0 ignored`.
 - K4.1 implementation is additive in `crates/kernel-domain/src/runtime.rs`.
 - K4.1 implementation is complete.
-- K4.1 canonical host validation is pending because native unit-test linking still requires a host with `cc`.
-- K4.2 has not started.
+- K4.1 canonical host validation passed with `108 passed`, `0 failed`, `0 ignored`.
+- K4.2 implementation is additive in `crates/kernel-domain/src/runtime.rs`.
+- K4.2 implementation is complete in source and awaits canonical host validation because native unit-test linking still requires a host with `cc` in this environment.
+- K4.3 has not started.
 - Runtime execution is not implemented.
 - Domain API baseline is frozen for K2 consumers.
 - No business logic, persistence, networking, or workflow execution is introduced in K1.
@@ -78,7 +80,7 @@ AI Engineering OS -> CHELA-X CES -> CHELA-X Kernel -> CHELA-X Runtime -> CHELA-X
 - Decision record types
 - Authorization, agent, delegation, policy, and workflow reference types
 - Deterministic authorization enforcement inputs, traces, results, and decision construction helpers
-- Deterministic runtime registry, capability indexing, heartbeat, lease, presence, and runtime-health primitives
+- Deterministic runtime registry, capability indexing, heartbeat, freshness, lease, presence, runtime-health, runtime-snapshot, and supervisor primitives
 
 ## References
 - [AGENTS.md](./AGENTS.md)
