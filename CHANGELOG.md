@@ -28,6 +28,8 @@ Kernel Platform Team
 INTERNAL
 
 ## 0.4.0
+- Corrected K3 authorization enforcement so permit policies no longer authorize requests without a matching grant scope, and deny decision construction now preserves governing policy references for explicit and non-policy denials.
+- Added K3 regression coverage for explicit-deny evidence retention, non-policy denial decision construction, deterministic permission-scope rejection, and evidence-presence enforcement.
 - Added additive `kernel-domain::runtime` primitives for runtime identity, capability descriptors, lease records, heartbeat records, presence states, runtime health, immutable agent registrations, and deterministic in-memory agent registry indexing.
 - Preserved the frozen K1-K3 surface while adding non-breaking runtime identifiers and additive agent getters needed by the registry layer.
 - Added K4.1 CES-traceable tests for deterministic registration, duplicate detection, runtime and capability lookup, presence transitions, deregistration, lease validation, and heartbeat updates.

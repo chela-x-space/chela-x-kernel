@@ -160,6 +160,12 @@ This precedence applies only when the higher-authority validation was actually e
 ## K3 Validation Results
 - K3 implementation status: `COMPLETE`
 - K3 architecture review: `PASS`
+- Canonical host validation follow-up exposed two K3 enforcement defects while validating the post-K4.1 workspace:
+  - `authorization_constructs_deny_decision_ces_b0_026_6`
+  - `authorization_rejects_target_outside_permission_scope_ces_b0_026_3`
+- K3 correction status:
+  - deny-decision construction now accepts deterministic governing policy references for auditable non-policy denials
+  - policy permits no longer authorize requests without a matching scoped grant
 - Codex sandbox validation evidence:
   - `cargo fmt --all --check`: `PASS`
   - `cargo check --workspace --all-targets`: `PASS`
@@ -168,13 +174,14 @@ This precedence applies only when the higher-authority validation was actually e
   - `cargo test --workspace --doc`: `PASS`
   - `cargo test --workspace --all-targets`: `ENVIRONMENT LIMITATION`
 - Codex sandbox environment evidence:
-  - direct `cargo test --workspace --all-targets` fails with `linker 'cc' not found`
+- direct `cargo test --workspace --all-targets` fails with `linker 'cc' not found`
 - K3 host validation status: `PENDING`
 - K3 validation status: `PASS WITH HOST TEST VALIDATION PENDING`
 
 ## K4.1 Validation Results
 - K4.1 implementation status: `COMPLETE`
 - K4.1 architecture review: `PASS`
+- K4.1 canonical host validation remains blocked from final acceptance until the corrected K3 tests are rerun and the full workspace returns green.
 - Codex sandbox validation evidence:
   - `cargo fmt --all --check`: `PASS`
   - `cargo check --workspace --all-targets`: `PASS`

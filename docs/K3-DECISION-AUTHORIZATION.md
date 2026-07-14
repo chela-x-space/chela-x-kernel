@@ -111,6 +111,10 @@ Chapter 28 policy precedence and Chapter 22 authority requirements are consumed 
 
 All timestamps and stable identifiers are supplied by the caller. The evaluator does not create clocks or random identifiers internally.
 
+When the decisive denial is not itself a matched policy effect, K3 still requires a supplied governing policy reference and policy-backed evidence set from the evaluation context. Non-policy denials therefore remain auditable without manufacturing a false permit or explicit-deny match.
+
+Permit policies alone do not authorize access. A request still requires a matching grant or role-derived permission binding whose scope contains the target.
+
 ## Evaluation Trace
 Every evaluation returns an ordered trace with:
 - step
