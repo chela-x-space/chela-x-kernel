@@ -4,7 +4,7 @@
 Draft
 
 ## Version
-0.2.5
+0.3.0
 
 ## Owner
 Kernel Platform Team
@@ -40,7 +40,7 @@ AI Engineering OS -> CHELA-X CES -> CHELA-X Kernel -> CHELA-X Runtime -> CHELA-X
 - CHELA-X Library provides the read-only retrieval index used for traceability and verification.
 
 ## Current Status
-`K2 State And Lifecycle Complete And Host-Validated`
+`K3 Decision And Authorization Enforcement Implemented`
 
 ## Constraints
 - Architecture is frozen.
@@ -55,7 +55,9 @@ AI Engineering OS -> CHELA-X CES -> CHELA-X Kernel -> CHELA-X Runtime -> CHELA-X
 - K2 architecture review passed.
 - K2 canonical host validation passed.
 - Codex sandbox linker isolation is not a project blocker.
-- K3 has not started.
+- K3 implementation is additive in `crates/kernel-domain/src/enforcement.rs`.
+- K3 implementation is complete.
+- K3 canonical host validation is pending because native unit-test linking still requires a host with `cc`.
 - Runtime execution is not implemented.
 - Domain API baseline is frozen for K2 consumers.
 - No business logic, persistence, networking, or workflow execution is introduced in K1.
@@ -71,6 +73,7 @@ AI Engineering OS -> CHELA-X CES -> CHELA-X Kernel -> CHELA-X Runtime -> CHELA-X
 - Authorization request record types
 - Decision record types
 - Authorization, agent, delegation, policy, and workflow reference types
+- Deterministic authorization enforcement inputs, traces, results, and decision construction helpers
 
 ## References
 - [AGENTS.md](./AGENTS.md)
@@ -80,4 +83,5 @@ AI Engineering OS -> CHELA-X CES -> CHELA-X Kernel -> CHELA-X Runtime -> CHELA-X
 - [docs/TRACEABILITY.md](./docs/TRACEABILITY.md)
 - [docs/IMPLEMENTATION-PLAN.md](./docs/IMPLEMENTATION-PLAN.md)
 - [docs/K2-STATE-LIFECYCLE.md](./docs/K2-STATE-LIFECYCLE.md)
+- [docs/K3-DECISION-AUTHORIZATION.md](./docs/K3-DECISION-AUTHORIZATION.md)
 - [docs/VALIDATION.md](./docs/VALIDATION.md)

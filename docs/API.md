@@ -4,7 +4,7 @@
 Draft
 
 ## Version
-0.2.0
+0.3.0
 
 ## Owner
 Kernel Platform Team
@@ -28,7 +28,7 @@ Kernel Platform Team
 INTERNAL
 
 ## Purpose And Scope
-This document defines the frozen K1.1 public API baseline plus the additive K2 state API for `kernel-domain`. It covers only pure domain types, constructors, invariants, lifecycle validation, and CES traceability. Runtime behavior is out of scope.
+This document defines the frozen K1.1 public API baseline plus the additive K2 state API and additive K3 enforcement API for `kernel-domain`. It covers only pure domain types, constructors, invariants, lifecycle validation, deterministic authorization enforcement, and CES traceability. Runtime execution is out of scope.
 
 ## K1 API Stability Statement
 The K1.1 domain API is frozen for K2 consumption. Breaking changes require either a CES-backed defect correction or an approved ADR.
@@ -38,6 +38,7 @@ The K1.1 domain API is frozen for K2 consumption. Breaking changes require eithe
 - `authorization`
 - `decision`
 - `delegation`
+- `enforcement`
 - `errors`
 - `identifier`
 - `identity`
@@ -57,6 +58,7 @@ The K1.1 domain API is frozen for K2 consumption. Breaking changes require eithe
 - `decision`: decision type, owner, subject, policy-set, rationale, context, and `DecisionRecord`.
 - `agent`: agent definition, type, category, runtime, failure, and recovery references.
 - `delegation`: delegator, delegate, beneficiary, scope, right, task, condition, authority-source, depth, and `DelegationReference`.
+- `enforcement`: authorization evaluation context, grants, explicit denials, role-permission bindings, policy records, authority requirements, delegation bindings, deterministic trace results, and optional decision construction inputs.
 - `policy`: `PolicyEffect`, evaluation-order, and audit-evidence references.
 - `workflow`: retry, recovery, and audit-evidence references.
 - `state`: lifecycle guard structs, state snapshots, transition request records, transition outcome records, reason or authority or evidence references, deterministic sequence values, workflow failure codes, and lifecycle validation functions.
@@ -110,14 +112,14 @@ The K1.1 domain API is frozen for K2 consumption. Breaking changes require eithe
 - async runtime
 - workflow execution
 - policy evaluation
-- authorization evaluation
+- external policy language parsing
 - delegation resolution
 - audit storage
 - runtime execution
 
 ## Known Deferred Semantics
-- authorization evaluation execution
-- policy conflict resolution execution
+- delegation chain resolution beyond one supplied bound
+- unsupported or higher-order exception and waiver publication workflows
 - workflow retry or recovery execution
 - enterprise reactivation semantics beyond explicit CES definition
 - linker-dependent native test execution on this machine because `cc` is unavailable

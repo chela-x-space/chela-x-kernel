@@ -4,7 +4,7 @@
 Draft
 
 ## Version
-0.2.5
+0.3.0
 
 ## Owner
 Kernel Platform Team
@@ -26,6 +26,12 @@ Kernel Platform Team
 
 ## Classification
 INTERNAL
+
+## 0.3.0
+- Added additive `kernel-domain::enforcement` primitives for deterministic authorization evaluation, policy or grant evidence resolution, authority checks, separation-of-duties checks, delegation bounds, evaluation traces, and decision construction.
+- Preserved the frozen K1/K2 public surface while adding non-breaking getters and enforcement-specific input spec types.
+- Added K3 CES-traceable tests for identity, scope, permission, explicit deny, authority, separation of duties, delegation bounds, deterministic outcomes, and trace order.
+- Recorded K3 sandbox validation evidence: `cargo fmt`, `cargo check`, `cargo clippy`, `cargo doc`, and `cargo test --doc` passed; native `cargo test --all-targets` remains blocked in this environment because linker `cc` is unavailable.
 
 ## 0.2.5
 - Finalized K2 canonical host validation with `cargo fmt`, `cargo check`, `cargo test`, `cargo clippy`, `cargo doc`, `cargo test --doc`, and `git diff --check` all passing.

@@ -4,7 +4,7 @@
 Draft
 
 ## Version
-0.2.5
+0.3.0
 
 ## Owner
 Kernel Platform Team
@@ -40,7 +40,7 @@ This breakdown is a working implementation plan only. It does not create archite
 - `K1 Kernel Domain Model`: implemented in `crates/kernel-domain`.
 - `K1.1 Domain API Freeze and Validation Gate`: complete; validation is `PASS`, API freeze status is `FROZEN FOR K2 CONSUMPTION`, and readiness for K2 is `YES`.
 - `K2 Kernel State and Lifecycle`: complete; implementation and canonical host validation passed.
-- `K3 Decision and Authorization Enforcement`: implement deterministic decision and authorization enforcement constrained by Chapters 22 and 26.
+- `K3 Decision and Authorization Enforcement`: implemented in `crates/kernel-domain/src/enforcement.rs`; canonical host validation remains pending.
 - `K4 Agent and Delegation Runtime`: implement governed agent and delegation execution constrained by Chapters 27 and 29.
 - `K5 Workflow Execution`: implement downstream workflow execution constrained by Chapters 28 to 30.
 - `K6 Security, Audit and Recovery`: implement audit, failure, and recovery controls constrained by Chapters 24, 27, and 30.

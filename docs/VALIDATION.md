@@ -4,7 +4,7 @@
 Draft
 
 ## Version
-0.2.5
+0.3.0
 
 ## Owner
 Kernel Platform Team
@@ -13,7 +13,7 @@ Kernel Platform Team
 2026-07-14
 
 ## Applies To
-Validation commands and K1.1 or K2 verification for CHELA-X Kernel.
+Validation commands and K1.1, K2, or K3 verification for CHELA-X Kernel.
 
 ## Review Cycle
 Quarterly
@@ -157,6 +157,21 @@ This precedence applies only when the higher-authority validation was actually e
 - K2 validation status: `PASS`
 - Overall K2 status: `PASS`
 
+## K3 Validation Results
+- K3 implementation status: `COMPLETE`
+- K3 architecture review: `PASS`
+- Codex sandbox validation evidence:
+  - `cargo fmt --all --check`: `PASS`
+  - `cargo check --workspace --all-targets`: `PASS`
+  - `cargo clippy --workspace --all-targets -- -D warnings`: `PASS`
+  - `cargo doc --workspace --no-deps`: `PASS`
+  - `cargo test --workspace --doc`: `PASS`
+  - `cargo test --workspace --all-targets`: `ENVIRONMENT LIMITATION`
+- Codex sandbox environment evidence:
+  - direct `cargo test --workspace --all-targets` fails with `linker 'cc' not found`
+- K3 host validation status: `PENDING`
+- K3 validation status: `PASS WITH HOST TEST VALIDATION PENDING`
+
 ## Required Canonical Host Validation Commands
 - `cd /home/chela-x/chela-x-kernel`
 - `cargo fmt --all --check`
@@ -173,3 +188,9 @@ This precedence applies only when the higher-authority validation was actually e
 - New K2 tests: `20`
 - Expected total: `58`
 - Canonical host-verified K2 total: `58`
+
+## Expected K3 Test Baseline
+- Previous tests after K2: `58`
+- New K3 tests: `28`
+- Expected total: `86`
+- Sandbox compile baseline: `86` tests discovered in source

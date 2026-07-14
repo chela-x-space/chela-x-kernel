@@ -4,7 +4,7 @@
 Draft
 
 ## Version
-0.2.5
+0.3.0
 
 ## Owner
 Kernel Platform Team
@@ -29,6 +29,11 @@ INTERNAL
 
 | Requirement Source | Requirement ID | Requirement Summary | Target Kernel Component | Implementation Status | Test Status | Evidence |
 | --- | --- | --- | --- | --- | --- | --- |
+| CES | `CES-B0-022.3`, `CES-B0-022.7`, `CES-B0-022.11`, `CES-B0-022.13` | Decision authority, policy citation, audit linkage, and fail-closed outcomes remain explicit during authorization enforcement. | `kernel-domain::enforcement::{AuthorizationAuthorityRequirement, DecisionConstructionInput, AuthorizationEvaluationResult}` | IMPLEMENTED | Sandbox compile, clippy, and doc pass; native test execution blocked by missing linker | `crates/kernel-domain/src/enforcement.rs`; tests: authority and decision construction suite; commit range: K3 session work |
+| CES | `CES-B0-024.1`, `CES-B0-024.2`, `CES-B0-024.6` | High-risk actions remain deny-by-default, authorized, and reconstructable through audit evidence. | `kernel-domain::enforcement::{evaluate_authorization, AuthorizationEvaluationTrace}` | IMPLEMENTED | Sandbox compile, clippy, and doc pass; native test execution blocked by missing linker | `crates/kernel-domain/src/enforcement.rs`; tests: identity, scope, explicit deny, deterministic trace suite; commit range: K3 session work |
+| CES | `CES-B0-026.1` to `CES-B0-026.8` | Authorization evaluation order, explicit deny precedence, tenant isolation, and stable outcomes are enforced deterministically. | `kernel-domain::enforcement::*` | IMPLEMENTED | Sandbox compile, clippy, and doc pass; native test execution blocked by missing linker | `crates/kernel-domain/src/enforcement.rs`; tests: `authorization_*_ces_b0_026_*`; commit range: K3 session work |
+| CES | `CES-B0-028.7`, `CES-B0-028.8`, `CES-B0-028.9`, `CES-B0-028.12` | Policy effects, conflict resolution, explicit deny precedence, and downstream enforcement consume policy results without redefining authority. | `kernel-domain::enforcement::{AuthorizationPolicyRecord, PolicyMatchResult}` | IMPLEMENTED | Sandbox compile, clippy, and doc pass; native test execution blocked by missing linker | `crates/kernel-domain/src/enforcement.rs`; tests: `authorization_policy_*_ces_b0_028_*`; commit range: K3 session work |
+| CES | `CES-B0-029.4`, `CES-B0-029.5`, `CES-B0-029.6`, `CES-B0-029.9`, `CES-B0-029.11`, `CES-B0-029.13`, `CES-B0-029.15` | Delegation remains bounded by valid authority, scope, lifecycle, depth, and separation-of-duties evidence during authorization enforcement. | `kernel-domain::enforcement::{AuthorizationDelegationBinding, DelegationBoundResult}` | IMPLEMENTED | Sandbox compile, clippy, and doc pass; native test execution blocked by missing linker | `crates/kernel-domain/src/enforcement.rs`; tests: `authorization_*delegation*_ces_b0_029_*`; commit range: K3 session work |
 | CES | `CES-B0-011#11.2-principle` | Identity persists across model, runtime, provider, and infrastructure changes. | `kernel-domain::identity::{HumanIdentity, AgentIdentity}` | PARTIAL | Passed (host verified; 38/0/0 suite) | `crates/kernel-domain/src/identity.rs`; tests: `identity_creates_valid_human_identity_ces_b0_011_2`, `identity_id_is_immutable_through_public_api_ces_b0_027_2`; commits: `cb67e70..f9c0330`, host validation accepted 2026-07-14 |
 | CES | `CES-B0-012#12.2-lifecycle` | Digital employees follow one governed lifecycle. | `kernel-domain::lifecycle::HumanLifecycle` | IMPLEMENTED | Passed (host verified; 38/0/0 suite) | `crates/kernel-domain/src/lifecycle.rs`; tests: lifecycle suite in `crates/kernel-domain/src/lifecycle.rs`; commits: `cb67e70..5c94d2a`, host validation accepted 2026-07-14 |
 | CES | `CES-B0-015#15.2-principle` | Authority exists only when granted by the organization. | `kernel-domain::authorization::AuthorityLevel` | PARTIAL | Passed (host verified; 38/0/0 suite where applicable) | `crates/kernel-domain/src/authorization.rs`; commits: `5c94d2a..f9c0330`, host validation accepted 2026-07-14 |
