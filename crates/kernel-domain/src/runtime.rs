@@ -1129,18 +1129,6 @@ impl AgentRegistry {
         self.update_registration(agent_id, |registration| {
             ensure_validated_heartbeat(&heartbeat)?;
             let assessment = assess_heartbeat(now, Some(&heartbeat), freshness_policy)?;
-            if registration.presence_state().is_terminal()
-                || registration.agent().identity().lifecycle().is_terminal()
-            {
-                return Ok((
-                    registration.clone(),
-                    HeartbeatUpdateResult {
-                        outcome: HeartbeatRecordOutcome::HeartbeatRuntimeRetired,
-                        assessment,
-                        latest_heartbeat: registration.last_heartbeat().cloned(),
-                    },
-                ));
-            }
             if heartbeat.runtime_id() != registration.runtime().runtime_id() {
                 return Ok((
                     registration.clone(),
@@ -1161,23 +1149,23 @@ impl AgentRegistry {
                     },
                 ));
             }
-            if registration.presence_state() == PresenceState::Offline {
+            if registration.presence_state().is_terminal()
+                || registration.agent().identity().lifecycle().is_terminal()
+            {
                 return Ok((
                     registration.clone(),
                     HeartbeatUpdateResult {
-                        outcome: HeartbeatRecordOutcome::HeartbeatRejected,
+                        outcome: HeartbeatRecordOutcome::HeartbeatRuntimeRetired,
                         assessment,
                         latest_heartbeat: registration.last_heartbeat().cloned(),
                     },
                 ));
             }
-            if registration.lease().is_some()
-                && heartbeat.active_lease_id() != registration.lease().map(LeaseRecord::lease_id)
-            {
+            if registration.presence_state() == PresenceState::Offline {
                 return Ok((
                     registration.clone(),
                     HeartbeatUpdateResult {
-                        outcome: HeartbeatRecordOutcome::HeartbeatLeaseMismatch,
+                        outcome: HeartbeatRecordOutcome::HeartbeatRejected,
                         assessment,
                         latest_heartbeat: registration.last_heartbeat().cloned(),
                     },
@@ -1204,6 +1192,18 @@ impl AgentRegistry {
                         },
                     ));
                 }
+            }
+            if registration.lease().is_some()
+                && heartbeat.active_lease_id() != registration.lease().map(LeaseRecord::lease_id)
+            {
+                return Ok((
+                    registration.clone(),
+                    HeartbeatUpdateResult {
+                        outcome: HeartbeatRecordOutcome::HeartbeatLeaseMismatch,
+                        assessment,
+                        latest_heartbeat: registration.last_heartbeat().cloned(),
+                    },
+                ));
             }
             if assessment.freshness() == HeartbeatFreshness::Stale {
                 return Ok((
@@ -1241,19 +1241,34 @@ impl AgentRegistry {
     ) -> DomainResult<LeaseRenewalResult> {
         self.update_registration(agent_id, |registration| {
             ensure_validated_lease(request.renewed_lease())?;
-            if registration.presence_state().is_terminal()
-                || registration.agent().identity().lifecycle().is_terminal()
-            {
+            if request.renewed_lease().runtime_id() != registration.runtime().runtime_id() {
+                let assessment = evaluate_lease(
+                    request.requested_at(),
+                    registration.lease(),
+                    registration.runtime().runtime_id(),
+                    registration.agent_id(),
+                );
                 return Ok((
                     registration.clone(),
                     LeaseRenewalResult {
-                        outcome: LeaseRenewalOutcome::RuntimeAlreadyRetired,
-                        assessment: evaluate_lease(
-                            request.requested_at(),
-                            registration.lease(),
-                            registration.runtime().runtime_id(),
-                            registration.agent_id(),
-                        ),
+                        outcome: LeaseRenewalOutcome::LeaseRuntimeMismatch,
+                        assessment,
+                        active_lease: registration.lease().cloned(),
+                    },
+                ));
+            }
+            if request.renewed_lease().agent_id() != Some(registration.agent_id()) {
+                let assessment = evaluate_lease(
+                    request.requested_at(),
+                    registration.lease(),
+                    registration.runtime().runtime_id(),
+                    registration.agent_id(),
+                );
+                return Ok((
+                    registration.clone(),
+                    LeaseRenewalResult {
+                        outcome: LeaseRenewalOutcome::LeaseAgentMismatch,
+                        assessment,
                         active_lease: registration.lease().cloned(),
                     },
                 ));
@@ -1265,6 +1280,18 @@ impl AgentRegistry {
                 registration.runtime().runtime_id(),
                 registration.agent_id(),
             );
+            if registration.presence_state().is_terminal()
+                || registration.agent().identity().lifecycle().is_terminal()
+            {
+                return Ok((
+                    registration.clone(),
+                    LeaseRenewalResult {
+                        outcome: LeaseRenewalOutcome::RuntimeAlreadyRetired,
+                        assessment,
+                        active_lease: current,
+                    },
+                ));
+            }
             let Some(current_lease) = current else {
                 return Ok((
                     registration.clone(),
@@ -1275,6 +1302,16 @@ impl AgentRegistry {
                     },
                 ));
             };
+            if is_duplicate_lease_renewal(&current_lease, request) {
+                return Ok((
+                    registration.clone(),
+                    LeaseRenewalResult {
+                        outcome: LeaseRenewalOutcome::LeaseDuplicate,
+                        assessment,
+                        active_lease: Some(current_lease),
+                    },
+                ));
+            }
             if request.prior_lease_id() != current_lease.lease_id() {
                 return Ok((
                     registration.clone(),
@@ -1297,41 +1334,11 @@ impl AgentRegistry {
                     },
                 ));
             }
-            if request.renewed_lease().runtime_id() != registration.runtime().runtime_id() {
-                return Ok((
-                    registration.clone(),
-                    LeaseRenewalResult {
-                        outcome: LeaseRenewalOutcome::LeaseRuntimeMismatch,
-                        assessment,
-                        active_lease: Some(current_lease),
-                    },
-                ));
-            }
-            if request.renewed_lease().agent_id() != Some(registration.agent_id()) {
-                return Ok((
-                    registration.clone(),
-                    LeaseRenewalResult {
-                        outcome: LeaseRenewalOutcome::LeaseAgentMismatch,
-                        assessment,
-                        active_lease: Some(current_lease),
-                    },
-                ));
-            }
             if request.renewed_lease().supersedes_lease_id() != Some(current_lease.lease_id()) {
                 return Ok((
                     registration.clone(),
                     LeaseRenewalResult {
                         outcome: LeaseRenewalOutcome::LeaseSequenceRegression,
-                        assessment,
-                        active_lease: Some(current_lease),
-                    },
-                ));
-            }
-            if request.renewed_lease() == &current_lease {
-                return Ok((
-                    registration.clone(),
-                    LeaseRenewalResult {
-                        outcome: LeaseRenewalOutcome::LeaseDuplicate,
                         assessment,
                         active_lease: Some(current_lease),
                     },
@@ -1935,6 +1942,11 @@ fn ensure_validated_lease(lease: &LeaseRecord) -> DomainResult<()> {
         ));
     }
     Ok(())
+}
+
+fn is_duplicate_lease_renewal(current_lease: &LeaseRecord, request: &LeaseRenewalRequest) -> bool {
+    request.renewed_lease() == current_lease
+        && current_lease.supersedes_lease_id() == Some(request.prior_lease_id())
 }
 
 fn validate_lease_window(
@@ -2821,6 +2833,68 @@ mod tests {
     }
 
     #[test]
+    fn runtime_retired_heartbeat_rejection_precedes_duplicate_and_preserves_registry_ces_b0_027_21()
+    {
+        let mut registry = AgentRegistry::new();
+        let retired_heartbeat = governed_heartbeat(
+            "CX-HB-000001",
+            "runtime.primary",
+            "CX-AGT-000001",
+            "2026-07-15T00:10:00Z",
+            "2026-07-15T00:20:00Z",
+            Some("CX-LEASE-000001"),
+            PresenceState::Retired,
+            RuntimeHealth::Critical,
+        );
+        let registration = registration(
+            "CX-AGT-000001",
+            "CX-CAP-000001",
+            "runtime.primary",
+            PresenceState::Retired,
+            AgentLifecycle::Retired,
+            Some(governed_lease(
+                "CX-LEASE-000001",
+                "runtime.primary",
+                "CX-AGT-000001",
+                "2026-07-15T00:00:00Z",
+                "2026-07-15T01:00:00Z",
+                None,
+            )),
+            Some(retired_heartbeat.clone()),
+        );
+        let agent_id = registration.agent_id().clone();
+        let before = registration.clone();
+        registry.register(registration).expect("register");
+
+        let left = registry
+            .record_heartbeat_validated(
+                &agent_id,
+                retired_heartbeat.clone(),
+                &TimeReference::new("2026-07-15T00:10:00Z").expect("now"),
+                &heartbeat_policy(),
+            )
+            .expect("left");
+        let right = registry
+            .record_heartbeat_validated(
+                &agent_id,
+                retired_heartbeat,
+                &TimeReference::new("2026-07-15T00:10:00Z").expect("now"),
+                &heartbeat_policy(),
+            )
+            .expect("right");
+
+        assert_eq!(
+            left.outcome(),
+            HeartbeatRecordOutcome::HeartbeatRuntimeRetired
+        );
+        assert_eq!(
+            right.outcome(),
+            HeartbeatRecordOutcome::HeartbeatRuntimeRetired
+        );
+        assert_eq!(registry.lookup(&agent_id).expect("lookup"), &before);
+    }
+
+    #[test]
     fn runtime_heartbeat_does_not_change_immutable_identity_ces_b0_027_2() {
         let mut registry = AgentRegistry::new();
         let registration = governed_registration("CX-AGT-000001", "runtime.primary");
@@ -3099,6 +3173,47 @@ mod tests {
             )
             .expect("result");
         assert_eq!(result.outcome(), LeaseRenewalOutcome::RuntimeAlreadyRetired);
+    }
+
+    #[test]
+    fn runtime_retired_lease_rejection_precedes_duplicate_and_preserves_registry_ces_b0_027_22() {
+        let mut registry = AgentRegistry::new();
+        let current_lease = governed_lease(
+            "CX-LEASE-000002",
+            "runtime.primary",
+            "CX-AGT-000001",
+            "2026-07-15T00:30:00Z",
+            "2026-07-15T02:00:00Z",
+            Some("CX-LEASE-000001"),
+        );
+        let registration = registration(
+            "CX-AGT-000001",
+            "CX-CAP-000001",
+            "runtime.primary",
+            PresenceState::Retired,
+            AgentLifecycle::Retired,
+            Some(current_lease.clone()),
+            None,
+        );
+        let agent_id = registration.agent_id().clone();
+        let before = registration.clone();
+        registry.register(registration).expect("register");
+
+        let request = LeaseRenewalRequest::new(
+            LeaseId::new("CX-LEASE-000001").expect("lease"),
+            current_lease,
+            TimeReference::new("2026-07-15T00:30:00Z").expect("time"),
+        );
+        let left = registry
+            .renew_lease_validated(&agent_id, &request, &lease_policy())
+            .expect("left");
+        let right = registry
+            .renew_lease_validated(&agent_id, &request, &lease_policy())
+            .expect("right");
+
+        assert_eq!(left.outcome(), LeaseRenewalOutcome::RuntimeAlreadyRetired);
+        assert_eq!(right.outcome(), LeaseRenewalOutcome::RuntimeAlreadyRetired);
+        assert_eq!(registry.lookup(&agent_id).expect("lookup"), &before);
     }
 
     #[test]
@@ -3552,6 +3667,52 @@ mod tests {
             .expect("right");
         assert_eq!(left.outcome(), LeaseRenewalOutcome::LeaseRenewed);
         assert_eq!(right.outcome(), LeaseRenewalOutcome::LeaseDuplicate);
+    }
+
+    #[test]
+    fn runtime_lower_non_identical_lease_sequence_is_regression_ces_b0_027_21() {
+        let mut registry = AgentRegistry::new();
+        let registration = governed_registration("CX-AGT-000001", "runtime.primary");
+        let agent_id = registration.agent_id().clone();
+        registry.register(registration).expect("register");
+        let accepted = LeaseRenewalRequest::new(
+            LeaseId::new("CX-LEASE-000001").expect("lease"),
+            governed_lease(
+                "CX-LEASE-000002",
+                "runtime.primary",
+                "CX-AGT-000001",
+                "2026-07-15T00:30:00Z",
+                "2026-07-15T02:00:00Z",
+                Some("CX-LEASE-000001"),
+            ),
+            TimeReference::new("2026-07-15T00:30:00Z").expect("time"),
+        );
+        let _ = registry
+            .renew_lease_validated(&agent_id, &accepted, &lease_policy())
+            .expect("accepted");
+
+        let before = registry.lookup(&agent_id).expect("lookup").clone();
+        let regression = LeaseRenewalRequest::new(
+            LeaseId::new("CX-LEASE-000001").expect("lease"),
+            governed_lease(
+                "CX-LEASE-000003",
+                "runtime.primary",
+                "CX-AGT-000001",
+                "2026-07-15T00:45:00Z",
+                "2026-07-15T02:30:00Z",
+                Some("CX-LEASE-000001"),
+            ),
+            TimeReference::new("2026-07-15T00:45:00Z").expect("time"),
+        );
+
+        let result = registry
+            .renew_lease_validated(&agent_id, &regression, &lease_policy())
+            .expect("result");
+        assert_eq!(
+            result.outcome(),
+            LeaseRenewalOutcome::LeaseSequenceRegression
+        );
+        assert_eq!(registry.lookup(&agent_id).expect("lookup"), &before);
     }
 
     #[test]
