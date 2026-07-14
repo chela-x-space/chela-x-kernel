@@ -32,6 +32,8 @@ INTERNAL
 - Added additive K4.2 runtime lifecycle control primitives for validated heartbeat ingestion, heartbeat freshness classification, lease assessment and renewal, deterministic runtime health assessment, immutable runtime state snapshots, recovery eligibility, and pure supervisor outcomes.
 - Added validated registry operations that apply heartbeat, lease, presence, and supervisor updates atomically without introducing runtime execution, scheduling, or background workers.
 - Added K4.2 CES-traceable tests for heartbeat, freshness, lease, health, supervisor, and registry consistency invariants.
+- Corrected K4.2 validation precedence so retired runtimes reject heartbeat and lease renewal before later freshness, duplicate, sequence, or renewal-window checks can mask the terminal outcome.
+- Corrected lease-renewal duplicate classification so an already-applied renewal returns `LeaseDuplicate`, while a different lower-sequence operation still returns `LeaseSequenceRegression`.
 - Recorded K4.2 sandbox validation evidence: `cargo fmt`, `cargo check`, `cargo clippy`, `cargo doc`, and `cargo test --doc` pass; native `cargo test --all-targets` remains blocked in this environment because linker `cc` is unavailable.
 
 ## 0.4.0

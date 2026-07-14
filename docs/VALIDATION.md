@@ -206,6 +206,8 @@ This precedence applies only when the higher-authority validation was actually e
 ## K4.2 Validation Results
 - K4.2 implementation status: `COMPLETE`
 - K4.2 architecture review: `PASS`
+- Canonical host validation exposed 3 K4.2 defects in retired heartbeat precedence, retired lease-renewal precedence, and duplicate lease classification.
+- Those K4.2 defects were corrected without architecture change. Canonical host rerun is still required before K4.2 can be promoted from `IMPLEMENTED` to `PASS`.
 - Codex sandbox validation evidence:
   - `cargo fmt --all --check`: `PASS`
   - `cargo check --workspace --all-targets`: `PASS`
