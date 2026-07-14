@@ -4,13 +4,13 @@
 Draft
 
 ## Version
-0.3.0
+0.4.0
 
 ## Owner
 Kernel Platform Team
 
 ## Last Updated
-2026-07-14
+2026-07-15
 
 ## Applies To
 K1 public API compatibility governance for `kernel-domain`.
@@ -31,7 +31,7 @@ INTERNAL
 `K1 Domain API Baseline`
 
 ## Status Statement
-`FROZEN FOR K2/K3 CONSUMPTION`
+`FROZEN FOR K2/K3/K4.1 CONSUMPTION`
 
 ## Validation State
 - K1.1 validation status: `PASS`
@@ -56,6 +56,7 @@ INTERNAL
 - `ownership`
 - `policy`
 - `request`
+- `runtime`
 - `state`
 - `workflow`
 
@@ -65,8 +66,9 @@ INTERNAL
 - identity and lifecycle enums or references
 - authorization, decision, agent, delegation, policy, and workflow pure reference types
 - deterministic enforcement input, output, trace, and spec types
+- deterministic runtime registry, capability, heartbeat, lease, and presence spec types
 - state snapshots, transition request or outcome records, lifecycle guard structs, workflow failure codes, and lifecycle validation functions
-- spec structs for `AgentDefinition`, `DecisionRecord`, `DelegationReference`, `AuthorizationGrantRecord`, and `AuthorizationPolicyRecord`
+- spec structs for `AgentDefinition`, `DecisionRecord`, `DelegationReference`, `AuthorizationGrantRecord`, `AuthorizationPolicyRecord`, `CapabilityDescriptor`, `RuntimeEntity`, `LeaseRecord`, `HeartbeatRecord`, and `AgentRegistration`
 
 ## Intentionally Private Types
 - internal validation helpers inside `identifier.rs`

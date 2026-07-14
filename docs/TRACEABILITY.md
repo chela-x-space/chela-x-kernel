@@ -4,13 +4,13 @@
 Draft
 
 ## Version
-0.3.0
+0.4.0
 
 ## Owner
 Kernel Platform Team
 
 ## Last Updated
-2026-07-14
+2026-07-15
 
 ## Applies To
 Requirement traceability from CES and Program sources into CHELA-X Kernel.
@@ -29,6 +29,9 @@ INTERNAL
 
 | Requirement Source | Requirement ID | Requirement Summary | Target Kernel Component | Implementation Status | Test Status | Evidence |
 | --- | --- | --- | --- | --- | --- | --- |
+| CES | `CES-B0-027.1`, `CES-B0-027.2`, `CES-B0-027.8`, `CES-B0-027.15` | Agent identity, registration, runtime binding, and immutable registration facts remain explicit and additive. | `kernel-domain::runtime::{RuntimeEntity, AgentRegistration, AgentRegistry}` | IMPLEMENTED | Sandbox compile, clippy, and doc pass; native test execution blocked by missing linker | `crates/kernel-domain/src/runtime.rs`; tests: registration, duplicate detection, and deterministic lookup suite; commit range: K4.1 session work |
+| CES | `CES-B0-027.5`, `CES-B0-027.9` | Capability descriptors and discovery-style lookups remain deterministic, scoped, and indexable. | `kernel-domain::runtime::{CapabilityDescriptor, AgentRegistry}` | IMPLEMENTED | Sandbox compile, clippy, and doc pass; native test execution blocked by missing linker | `crates/kernel-domain/src/runtime.rs`; tests: capability descriptor validation and capability lookup suite; commit range: K4.1 session work |
+| CES | `CES-B0-027.6`, `CES-B0-027.7`, `CES-B0-027.10`, `CES-B0-027.21`, `CES-B0-027.22` | Presence, runtime health, lease validity, heartbeat freshness, and runtime validation remain deterministic and auditable. | `kernel-domain::runtime::{PresenceState, RuntimeHealth, LeaseRecord, HeartbeatRecord, AgentRegistry}` | IMPLEMENTED | Sandbox compile, clippy, and doc pass; native test execution blocked by missing linker | `crates/kernel-domain/src/runtime.rs`; tests: lifecycle, lease validation, heartbeat freshness, and deregistration suite; commit range: K4.1 session work |
 | CES | `CES-B0-022.3`, `CES-B0-022.7`, `CES-B0-022.11`, `CES-B0-022.13` | Decision authority, policy citation, audit linkage, and fail-closed outcomes remain explicit during authorization enforcement. | `kernel-domain::enforcement::{AuthorizationAuthorityRequirement, DecisionConstructionInput, AuthorizationEvaluationResult}` | IMPLEMENTED | Sandbox compile, clippy, and doc pass; native test execution blocked by missing linker | `crates/kernel-domain/src/enforcement.rs`; tests: authority and decision construction suite; commit range: K3 session work |
 | CES | `CES-B0-024.1`, `CES-B0-024.2`, `CES-B0-024.6` | High-risk actions remain deny-by-default, authorized, and reconstructable through audit evidence. | `kernel-domain::enforcement::{evaluate_authorization, AuthorizationEvaluationTrace}` | IMPLEMENTED | Sandbox compile, clippy, and doc pass; native test execution blocked by missing linker | `crates/kernel-domain/src/enforcement.rs`; tests: identity, scope, explicit deny, deterministic trace suite; commit range: K3 session work |
 | CES | `CES-B0-026.1` to `CES-B0-026.8` | Authorization evaluation order, explicit deny precedence, tenant isolation, and stable outcomes are enforced deterministically. | `kernel-domain::enforcement::*` | IMPLEMENTED | Sandbox compile, clippy, and doc pass; native test execution blocked by missing linker | `crates/kernel-domain/src/enforcement.rs`; tests: `authorization_*_ces_b0_026_*`; commit range: K3 session work |

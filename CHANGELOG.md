@@ -4,13 +4,13 @@
 Draft
 
 ## Version
-0.3.0
+0.4.0
 
 ## Owner
 Kernel Platform Team
 
 ## Last Updated
-2026-07-14
+2026-07-15
 
 ## Applies To
 CHELA-X Kernel repository history.
@@ -26,6 +26,12 @@ Kernel Platform Team
 
 ## Classification
 INTERNAL
+
+## 0.4.0
+- Added additive `kernel-domain::runtime` primitives for runtime identity, capability descriptors, lease records, heartbeat records, presence states, runtime health, immutable agent registrations, and deterministic in-memory agent registry indexing.
+- Preserved the frozen K1-K3 surface while adding non-breaking runtime identifiers and additive agent getters needed by the registry layer.
+- Added K4.1 CES-traceable tests for deterministic registration, duplicate detection, runtime and capability lookup, presence transitions, deregistration, lease validation, and heartbeat updates.
+- Recorded K4.1 sandbox validation evidence: `cargo fmt`, `cargo check`, `cargo clippy`, `cargo doc`, and `cargo test --doc` pass; native `cargo test --all-targets` remains blocked in this environment because linker `cc` is unavailable.
 
 ## 0.3.0
 - Added additive `kernel-domain::enforcement` primitives for deterministic authorization evaluation, policy or grant evidence resolution, authority checks, separation-of-duties checks, delegation bounds, evaluation traces, and decision construction.

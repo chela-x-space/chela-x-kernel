@@ -4,13 +4,13 @@
 Draft
 
 ## Version
-0.3.0
+0.4.0
 
 ## Owner
 Kernel Platform Team
 
 ## Last Updated
-2026-07-14
+2026-07-15
 
 ## Applies To
 K1 public API review and consumption guidance for `kernel-domain`.
@@ -28,7 +28,7 @@ Kernel Platform Team
 INTERNAL
 
 ## Purpose And Scope
-This document defines the frozen K1.1 public API baseline plus the additive K2 state API and additive K3 enforcement API for `kernel-domain`. It covers only pure domain types, constructors, invariants, lifecycle validation, deterministic authorization enforcement, and CES traceability. Runtime execution is out of scope.
+This document defines the frozen K1.1 public API baseline plus the additive K2 state API, additive K3 enforcement API, and additive K4.1 runtime registry API for `kernel-domain`. It covers only pure domain types, constructors, invariants, lifecycle validation, deterministic authorization enforcement, deterministic runtime registration, and CES traceability. Runtime execution is out of scope.
 
 ## K1 API Stability Statement
 The K1.1 domain API is frozen for K2 consumption. Breaking changes require either a CES-backed defect correction or an approved ADR.
@@ -46,6 +46,7 @@ The K1.1 domain API is frozen for K2 consumption. Breaking changes require eithe
 - `ownership`
 - `policy`
 - `request`
+- `runtime`
 - `state`
 - `workflow`
 
@@ -59,6 +60,7 @@ The K1.1 domain API is frozen for K2 consumption. Breaking changes require eithe
 - `agent`: agent definition, type, category, runtime, failure, and recovery references.
 - `delegation`: delegator, delegate, beneficiary, scope, right, task, condition, authority-source, depth, and `DelegationReference`.
 - `enforcement`: authorization evaluation context, grants, explicit denials, role-permission bindings, policy records, authority requirements, delegation bindings, deterministic trace results, and optional decision construction inputs.
+- `runtime`: runtime identifiers, runtime entities, immutable agent registrations, capability descriptors, lease records, heartbeat records, presence states, runtime health, and deterministic registry lookup or update primitives.
 - `policy`: `PolicyEffect`, evaluation-order, and audit-evidence references.
 - `workflow`: retry, recovery, and audit-evidence references.
 - `state`: lifecycle guard structs, state snapshots, transition request records, transition outcome records, reason or authority or evidence references, deterministic sequence values, workflow failure codes, and lifecycle validation functions.
@@ -119,6 +121,9 @@ The K1.1 domain API is frozen for K2 consumption. Breaking changes require eithe
 
 ## Known Deferred Semantics
 - delegation chain resolution beyond one supplied bound
+- distributed runtime coordination
+- remote heartbeat transport
+- persistent registry storage
 - unsupported or higher-order exception and waiver publication workflows
 - workflow retry or recovery execution
 - enterprise reactivation semantics beyond explicit CES definition
