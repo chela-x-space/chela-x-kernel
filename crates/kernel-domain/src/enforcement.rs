@@ -452,6 +452,7 @@ pub fn evaluate_authorization(
         AuthorizationDecisionOutcome,
         AuthorizationRejectionReason,
         PolicyId,
+        Vec<PolicyId>,
         Vec<MatchedPolicyEvidenceReference>,
     )>;
     push_step(
@@ -467,7 +468,8 @@ pub fn evaluate_authorization(
             AuthorizationDecisionOutcome::DenyValidation,
             reason,
             fallback_policy_id(input)?,
-            vec![input.context.authority_requirement.evidence.clone()],
+            fallback_policy_ids(input)?,
+            vec![fallback_policy_evidence(input)?],
         ));
     }
 
@@ -497,7 +499,8 @@ pub fn evaluate_authorization(
                 AuthorizationDecisionOutcome::DenyScope,
                 reason,
                 fallback_policy_id(input)?,
-                vec![input.context.authority_requirement.evidence.clone()],
+                fallback_policy_ids(input)?,
+                vec![fallback_policy_evidence(input)?],
             ));
         }
     } else {
@@ -535,6 +538,7 @@ pub fn evaluate_authorization(
                 AuthorizationDecisionOutcome::DenyExplicit,
                 AuthorizationRejectionReason::ExplicitDenialMatched,
                 deny.policy_id.clone(),
+                vec![deny.policy_id.clone()],
                 vec![deny.evidence.clone()],
             ));
         }
@@ -651,12 +655,18 @@ pub fn evaluate_authorization(
             decisive = Some((
                 map_rejection_to_outcome(&reason),
                 reason,
-                permission_match
-                    .matched_policies
-                    .first()
-                    .cloned()
-                    .or_else(|| policy_match.policy_id.clone())
-                    .unwrap_or_else(|| fallback_policy_id(input).expect("fallback policy id")),
+                decisive_policy_id(
+                    &permission_match.matched_policies,
+                    policy_match.policy_id.as_ref(),
+                    input,
+                )
+                .expect("decisive policy id"),
+                decision_policy_ids(
+                    &permission_match.matched_policies,
+                    policy_match.policy_id.as_ref(),
+                    input,
+                )
+                .expect("decision policy ids"),
                 permission_step_evidence.clone(),
             ));
         }
@@ -684,33 +694,45 @@ pub fn evaluate_authorization(
             decisive = Some((
                 AuthorizationDecisionOutcome::DenySeparationOfDuties,
                 reason,
-                permission_match
-                    .matched_policies
-                    .first()
-                    .cloned()
-                    .or_else(|| policy_match.policy_id.clone())
-                    .unwrap_or_else(|| fallback_policy_id(input).expect("fallback policy id")),
+                decisive_policy_id(
+                    &permission_match.matched_policies,
+                    policy_match.policy_id.as_ref(),
+                    input,
+                )
+                .expect("decisive policy id"),
+                decision_policy_ids(
+                    &permission_match.matched_policies,
+                    policy_match.policy_id.as_ref(),
+                    input,
+                )
+                .expect("decision policy ids"),
                 permission_match.matched_evidence.clone(),
             ));
         }
     }
 
-    let (outcome, rejection_reason, decisive_policy_id, evidence) = if let Some(decisive) = decisive
-    {
-        decisive
-    } else {
-        (
-            AuthorizationDecisionOutcome::Allow,
-            AuthorizationRejectionReason::DenyByDefault,
-            permission_match
-                .matched_policies
-                .first()
-                .cloned()
-                .or_else(|| policy_match.policy_id.clone())
-                .unwrap_or_else(|| fallback_policy_id(input).expect("fallback policy id")),
-            permission_match.matched_evidence.clone(),
-        )
-    };
+    let (outcome, rejection_reason, decisive_policy_id, decision_policy_ids, evidence) =
+        if let Some(decisive) = decisive {
+            decisive
+        } else {
+            (
+                AuthorizationDecisionOutcome::Allow,
+                AuthorizationRejectionReason::DenyByDefault,
+                decisive_policy_id(
+                    &permission_match.matched_policies,
+                    policy_match.policy_id.as_ref(),
+                    input,
+                )
+                .expect("decisive policy id"),
+                decision_policy_ids(
+                    &permission_match.matched_policies,
+                    policy_match.policy_id.as_ref(),
+                    input,
+                )
+                .expect("decision policy ids"),
+                permission_match.matched_evidence.clone(),
+            )
+        };
     let rejection_reason = if matches!(outcome, AuthorizationDecisionOutcome::Allow) {
         None
     } else {
@@ -752,7 +774,7 @@ pub fn evaluate_authorization(
                 construction,
                 input.request.request_id(),
                 input.request.target().scope(),
-                &permission_match.matched_policies,
+                &decision_policy_ids,
                 outcome,
                 input.decision_ids.decided_at.as_str(),
             )
@@ -1143,6 +1165,20 @@ fn resolve_permission_match(
             ),
         };
     }
+    if matched_grants.is_empty() {
+        return PermissionMatchResult {
+            matched: false,
+            matched_policies,
+            matched_evidence,
+            rejection_reason: Some(
+                if requested_permission.effect_intent().as_str() == "Permit" {
+                    AuthorizationRejectionReason::PermissionMismatch
+                } else {
+                    AuthorizationRejectionReason::InvalidPermission
+                },
+            ),
+        };
+    }
     PermissionMatchResult {
         matched: true,
         matched_policies,
@@ -1176,7 +1212,7 @@ fn build_decision_record(
 ) -> DomainResult<DecisionRecord> {
     let policy_ids = if matched_policy_ids.is_empty() {
         return Err(DomainError::MissingAuthorizationEvidence(
-            "decision construction requires at least one matched policy id",
+            "decision construction requires at least one governing policy id",
         ));
     } else {
         matched_policy_ids.to_vec()
@@ -1360,6 +1396,76 @@ fn fallback_policy_id(input: &AuthorizationEvaluationInput) -> DomainResult<Poli
         ))
 }
 
+fn fallback_policy_evidence(
+    input: &AuthorizationEvaluationInput,
+) -> DomainResult<MatchedPolicyEvidenceReference> {
+    input
+        .context
+        .policies
+        .first()
+        .map(|policy| policy.evidence.clone())
+        .or_else(|| {
+            input
+                .context
+                .direct_grants
+                .first()
+                .map(|grant| grant.evidence.clone())
+        })
+        .or_else(|| {
+            input
+                .context
+                .inherited_grants
+                .first()
+                .map(|grant| grant.evidence.clone())
+        })
+        .or_else(|| {
+            input
+                .context
+                .explicit_denials
+                .first()
+                .map(|deny| deny.evidence.clone())
+        })
+        .ok_or(DomainError::MissingAuthorizationEvidence(
+            "authorization evaluation requires at least one policy-backed evidence reference",
+        ))
+}
+
+fn fallback_policy_ids(input: &AuthorizationEvaluationInput) -> DomainResult<Vec<PolicyId>> {
+    Ok(vec![fallback_policy_id(input)?])
+}
+
+fn decisive_policy_id(
+    matched_policy_ids: &[PolicyId],
+    policy_id: Option<&PolicyId>,
+    input: &AuthorizationEvaluationInput,
+) -> DomainResult<PolicyId> {
+    matched_policy_ids
+        .first()
+        .cloned()
+        .or_else(|| policy_id.cloned())
+        .or_else(|| fallback_policy_id(input).ok())
+        .ok_or(DomainError::MissingAuthorizationEvidence(
+            "authorization evaluation requires at least one policy-backed rule reference",
+        ))
+}
+
+fn decision_policy_ids(
+    matched_policy_ids: &[PolicyId],
+    policy_id: Option<&PolicyId>,
+    input: &AuthorizationEvaluationInput,
+) -> DomainResult<Vec<PolicyId>> {
+    let mut policy_ids = matched_policy_ids.to_vec();
+    if let Some(policy_id) = policy_id {
+        policy_ids.push(policy_id.clone());
+    }
+    if policy_ids.is_empty() {
+        policy_ids.push(fallback_policy_id(input)?);
+    }
+    let mut seen = BTreeSet::new();
+    policy_ids.retain(|policy_id| seen.insert(policy_id.as_str().to_owned()));
+    Ok(policy_ids)
+}
+
 fn dedupe_evidence(
     evidence: Vec<MatchedPolicyEvidenceReference>,
 ) -> Vec<MatchedPolicyEvidenceReference> {
@@ -1412,11 +1518,11 @@ mod tests {
     use crate::agent::AgentReference;
     use crate::authorization::{
         ActionVerb, AuthorityLevel, AuthorizationDecisionOutcome,
-        AuthorizationEvaluationOrderVersion, AuthorizationPrincipalReference,
-        AuthorizationPrincipalType, AuthorizationSubject, AuthorizationTarget,
-        CredentialStatusReference, MatchedPolicyEvidenceReference, PermissionEffectIntent,
-        PermissionReference, PrincipalLifecycleStateReference, ResourceType, RoleReference,
-        ScopeLevel, ScopeReference,
+        AuthorizationEvaluationOrderVersion, AuthorizationEvaluationStep,
+        AuthorizationPrincipalReference, AuthorizationPrincipalType, AuthorizationSubject,
+        AuthorizationTarget, CredentialStatusReference, MatchedPolicyEvidenceReference,
+        PermissionEffectIntent, PermissionReference, PrincipalLifecycleStateReference,
+        ResourceType, RoleReference, ScopeLevel, ScopeReference,
     };
     use crate::decision::{
         DecisionContextReference, DecisionOwnerReference, DecisionRationaleReference, DecisionType,
@@ -1427,6 +1533,7 @@ mod tests {
         DelegationScopeKind, DelegationVersion, DelegatorReference, PolicyResultReference,
         SeparationOfDutiesConflict,
     };
+    use crate::errors::DomainError;
     use crate::identifier::{
         AgentId, AuditEvidenceId, AuthorizationDecisionId, AuthorizationRequestId,
         DecisionAuthorityId, DecisionId, DelegationId, EnglishNamespace, EnterpriseId, HumanId,
@@ -1922,9 +2029,25 @@ mod tests {
             decision_construction: None,
         })
         .expect("evaluation");
+        assert_eq!(result.outcome, AuthorizationDecisionOutcome::Deny);
         assert_eq!(
             result.rejection_reason,
             Some(AuthorizationRejectionReason::PermissionMismatch)
+        );
+        assert!(result.scope_validation.passed);
+        assert!(!result.permission_match.matched);
+        assert_eq!(
+            result.permission_match.rejection_reason,
+            Some(AuthorizationRejectionReason::PermissionMismatch)
+        );
+        assert_eq!(
+            result
+                .trace
+                .steps
+                .iter()
+                .find(|step| step.decisive)
+                .map(|step| step.step),
+            Some(AuthorizationEvaluationStep::ResolveRequestedPermissionMatch)
         );
     }
 
@@ -2438,6 +2561,177 @@ mod tests {
             result.decision.outcome(),
             AuthorizationDecisionOutcome::DenyExplicit
         );
+        assert_eq!(
+            result.decision_record.expect("decision record").status(),
+            crate::decision::DecisionStatus::Rejected
+        );
+    }
+
+    #[test]
+    fn authorization_policy_deny_retains_matched_policy_evidence_ces_b0_028_7() {
+        let mut context = base_context();
+        context.direct_grants.push(direct_permission_grant());
+        context
+            .policies
+            .push(policy_record(PolicyEffect::Deny, 9, "EVID-POL-DENY-001"));
+        let result = evaluate_authorization(&AuthorizationEvaluationInput {
+            request: request_with(
+                AuthorizationPrincipalType::Employee,
+                "Active",
+                permission("CX-PERM-000001", "approve", "workflow"),
+                target("CX-PROJ-000001"),
+            ),
+            context,
+            decision_ids: decision_ids(),
+            decision_construction: Some(decision_construction()),
+        })
+        .expect("evaluation");
+        assert_eq!(result.outcome, AuthorizationDecisionOutcome::Deny);
+        assert_eq!(
+            result.decision.matched_policy_evidence().as_str(),
+            "EVID-POL-DENY-001"
+        );
+        assert!(result
+            .audit_evidence
+            .matched_rules()
+            .iter()
+            .any(|evidence| evidence.as_str() == "EVID-POL-DENY-001"));
+    }
+
+    #[test]
+    fn authorization_constructs_non_policy_deny_with_governing_policy_reference_ces_b0_026_8() {
+        let mut context = base_context();
+        context.direct_grants.push(direct_permission_grant());
+        context
+            .policies
+            .push(policy_record(PolicyEffect::Permit, 1, "EVID-POL-001"));
+        context.authority_requirement = AuthorizationAuthorityRequirement::new(
+            DecisionAuthorityId::new("CX-DECAUTH-000001").expect("authority"),
+            AuthorityLevel::Executive,
+            AuthorityLevel::Manager,
+            MatchedPolicyEvidenceReference::new("EVID-AUTH-001").expect("evidence"),
+        );
+        let result = evaluate_authorization(&AuthorizationEvaluationInput {
+            request: request_with(
+                AuthorizationPrincipalType::Employee,
+                "Active",
+                permission("CX-PERM-000001", "approve", "workflow"),
+                target("CX-PROJ-000001"),
+            ),
+            context,
+            decision_ids: decision_ids(),
+            decision_construction: Some(decision_construction()),
+        })
+        .expect("evaluation");
+        assert_eq!(result.outcome, AuthorizationDecisionOutcome::Deny);
+        assert_eq!(
+            result.rejection_reason,
+            Some(AuthorizationRejectionReason::AuthorityInsufficient)
+        );
+        assert_eq!(result.decision.policy_id().as_str(), "CX-POL-000001");
+        let record = result.decision_record.expect("decision record");
+        assert_eq!(record.status(), crate::decision::DecisionStatus::Rejected);
+    }
+
+    #[test]
+    fn authorization_target_outside_permission_scope_is_deterministic_ces_b0_026_5() {
+        let mut context = base_context();
+        context.direct_grants.push(
+            AuthorizationGrantRecord::new(AuthorizationGrantRecordSpec {
+                policy_id: PolicyId::new("CX-POL-000001").expect("policy"),
+                principal_id: principal_id(),
+                scope: project_scope("CX-SCP-000301", "CX-PROJ-000002"),
+                role: None,
+                permission: Some(permission("CX-PERM-000001", "approve", "workflow")),
+                inheritable: false,
+                active: true,
+                evidence: MatchedPolicyEvidenceReference::new("EVID-GRANT-002").expect("evidence"),
+            })
+            .expect("grant"),
+        );
+        context
+            .policies
+            .push(policy_record(PolicyEffect::Permit, 1, "EVID-POL-001"));
+        let input = AuthorizationEvaluationInput {
+            request: request_with(
+                AuthorizationPrincipalType::Employee,
+                "Active",
+                permission("CX-PERM-000001", "approve", "workflow"),
+                target("CX-PROJ-000001"),
+            ),
+            context,
+            decision_ids: decision_ids(),
+            decision_construction: None,
+        };
+        let left = evaluate_authorization(&input).expect("left");
+        let right = evaluate_authorization(&input).expect("right");
+        assert_eq!(left.outcome, AuthorizationDecisionOutcome::Deny);
+        assert_eq!(
+            left.rejection_reason,
+            Some(AuthorizationRejectionReason::PermissionMismatch)
+        );
+        assert_eq!(left.rejection_reason, right.rejection_reason);
+        assert_eq!(left.outcome, right.outcome);
+        assert_eq!(
+            left.trace
+                .steps
+                .iter()
+                .find(|step| step.decisive)
+                .map(|step| step.step),
+            right
+                .trace
+                .steps
+                .iter()
+                .find(|step| step.decisive)
+                .map(|step| step.step)
+        );
+    }
+
+    #[test]
+    fn authorization_does_not_permit_without_grant_backing_ces_b0_028_12() {
+        let mut context = base_context();
+        context
+            .policies
+            .push(policy_record(PolicyEffect::Permit, 1, "EVID-POL-001"));
+        let result = evaluate_authorization(&AuthorizationEvaluationInput {
+            request: request_with(
+                AuthorizationPrincipalType::Employee,
+                "Active",
+                permission("CX-PERM-000001", "approve", "workflow"),
+                target("CX-PROJ-000001"),
+            ),
+            context,
+            decision_ids: decision_ids(),
+            decision_construction: None,
+        })
+        .expect("evaluation");
+        assert_eq!(result.outcome, AuthorizationDecisionOutcome::Deny);
+        assert_eq!(
+            result.rejection_reason,
+            Some(AuthorizationRejectionReason::PermissionMismatch)
+        );
+    }
+
+    #[test]
+    fn authorization_requires_policy_backed_evidence_for_decision_construction_ces_b0_026_8() {
+        let mut context = base_context();
+        context.direct_grants.push(direct_permission_grant());
+        context.policies.clear();
+        let result = evaluate_authorization(&AuthorizationEvaluationInput {
+            request: request_with(
+                AuthorizationPrincipalType::Employee,
+                "Suspended",
+                permission("CX-PERM-000001", "approve", "workflow"),
+                target("CX-PROJ-000001"),
+            ),
+            context,
+            decision_ids: decision_ids(),
+            decision_construction: Some(decision_construction()),
+        });
+        assert!(matches!(
+            result,
+            Err(DomainError::MissingAuthorizationEvidence(_))
+        ));
     }
 
     #[test]
