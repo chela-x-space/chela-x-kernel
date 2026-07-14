@@ -2319,6 +2319,21 @@ mod tests {
         )
     }
 
+    fn registry_with_retired_runtime(agent_id: &str, runtime_id: &str) -> (AgentRegistry, AgentId) {
+        let mut registry = AgentRegistry::new();
+        let registration = governed_registration(agent_id, runtime_id);
+        let agent_id = registration.agent_id().clone();
+        registry.register(registration).expect("register");
+        registry
+            .transition_presence(&agent_id, PresenceState::Retired)
+            .expect("retire presence");
+        assert_eq!(
+            registry.lookup(&agent_id).expect("lookup").presence_state(),
+            PresenceState::Retired
+        );
+        (registry, agent_id)
+    }
+
     #[test]
     fn runtime_registration_is_stable_and_lookup_is_deterministic_ces_b0_027_8() {
         let mut registry = AgentRegistry::new();
@@ -2790,25 +2805,8 @@ mod tests {
 
     #[test]
     fn runtime_heartbeat_for_retired_runtime_rejected_ces_b0_027_7() {
-        let mut registry = AgentRegistry::new();
-        let registration = registration(
-            "CX-AGT-000001",
-            "CX-CAP-000001",
-            "runtime.primary",
-            PresenceState::Retired,
-            AgentLifecycle::Retired,
-            Some(governed_lease(
-                "CX-LEASE-000001",
-                "runtime.primary",
-                "CX-AGT-000001",
-                "2026-07-15T00:00:00Z",
-                "2026-07-15T01:00:00Z",
-                None,
-            )),
-            None,
-        );
-        let agent_id = registration.agent_id().clone();
-        registry.register(registration).expect("register");
+        let (mut registry, agent_id) =
+            registry_with_retired_runtime("CX-AGT-000001", "runtime.primary");
         let result = registry
             .record_heartbeat_validated(
                 &agent_id,
@@ -2835,7 +2833,8 @@ mod tests {
     #[test]
     fn runtime_retired_heartbeat_rejection_precedes_duplicate_and_preserves_registry_ces_b0_027_21()
     {
-        let mut registry = AgentRegistry::new();
+        let (mut registry, agent_id) =
+            registry_with_retired_runtime("CX-AGT-000001", "runtime.primary");
         let retired_heartbeat = governed_heartbeat(
             "CX-HB-000001",
             "runtime.primary",
@@ -2846,25 +2845,7 @@ mod tests {
             PresenceState::Retired,
             RuntimeHealth::Critical,
         );
-        let registration = registration(
-            "CX-AGT-000001",
-            "CX-CAP-000001",
-            "runtime.primary",
-            PresenceState::Retired,
-            AgentLifecycle::Retired,
-            Some(governed_lease(
-                "CX-LEASE-000001",
-                "runtime.primary",
-                "CX-AGT-000001",
-                "2026-07-15T00:00:00Z",
-                "2026-07-15T01:00:00Z",
-                None,
-            )),
-            Some(retired_heartbeat.clone()),
-        );
-        let agent_id = registration.agent_id().clone();
-        let before = registration.clone();
-        registry.register(registration).expect("register");
+        let before = registry.lookup(&agent_id).expect("lookup").clone();
 
         let left = registry
             .record_heartbeat_validated(
@@ -3135,25 +3116,8 @@ mod tests {
 
     #[test]
     fn runtime_lease_renewal_for_retired_runtime_rejected_ces_b0_027_19() {
-        let mut registry = AgentRegistry::new();
-        let registration = registration(
-            "CX-AGT-000001",
-            "CX-CAP-000001",
-            "runtime.primary",
-            PresenceState::Retired,
-            AgentLifecycle::Retired,
-            Some(governed_lease(
-                "CX-LEASE-000001",
-                "runtime.primary",
-                "CX-AGT-000001",
-                "2026-07-15T00:00:00Z",
-                "2026-07-15T01:00:00Z",
-                None,
-            )),
-            None,
-        );
-        let agent_id = registration.agent_id().clone();
-        registry.register(registration).expect("register");
+        let (mut registry, agent_id) =
+            registry_with_retired_runtime("CX-AGT-000001", "runtime.primary");
         let result = registry
             .renew_lease_validated(
                 &agent_id,
@@ -3177,27 +3141,15 @@ mod tests {
 
     #[test]
     fn runtime_retired_lease_rejection_precedes_duplicate_and_preserves_registry_ces_b0_027_22() {
-        let mut registry = AgentRegistry::new();
-        let current_lease = governed_lease(
-            "CX-LEASE-000002",
-            "runtime.primary",
-            "CX-AGT-000001",
-            "2026-07-15T00:30:00Z",
-            "2026-07-15T02:00:00Z",
-            Some("CX-LEASE-000001"),
-        );
-        let registration = registration(
-            "CX-AGT-000001",
-            "CX-CAP-000001",
-            "runtime.primary",
-            PresenceState::Retired,
-            AgentLifecycle::Retired,
-            Some(current_lease.clone()),
-            None,
-        );
-        let agent_id = registration.agent_id().clone();
-        let before = registration.clone();
-        registry.register(registration).expect("register");
+        let (mut registry, agent_id) =
+            registry_with_retired_runtime("CX-AGT-000001", "runtime.primary");
+        let current_lease = registry
+            .lookup(&agent_id)
+            .expect("lookup")
+            .lease()
+            .expect("lease")
+            .clone();
+        let before = registry.lookup(&agent_id).expect("lookup").clone();
 
         let request = LeaseRenewalRequest::new(
             LeaseId::new("CX-LEASE-000001").expect("lease"),
