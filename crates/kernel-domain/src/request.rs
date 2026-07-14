@@ -60,6 +60,18 @@ impl AuthorizationRequestRecord {
     pub fn target(&self) -> &AuthorizationTarget {
         &self.target
     }
+
+    pub fn requested_permission(&self) -> &PermissionReference {
+        &self.requested_permission
+    }
+
+    pub fn requested_at(&self) -> &TimeReference {
+        &self.requested_at
+    }
+
+    pub fn reason(&self) -> &str {
+        self.reason.as_str()
+    }
 }
 
 #[cfg(test)]

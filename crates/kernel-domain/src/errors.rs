@@ -23,10 +23,13 @@ pub enum DomainError {
     InvalidRequestRecord(&'static str),
     InvalidDecisionRecord(&'static str),
     InvalidAuthorizationReference(&'static str),
+    InvalidAuthorizationEvaluation(&'static str),
+    MissingAuthorizationEvidence(&'static str),
     InvalidAgentReference(&'static str),
     InvalidDelegationReference(&'static str),
     InvalidPolicyReference(&'static str),
     InvalidWorkflowReference(&'static str),
+    UnsupportedAuthorizationSemantics(&'static str),
 }
 
 impl fmt::Display for DomainError {
@@ -66,6 +69,12 @@ impl fmt::Display for DomainError {
             Self::InvalidAuthorizationReference(message) => {
                 write!(formatter, "invalid authorization reference: {message}")
             }
+            Self::InvalidAuthorizationEvaluation(message) => {
+                write!(formatter, "invalid authorization evaluation: {message}")
+            }
+            Self::MissingAuthorizationEvidence(message) => {
+                write!(formatter, "missing authorization evidence: {message}")
+            }
             Self::InvalidAgentReference(message) => {
                 write!(formatter, "invalid agent reference: {message}")
             }
@@ -77,6 +86,9 @@ impl fmt::Display for DomainError {
             }
             Self::InvalidWorkflowReference(message) => {
                 write!(formatter, "invalid workflow reference: {message}")
+            }
+            Self::UnsupportedAuthorizationSemantics(message) => {
+                write!(formatter, "unsupported authorization semantics: {message}")
             }
         }
     }

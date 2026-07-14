@@ -307,6 +307,12 @@ impl AuthorizationSubject {
             Self::Principal(principal) => principal.enterprise_id(),
         }
     }
+
+    pub fn principal(&self) -> &AuthorizationPrincipalReference {
+        match self {
+            Self::Principal(principal) => principal,
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -514,6 +520,30 @@ impl AuthorizationAuditEvidenceReference {
 
     pub fn audit_evidence_id(&self) -> &AuditEvidenceId {
         &self.audit_evidence_id
+    }
+
+    pub fn decision_id(&self) -> &AuthorizationDecisionId {
+        &self.decision_id
+    }
+
+    pub fn principal_id(&self) -> &PrincipalId {
+        &self.principal_id
+    }
+
+    pub fn scope_id(&self) -> &ScopeId {
+        &self.scope_id
+    }
+
+    pub fn policy_version(&self) -> &StableVersion {
+        &self.policy_version
+    }
+
+    pub fn matched_rules(&self) -> &[MatchedPolicyEvidenceReference] {
+        &self.matched_rules
+    }
+
+    pub fn outcome(&self) -> AuthorizationDecisionOutcome {
+        self.outcome
     }
 }
 

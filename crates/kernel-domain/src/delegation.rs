@@ -100,6 +100,10 @@ impl DelegationScope {
     pub fn kind(&self) -> &DelegationScopeKind {
         &self.kind
     }
+
+    pub fn agent_scope(&self) -> Option<&crate::identifier::AgentId> {
+        self.agent_scope.as_ref()
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -126,6 +130,14 @@ impl DelegatedRightReference {
             permission,
             responsibility: NonEmptyText::new("delegated_responsibility", responsibility)?,
         })
+    }
+
+    pub fn permission(&self) -> &PermissionReference {
+        &self.permission
+    }
+
+    pub fn responsibility(&self) -> &str {
+        self.responsibility.as_str()
     }
 }
 
@@ -195,6 +207,10 @@ impl PolicyResultReference {
     pub fn non_waivable(&self) -> bool {
         self.non_waivable
     }
+
+    pub fn policy_id(&self) -> &PolicyId {
+        &self.policy_id
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -223,6 +239,14 @@ impl AuthoritySourceReference {
             authorization_decision,
         })
     }
+
+    pub fn policy_result(&self) -> &PolicyResultReference {
+        &self.policy_result
+    }
+
+    pub fn authorization_decision(&self) -> &AuthorizationDecisionReference {
+        &self.authorization_decision
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -235,6 +259,10 @@ impl SeparationOfDutiesConflict {
         Ok(Self {
             rule: NonEmptyText::new("sod_rule", rule)?,
         })
+    }
+
+    pub fn rule(&self) -> &str {
+        self.rule.as_str()
     }
 }
 
@@ -302,6 +330,46 @@ impl DelegationReference {
             lifecycle: spec.lifecycle,
             separation_of_duties: spec.separation_of_duties,
         })
+    }
+
+    pub fn delegation_id(&self) -> &DelegationId {
+        &self.delegation_id
+    }
+
+    pub fn delegator(&self) -> &DelegatorReference {
+        &self.delegator
+    }
+
+    pub fn delegate(&self) -> &DelegateReference {
+        &self.delegate
+    }
+
+    pub fn authority_source(&self) -> &AuthoritySourceReference {
+        &self.authority_source
+    }
+
+    pub fn scope(&self) -> &DelegationScope {
+        &self.scope
+    }
+
+    pub fn delegated_rights(&self) -> &[DelegatedRightReference] {
+        &self.delegated_rights
+    }
+
+    pub fn conditions(&self) -> &[DelegationConditionReference] {
+        &self.conditions
+    }
+
+    pub fn depth(&self) -> DelegationDepth {
+        self.depth
+    }
+
+    pub fn lifecycle(&self) -> DelegationLifecycle {
+        self.lifecycle
+    }
+
+    pub fn separation_of_duties(&self) -> Option<&SeparationOfDutiesConflict> {
+        self.separation_of_duties.as_ref()
     }
 }
 

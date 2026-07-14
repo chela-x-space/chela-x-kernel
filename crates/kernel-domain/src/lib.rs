@@ -4,6 +4,7 @@ pub mod agent;
 pub mod authorization;
 pub mod decision;
 pub mod delegation;
+pub mod enforcement;
 pub mod errors;
 pub mod identifier;
 pub mod identity;
@@ -38,6 +39,16 @@ pub use delegation::{
     DelegatedTaskReference, DelegationConditionReference, DelegationDepth, DelegationReference,
     DelegationReferenceSpec, DelegationScope, DelegationScopeKind, DelegationVersion,
     DelegatorReference, PolicyResultReference, SeparationOfDutiesConflict,
+};
+pub use enforcement::{
+    evaluate_authorization, AuthorityValidationResult, AuthorizationAuthorityRequirement,
+    AuthorizationDecisionIds, AuthorizationDelegationBinding, AuthorizationEvaluationContext,
+    AuthorizationEvaluationInput, AuthorizationEvaluationResult, AuthorizationEvaluationStepResult,
+    AuthorizationEvaluationTrace, AuthorizationExplicitDenyRecord, AuthorizationGrantRecord,
+    AuthorizationGrantRecordSpec, AuthorizationPolicyLayer, AuthorizationPolicyRecord,
+    AuthorizationPolicyRecordSpec, AuthorizationRejectionReason, AuthorizationRolePermissionRecord,
+    DecisionConstructionInput, DelegationBoundResult, PermissionMatchResult, PolicyMatchResult,
+    ScopeValidationResult, SeparationOfDutiesResult,
 };
 pub use errors::{DomainError, DomainResult};
 pub use identifier::{
