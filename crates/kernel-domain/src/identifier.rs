@@ -90,6 +90,9 @@ define_identifier!(OrganizationUnitId, "OrganizationUnitId", "CX-OU-", 6);
 define_identifier!(OwnershipId, "OwnershipId", "CX-OWN-", 6);
 define_identifier!(HumanId, "HumanId", "CX-EMP-", 6);
 define_identifier!(AgentId, "AgentId", "CX-AGT-", 6);
+define_identifier!(CapabilityId, "CapabilityId", "CX-CAP-", 6);
+define_identifier!(LeaseId, "LeaseId", "CX-LEASE-", 6);
+define_identifier!(HeartbeatId, "HeartbeatId", "CX-HB-", 6);
 define_identifier!(DecisionId, "DecisionId", "CX-DEC-", 6);
 define_identifier!(DecisionAuthorityId, "DecisionAuthorityId", "CX-DECAUTH-", 6);
 define_identifier!(PrincipalId, "PrincipalId", "CX-PRN-", 6);
@@ -112,6 +115,33 @@ define_identifier!(AuditEvidenceId, "AuditEvidenceId", "CX-AUD-", 6);
 define_identifier!(DelegationId, "DelegationId", "CX-DEL-", 6);
 define_identifier!(PolicyId, "PolicyId", "CX-POL-", 6);
 define_identifier!(WorkflowId, "WorkflowId", "CX-WF-", 6);
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct RuntimeId(String);
+
+impl RuntimeId {
+    pub fn new(value: impl Into<String>) -> DomainResult<Self> {
+        validate_namespace("RuntimeId", value).map(Self)
+    }
+
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+
+impl fmt::Display for RuntimeId {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str(self.as_str())
+    }
+}
+
+impl FromStr for RuntimeId {
+    type Err = DomainError;
+
+    fn from_str(value: &str) -> DomainResult<Self> {
+        Self::new(value.to_owned())
+    }
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct AgentUuid(String);
@@ -211,7 +241,7 @@ mod tests {
     use std::collections::hash_map::DefaultHasher;
     use std::hash::{Hash, Hasher};
 
-    use super::{AgentId, EnterpriseId, NonEmptyText};
+    use super::{AgentId, CapabilityId, EnterpriseId, NonEmptyText, RuntimeId};
 
     #[test]
     fn identifier_accepts_valid_opaque_identifier_ces_b0_025_1() {
@@ -247,5 +277,20 @@ mod tests {
     fn non_empty_text_rejects_blank_values_traceability_k1() {
         let error = NonEmptyText::new("reason", "   ").expect_err("blank text must fail");
         assert_eq!(error.to_string(), "empty value: reason");
+    }
+
+    #[test]
+    fn capability_id_accepts_valid_prefixed_identifier_ces_b0_027_5() {
+        let identifier = CapabilityId::new("CX-CAP-000001").expect("capability id");
+        assert_eq!(identifier.as_str(), "CX-CAP-000001");
+    }
+
+    #[test]
+    fn runtime_id_rejects_invalid_namespace_characters_traceability_k4_1() {
+        let error = RuntimeId::new("runtime id")
+            .expect_err("runtime identifiers must use namespace-safe characters");
+        assert!(error
+            .to_string()
+            .contains("ASCII letters, digits, dot, underscore, or hyphen"));
     }
 }

@@ -91,6 +91,26 @@ impl AgentDefinition {
     pub fn agent_name(&self) -> &str {
         self.agent_name.as_str()
     }
+
+    pub fn agent_type(&self) -> &AgentType {
+        &self.agent_type
+    }
+
+    pub fn agent_category(&self) -> &AgentCategory {
+        &self.agent_category
+    }
+
+    pub fn owner(&self) -> &OwnerReference {
+        &self.owner
+    }
+
+    pub fn organizational_context(&self) -> &OrganizationalContext {
+        &self.organizational_context
+    }
+
+    pub fn runtime_reference(&self) -> &AgentRuntimeReference {
+        &self.runtime_reference
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

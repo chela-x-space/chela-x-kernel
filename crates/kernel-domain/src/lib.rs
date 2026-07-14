@@ -12,6 +12,7 @@ pub mod lifecycle;
 pub mod ownership;
 pub mod policy;
 pub mod request;
+pub mod runtime;
 pub mod state;
 pub mod workflow;
 
@@ -53,9 +54,10 @@ pub use enforcement::{
 pub use errors::{DomainError, DomainResult};
 pub use identifier::{
     AgentId, AgentUuid, AuditEvidenceId, AuthorizationDecisionId, AuthorizationRequestId,
-    DecisionAuthorityId, DecisionId, DelegationId, EnglishNamespace, EnterpriseId, HumanId,
-    NonEmptyText, OrganizationUnitId, OwnershipId, PermissionId, PolicyId, PrincipalId, ProjectId,
-    RoleId, ScopeId, StableVersion, WorkflowId, WorkspaceId,
+    CapabilityId, DecisionAuthorityId, DecisionId, DelegationId, EnglishNamespace, EnterpriseId,
+    HeartbeatId, HumanId, LeaseId, NonEmptyText, OrganizationUnitId, OwnershipId, PermissionId,
+    PolicyId, PrincipalId, ProjectId, RoleId, RuntimeId, ScopeId, StableVersion, WorkflowId,
+    WorkspaceId,
 };
 pub use identity::{AgentIdentity, HumanIdentity};
 pub use identity::{IdentityKind, IdentityReference};
@@ -71,6 +73,11 @@ pub use policy::{
     PolicyAuditEvidenceReference, PolicyEffect, PolicyEvaluationOrderVersion, PolicyEvaluationStep,
 };
 pub use request::{AuthorizationRequestRecord, TimeReference};
+pub use runtime::{
+    AgentRegistration, AgentRegistrationSpec, AgentRegistry, CapabilityDescriptor,
+    CapabilityDescriptorSpec, HeartbeatRecord, HeartbeatRecordSpec, LeaseRecord, LeaseRecordSpec,
+    PresenceState, RuntimeEntity, RuntimeEntitySpec, RuntimeHealth,
+};
 pub use state::{
     validate_agent_transition, validate_decision_transition, validate_delegation_transition,
     validate_enterprise_transition, validate_human_transition,

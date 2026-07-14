@@ -26,6 +26,8 @@ pub enum DomainError {
     InvalidAuthorizationEvaluation(&'static str),
     MissingAuthorizationEvidence(&'static str),
     InvalidAgentReference(&'static str),
+    InvalidRuntimeReference(&'static str),
+    InvalidRuntimeRegistry(&'static str),
     InvalidDelegationReference(&'static str),
     InvalidPolicyReference(&'static str),
     InvalidWorkflowReference(&'static str),
@@ -77,6 +79,12 @@ impl fmt::Display for DomainError {
             }
             Self::InvalidAgentReference(message) => {
                 write!(formatter, "invalid agent reference: {message}")
+            }
+            Self::InvalidRuntimeReference(message) => {
+                write!(formatter, "invalid runtime reference: {message}")
+            }
+            Self::InvalidRuntimeRegistry(message) => {
+                write!(formatter, "invalid runtime registry: {message}")
             }
             Self::InvalidDelegationReference(message) => {
                 write!(formatter, "invalid delegation reference: {message}")
