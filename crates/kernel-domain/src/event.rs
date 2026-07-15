@@ -6,6 +6,9 @@ use crate::errors::{DomainError, DomainResult};
 const EVENT_TYPE_EXPECTATION: &str =
     "lowercase dotted event type with an approved category and non-empty ASCII alphanumeric segments";
 
+const EVENT_VERSION_EXPECTATION: &str =
+    "semantic event schema version in MAJOR.MINOR.PATCH format using ASCII digits without leading zeros";
+
 const APPROVED_EVENT_CATEGORIES: &[&str] = &[
     "system",
     "runtime",
@@ -95,13 +98,94 @@ impl FromStr for EventType {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct EventVersion(String);
+
+impl EventVersion {
+    pub fn new(value: impl Into<String>) -> DomainResult<Self> {
+        let value = value.into().trim().to_owned();
+
+        if value.is_empty() {
+            return Err(DomainError::EmptyValue {
+                field: "EventVersion",
+            });
+        }
+
+        let segments: Vec<&str> = value.split('.').collect();
+
+        if segments.len() != 3
+            || segments
+                .iter()
+                .any(|segment| !Self::valid_numeric_segment(segment))
+        {
+            return Err(Self::invalid(value));
+        }
+
+        Ok(Self(value))
+    }
+
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+
+    pub fn major(&self) -> u64 {
+        self.segment(0)
+    }
+
+    pub fn minor(&self) -> u64 {
+        self.segment(1)
+    }
+
+    pub fn patch(&self) -> u64 {
+        self.segment(2)
+    }
+
+    fn valid_numeric_segment(segment: &str) -> bool {
+        !segment.is_empty()
+            && segment.chars().all(|character| character.is_ascii_digit())
+            && (segment == "0" || !segment.starts_with('0'))
+            && segment.parse::<u64>().is_ok()
+    }
+
+    fn segment(&self, index: usize) -> u64 {
+        self.0
+            .split('.')
+            .nth(index)
+            .expect("validated event version contains exactly three segments")
+            .parse::<u64>()
+            .expect("validated event version segments fit within u64")
+    }
+
+    fn invalid(value: String) -> DomainError {
+        DomainError::InvalidIdentifier {
+            kind: "EventVersion",
+            value,
+            expected: EVENT_VERSION_EXPECTATION,
+        }
+    }
+}
+
+impl fmt::Display for EventVersion {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str(self.as_str())
+    }
+}
+
+impl FromStr for EventVersion {
+    type Err = DomainError;
+
+    fn from_str(value: &str) -> DomainResult<Self> {
+        Self::new(value.to_owned())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::collections::hash_map::DefaultHasher;
     use std::hash::{Hash, Hasher};
     use std::str::FromStr;
 
-    use super::EventType;
+    use super::{EventType, EventVersion};
 
     #[test]
     fn event_type_accepts_canonical_dotted_type_traceability_k5_2() {
@@ -202,5 +286,95 @@ mod tests {
             .expect_err("unknown category must not be accepted");
 
         assert!(error.to_string().contains("invalid EventType identifier"));
+    }
+
+    #[test]
+    fn event_version_accepts_canonical_semantic_version_traceability_k5_3() {
+        let version = EventVersion::new("1.0.0").expect("valid event version");
+
+        assert_eq!(version.as_str(), "1.0.0");
+        assert_eq!(version.major(), 1);
+        assert_eq!(version.minor(), 0);
+        assert_eq!(version.patch(), 0);
+    }
+
+    #[test]
+    fn event_version_display_and_parsing_are_stable_traceability_k5_3() {
+        let version = EventVersion::from_str("2.10.7").expect("valid parsed event version");
+
+        assert_eq!(version.to_string(), "2.10.7");
+        assert_eq!(version.major(), 2);
+        assert_eq!(version.minor(), 10);
+        assert_eq!(version.patch(), 7);
+    }
+
+    #[test]
+    fn event_version_hash_is_stable_for_equal_values_traceability_k5_3() {
+        let left = EventVersion::new("1.2.3").expect("left version");
+        let right = EventVersion::new("1.2.3").expect("right version");
+
+        let mut left_hasher = DefaultHasher::new();
+        let mut right_hasher = DefaultHasher::new();
+
+        left.hash(&mut left_hasher);
+        right.hash(&mut right_hasher);
+
+        assert_eq!(left, right);
+        assert_eq!(left_hasher.finish(), right_hasher.finish());
+    }
+
+    #[test]
+    fn event_version_rejects_empty_value_traceability_k5_3() {
+        let error = EventVersion::new("").expect_err("empty event version must fail");
+
+        assert_eq!(error.to_string(), "empty value: EventVersion");
+    }
+
+    #[test]
+    fn event_version_rejects_missing_patch_segment_traceability_k5_3() {
+        let error = EventVersion::new("1.0").expect_err("three version segments are required");
+
+        assert!(error
+            .to_string()
+            .contains("invalid EventVersion identifier"));
+    }
+
+    #[test]
+    fn event_version_rejects_extra_segment_traceability_k5_3() {
+        let error =
+            EventVersion::new("1.0.0.1").expect_err("extra version segment must be rejected");
+
+        assert!(error
+            .to_string()
+            .contains("invalid EventVersion identifier"));
+    }
+
+    #[test]
+    fn event_version_rejects_non_numeric_segment_traceability_k5_3() {
+        let error =
+            EventVersion::new("1.x.0").expect_err("version segments must contain only digits");
+
+        assert!(error
+            .to_string()
+            .contains("invalid EventVersion identifier"));
+    }
+
+    #[test]
+    fn event_version_rejects_leading_zero_traceability_k5_3() {
+        let error = EventVersion::new("01.0.0").expect_err("leading zeros must not be accepted");
+
+        assert!(error
+            .to_string()
+            .contains("invalid EventVersion identifier"));
+    }
+
+    #[test]
+    fn event_version_rejects_prerelease_suffix_traceability_k5_3() {
+        let error =
+            EventVersion::new("1.0.0-rc1").expect_err("prerelease versions are not canonical");
+
+        assert!(error
+            .to_string()
+            .contains("invalid EventVersion identifier"));
     }
 }
