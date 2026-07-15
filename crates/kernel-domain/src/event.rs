@@ -1,8 +1,9 @@
+use std::collections::HashSet;
 use std::fmt;
 use std::str::FromStr;
 
 use crate::errors::{DomainError, DomainResult};
-use crate::identifier::{EventId, RuntimeId};
+use crate::identifier::{AuditEvidenceId, EventId, RuntimeId, WorkflowId};
 
 const EVENT_TYPE_EXPECTATION: &str =
     "lowercase dotted event type with an approved category and non-empty ASCII alphanumeric segments";
@@ -15,6 +16,12 @@ const EVENT_SUBJECT_ID_EXPECTATION: &str =
 
 const EVENT_COMPONENT_EXPECTATION: &str =
     "lowercase ASCII component using a-z, 0-9, hyphen, dot, or underscore, without leading, trailing, or adjacent separators";
+
+const EVENT_ACTOR_ID_EXPECTATION: &str =
+    "non-empty ASCII actor reference using letters, digits, dot, underscore, or hyphen";
+
+const EVENT_TRACE_REFERENCE_EXPECTATION: &str =
+    "non-empty ASCII trace reference using letters, digits, dot, underscore, or hyphen";
 
 const EVENT_VERSION_EXPECTATION: &str =
     "semantic event schema version in MAJOR.MINOR.PATCH format using ASCII digits without leading zeros";
@@ -234,6 +241,181 @@ impl FromStr for EventSubjectType {
 
     fn from_str(value: &str) -> DomainResult<Self> {
         Self::new(value.to_owned())
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct EventActorId(String);
+
+impl EventActorId {
+    pub fn new(value: impl Into<String>) -> DomainResult<Self> {
+        let value = value.into().trim().to_owned();
+
+        if value.is_empty() {
+            return Err(DomainError::EmptyValue {
+                field: "EventActorId",
+            });
+        }
+
+        if !Self::is_namespace_safe(&value) {
+            return Err(Self::invalid(value));
+        }
+
+        Ok(Self(value))
+    }
+
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+
+    fn is_namespace_safe(value: &str) -> bool {
+        value.chars().all(|character| {
+            character.is_ascii_alphanumeric() || matches!(character, '.' | '_' | '-')
+        })
+    }
+
+    fn invalid(value: String) -> DomainError {
+        DomainError::InvalidIdentifier {
+            kind: "EventActorId",
+            value,
+            expected: EVENT_ACTOR_ID_EXPECTATION,
+        }
+    }
+}
+
+impl fmt::Display for EventActorId {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str(self.as_str())
+    }
+}
+
+impl FromStr for EventActorId {
+    type Err = DomainError;
+
+    fn from_str(value: &str) -> DomainResult<Self> {
+        Self::new(value.to_owned())
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct EventTraceReference(String);
+
+impl EventTraceReference {
+    pub fn new(value: impl Into<String>) -> DomainResult<Self> {
+        let value = value.into().trim().to_owned();
+
+        if value.is_empty() {
+            return Err(DomainError::EmptyValue {
+                field: "EventTraceReference",
+            });
+        }
+
+        if !Self::is_namespace_safe(&value) {
+            return Err(Self::invalid(value));
+        }
+
+        Ok(Self(value))
+    }
+
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+
+    fn is_namespace_safe(value: &str) -> bool {
+        value.chars().all(|character| {
+            character.is_ascii_alphanumeric() || matches!(character, '.' | '_' | '-')
+        })
+    }
+
+    fn invalid(value: String) -> DomainError {
+        DomainError::InvalidIdentifier {
+            kind: "EventTraceReference",
+            value,
+            expected: EVENT_TRACE_REFERENCE_EXPECTATION,
+        }
+    }
+}
+
+impl fmt::Display for EventTraceReference {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str(self.as_str())
+    }
+}
+
+impl FromStr for EventTraceReference {
+    type Err = DomainError;
+
+    fn from_str(value: &str) -> DomainResult<Self> {
+        Self::new(value.to_owned())
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EventTrace {
+    actor_id: Option<EventActorId>,
+    workflow_id: Option<WorkflowId>,
+    task_id: Option<EventTraceReference>,
+    execution_id: Option<EventTraceReference>,
+    evidence_ids: Vec<AuditEvidenceId>,
+}
+
+impl EventTrace {
+    pub fn new(
+        actor_id: Option<EventActorId>,
+        workflow_id: Option<WorkflowId>,
+        task_id: Option<EventTraceReference>,
+        execution_id: Option<EventTraceReference>,
+        evidence_ids: Vec<AuditEvidenceId>,
+    ) -> DomainResult<Self> {
+        if actor_id.is_none()
+            && workflow_id.is_none()
+            && task_id.is_none()
+            && execution_id.is_none()
+            && evidence_ids.is_empty()
+        {
+            return Err(DomainError::InvalidEventReference(
+                "event trace must contain at least one trace reference or evidence",
+            ));
+        }
+
+        let mut observed_evidence = HashSet::with_capacity(evidence_ids.len());
+
+        if evidence_ids
+            .iter()
+            .any(|evidence_id| !observed_evidence.insert(evidence_id))
+        {
+            return Err(DomainError::InvalidEventReference(
+                "event trace must not contain duplicate evidence identifiers",
+            ));
+        }
+
+        Ok(Self {
+            actor_id,
+            workflow_id,
+            task_id,
+            execution_id,
+            evidence_ids,
+        })
+    }
+
+    pub const fn actor_id(&self) -> Option<&EventActorId> {
+        self.actor_id.as_ref()
+    }
+
+    pub const fn workflow_id(&self) -> Option<&WorkflowId> {
+        self.workflow_id.as_ref()
+    }
+
+    pub const fn task_id(&self) -> Option<&EventTraceReference> {
+        self.task_id.as_ref()
+    }
+
+    pub const fn execution_id(&self) -> Option<&EventTraceReference> {
+        self.execution_id.as_ref()
+    }
+
+    pub fn evidence_ids(&self) -> &[AuditEvidenceId] {
+        &self.evidence_ids
     }
 }
 
@@ -530,11 +712,12 @@ mod tests {
     use std::hash::{Hash, Hasher};
     use std::str::FromStr;
 
-    use crate::identifier::{EventId, RuntimeId};
+    use crate::identifier::{AuditEvidenceId, EventId, RuntimeId, WorkflowId};
 
     use super::{
-        EventCausation, EventClassification, EventComponent, EventSource, EventSubject,
-        EventSubjectId, EventSubjectType, EventType, EventVersion,
+        EventActorId, EventCausation, EventClassification, EventComponent, EventSource,
+        EventSubject, EventSubjectId, EventSubjectType, EventTrace, EventTraceReference, EventType,
+        EventVersion,
     };
 
     #[test]
@@ -1132,6 +1315,229 @@ mod tests {
             EventSubjectType::new("agent").expect("right subject type"),
             EventSubjectId::new("CX-AGT-000001").expect("right subject id"),
         );
+
+        assert_eq!(left, right);
+        assert_eq!(left.clone(), left);
+    }
+
+    #[test]
+    fn event_actor_id_accepts_namespace_safe_values() {
+        for value in [
+            "CX-AGT-000001",
+            "CX-EMP-000001",
+            "system.scheduler",
+            "external_principal-01",
+        ] {
+            let actor_id = EventActorId::new(value).expect("valid actor reference");
+
+            assert_eq!(actor_id.as_str(), value);
+            assert_eq!(actor_id.to_string(), value);
+        }
+    }
+
+    #[test]
+    fn event_actor_id_trims_outer_whitespace() {
+        let actor_id =
+            EventActorId::new("  system.scheduler  ").expect("outer whitespace must be trimmed");
+
+        assert_eq!(actor_id.as_str(), "system.scheduler");
+    }
+
+    #[test]
+    fn event_actor_id_rejects_empty_and_unsafe_values() {
+        assert_eq!(
+            EventActorId::new("   ")
+                .expect_err("empty actor id must fail")
+                .to_string(),
+            "empty value: EventActorId"
+        );
+
+        for value in [
+            "system actor",
+            "actor/system",
+            "actor:system",
+            "actor@system",
+        ] {
+            EventActorId::new(value).expect_err("unsafe actor reference must fail");
+        }
+    }
+
+    #[test]
+    fn event_actor_id_supports_from_str() {
+        let actor_id: EventActorId = "system.scheduler".parse().expect("actor id must parse");
+
+        assert_eq!(actor_id.as_str(), "system.scheduler");
+    }
+
+    #[test]
+    fn event_trace_reference_accepts_namespace_safe_values() {
+        for value in [
+            "task.primary",
+            "execution_000001",
+            "CX-TASK-000001",
+            "execution-runtime-01",
+        ] {
+            let reference = EventTraceReference::new(value).expect("valid trace reference");
+
+            assert_eq!(reference.as_str(), value);
+            assert_eq!(reference.to_string(), value);
+        }
+    }
+
+    #[test]
+    fn event_trace_reference_trims_outer_whitespace() {
+        let reference = EventTraceReference::new("  execution.primary  ")
+            .expect("outer whitespace must be trimmed");
+
+        assert_eq!(reference.as_str(), "execution.primary");
+    }
+
+    #[test]
+    fn event_trace_reference_rejects_empty_and_unsafe_values() {
+        assert_eq!(
+            EventTraceReference::new("   ")
+                .expect_err("empty trace reference must fail")
+                .to_string(),
+            "empty value: EventTraceReference"
+        );
+
+        for value in [
+            "execution primary",
+            "execution/primary",
+            "execution:primary",
+            "execution@primary",
+        ] {
+            EventTraceReference::new(value).expect_err("unsafe trace reference must fail");
+        }
+    }
+
+    #[test]
+    fn event_trace_reference_supports_from_str() {
+        let reference: EventTraceReference =
+            "execution.primary".parse().expect("reference must parse");
+
+        assert_eq!(reference.as_str(), "execution.primary");
+    }
+
+    #[test]
+    fn event_trace_accepts_actor_only() {
+        let actor_id = EventActorId::new("system.scheduler").expect("valid actor id");
+
+        let trace = EventTrace::new(Some(actor_id.clone()), None, None, None, vec![])
+            .expect("actor-only trace must be valid");
+
+        assert_eq!(trace.actor_id(), Some(&actor_id));
+        assert_eq!(trace.workflow_id(), None);
+        assert_eq!(trace.task_id(), None);
+        assert_eq!(trace.execution_id(), None);
+        assert!(trace.evidence_ids().is_empty());
+    }
+
+    #[test]
+    fn event_trace_accepts_execution_and_evidence_without_actor() {
+        let execution_id =
+            EventTraceReference::new("execution.primary").expect("valid execution reference");
+        let evidence_id = AuditEvidenceId::new("CX-AUD-000001").expect("valid evidence id");
+
+        let trace = EventTrace::new(
+            None,
+            None,
+            None,
+            Some(execution_id.clone()),
+            vec![evidence_id.clone()],
+        )
+        .expect("system trace without actor must be valid");
+
+        assert_eq!(trace.actor_id(), None);
+        assert_eq!(trace.execution_id(), Some(&execution_id));
+        assert_eq!(trace.evidence_ids(), &[evidence_id]);
+    }
+
+    #[test]
+    fn event_trace_accepts_workflow_and_task_references() {
+        let workflow_id = WorkflowId::new("CX-WF-000001").expect("valid workflow id");
+        let task_id = EventTraceReference::new("task.primary").expect("valid task reference");
+
+        let trace = EventTrace::new(
+            None,
+            Some(workflow_id.clone()),
+            Some(task_id.clone()),
+            None,
+            vec![],
+        )
+        .expect("workflow and task trace must be valid");
+
+        assert_eq!(trace.workflow_id(), Some(&workflow_id));
+        assert_eq!(trace.task_id(), Some(&task_id));
+    }
+
+    #[test]
+    fn event_trace_rejects_completely_empty_trace() {
+        let error =
+            EventTrace::new(None, None, None, None, vec![]).expect_err("empty trace must fail");
+
+        assert_eq!(
+            error.to_string(),
+            "invalid event reference: event trace must contain at least one trace reference or evidence"
+        );
+    }
+
+    #[test]
+    fn event_trace_rejects_duplicate_evidence() {
+        let evidence_id = AuditEvidenceId::new("CX-AUD-000001").expect("valid evidence id");
+
+        let error = EventTrace::new(
+            None,
+            None,
+            None,
+            None,
+            vec![evidence_id.clone(), evidence_id],
+        )
+        .expect_err("duplicate evidence must fail");
+
+        assert_eq!(
+            error.to_string(),
+            "invalid event reference: event trace must not contain duplicate evidence identifiers"
+        );
+    }
+
+    #[test]
+    fn event_trace_preserves_evidence_order() {
+        let first = AuditEvidenceId::new("CX-AUD-000001").expect("first evidence id");
+        let second = AuditEvidenceId::new("CX-AUD-000002").expect("second evidence id");
+        let third = AuditEvidenceId::new("CX-AUD-000003").expect("third evidence id");
+
+        let trace = EventTrace::new(
+            None,
+            None,
+            None,
+            None,
+            vec![first.clone(), second.clone(), third.clone()],
+        )
+        .expect("evidence-only trace must be valid");
+
+        assert_eq!(trace.evidence_ids(), &[first, second, third]);
+    }
+
+    #[test]
+    fn event_trace_preserves_value_semantics() {
+        let left = EventTrace::new(
+            Some(EventActorId::new("system.scheduler").expect("left actor")),
+            None,
+            None,
+            None,
+            vec![],
+        )
+        .expect("left trace");
+
+        let right = EventTrace::new(
+            Some(EventActorId::new("system.scheduler").expect("right actor")),
+            None,
+            None,
+            None,
+            vec![],
+        )
+        .expect("right trace");
 
         assert_eq!(left, right);
         assert_eq!(left.clone(), left);

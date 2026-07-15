@@ -54,7 +54,8 @@ pub use enforcement::{
 };
 pub use errors::{DomainError, DomainResult};
 pub use event::{
-    EventCausation, EventClassification, EventComponent, EventSource, EventType, EventVersion,
+    EventActorId, EventCausation, EventClassification, EventComponent, EventSource, EventSubject,
+    EventSubjectId, EventSubjectType, EventTrace, EventTraceReference, EventType, EventVersion,
 };
 pub use identifier::{
     AgentId, AgentUuid, AuditEvidenceId, AuthorizationDecisionId, AuthorizationRequestId,
