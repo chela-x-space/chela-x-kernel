@@ -31,6 +31,7 @@ pub enum DomainError {
     InvalidDelegationReference(&'static str),
     InvalidPolicyReference(&'static str),
     InvalidWorkflowReference(&'static str),
+    InvalidEventReference(&'static str),
     UnsupportedAuthorizationSemantics(&'static str),
 }
 
@@ -94,6 +95,9 @@ impl fmt::Display for DomainError {
             }
             Self::InvalidWorkflowReference(message) => {
                 write!(formatter, "invalid workflow reference: {message}")
+            }
+            Self::InvalidEventReference(message) => {
+                write!(formatter, "invalid event reference: {message}")
             }
             Self::UnsupportedAuthorizationSemantics(message) => {
                 write!(formatter, "unsupported authorization semantics: {message}")

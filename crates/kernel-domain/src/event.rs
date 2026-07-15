@@ -2,6 +2,7 @@ use std::fmt;
 use std::str::FromStr;
 
 use crate::errors::{DomainError, DomainResult};
+use crate::identifier::EventId;
 
 const EVENT_TYPE_EXPECTATION: &str =
     "lowercase dotted event type with an approved category and non-empty ASCII alphanumeric segments";
@@ -24,6 +25,39 @@ const APPROVED_EVENT_CATEGORIES: &[&str] = &[
     "api",
     "studio",
 ];
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum EventCausation {
+    Root,
+    CausedBy(EventId),
+}
+
+impl EventCausation {
+    pub const fn root() -> Self {
+        Self::Root
+    }
+
+    pub fn caused_by(current_event_id: &EventId, parent_event_id: EventId) -> DomainResult<Self> {
+        if current_event_id == &parent_event_id {
+            return Err(DomainError::InvalidEventReference(
+                "an event cannot directly cause itself",
+            ));
+        }
+
+        Ok(Self::CausedBy(parent_event_id))
+    }
+
+    pub const fn is_root(&self) -> bool {
+        matches!(self, Self::Root)
+    }
+
+    pub fn parent_event_id(&self) -> Option<&EventId> {
+        match self {
+            Self::Root => None,
+            Self::CausedBy(event_id) => Some(event_id),
+        }
+    }
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct EventType(String);
@@ -246,7 +280,9 @@ mod tests {
     use std::hash::{Hash, Hasher};
     use std::str::FromStr;
 
-    use super::{EventClassification, EventType, EventVersion};
+    use crate::identifier::EventId;
+
+    use super::{EventCausation, EventClassification, EventType, EventVersion};
 
     #[test]
     fn event_type_accepts_canonical_dotted_type_traceability_k5_2() {
@@ -500,5 +536,63 @@ mod tests {
         assert!(error
             .to_string()
             .contains("invalid EventClassification identifier"));
+    }
+    #[test]
+    fn event_causation_represents_root_event_traceability_k5_5() {
+        let causation = EventCausation::root();
+
+        assert!(causation.is_root());
+        assert_eq!(causation.parent_event_id(), None);
+    }
+
+    #[test]
+    fn event_causation_references_parent_event_id_traceability_k5_5() {
+        let current = EventId::new("CX-EVT-000002").expect("current event id");
+        let parent = EventId::new("CX-EVT-000001").expect("parent event id");
+
+        let causation =
+            EventCausation::caused_by(&current, parent).expect("valid causation reference");
+
+        assert!(!causation.is_root());
+        assert_eq!(
+            causation
+                .parent_event_id()
+                .expect("caused event has parent")
+                .as_str(),
+            "CX-EVT-000001"
+        );
+    }
+
+    #[test]
+    fn event_causation_rejects_self_causation_traceability_k5_5() {
+        let current = EventId::new("CX-EVT-000001").expect("current event id");
+        let parent = EventId::new("CX-EVT-000001").expect("same parent event id");
+
+        let error = EventCausation::caused_by(&current, parent)
+            .expect_err("event must not directly cause itself");
+
+        assert_eq!(
+            error.to_string(),
+            "invalid event reference: an event cannot directly cause itself"
+        );
+    }
+
+    #[test]
+    fn event_causation_equality_is_stable_traceability_k5_5() {
+        let current = EventId::new("CX-EVT-000010").expect("current event id");
+
+        let left = EventCausation::caused_by(
+            &current,
+            EventId::new("CX-EVT-000009").expect("left parent"),
+        )
+        .expect("left causation");
+
+        let right = EventCausation::caused_by(
+            &current,
+            EventId::new("CX-EVT-000009").expect("right parent"),
+        )
+        .expect("right causation");
+
+        assert_eq!(left, right);
     }
 }
