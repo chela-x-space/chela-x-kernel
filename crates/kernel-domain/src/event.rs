@@ -9,6 +9,9 @@ const EVENT_TYPE_EXPECTATION: &str =
 const EVENT_VERSION_EXPECTATION: &str =
     "semantic event schema version in MAJOR.MINOR.PATCH format using ASCII digits without leading zeros";
 
+const EVENT_CLASSIFICATION_EXPECTATION: &str =
+    "one of PUBLIC, INTERNAL, CONFIDENTIAL, RESTRICTED, or CRITICAL";
+
 const APPROVED_EVENT_CATEGORIES: &[&str] = &[
     "system",
     "runtime",
@@ -179,13 +182,71 @@ impl FromStr for EventVersion {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum EventClassification {
+    Public,
+    Internal,
+    Confidential,
+    Restricted,
+    Critical,
+}
+
+impl EventClassification {
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Public => "PUBLIC",
+            Self::Internal => "INTERNAL",
+            Self::Confidential => "CONFIDENTIAL",
+            Self::Restricted => "RESTRICTED",
+            Self::Critical => "CRITICAL",
+        }
+    }
+
+    pub fn new(value: impl AsRef<str>) -> DomainResult<Self> {
+        let value = value.as_ref().trim();
+
+        if value.is_empty() {
+            return Err(DomainError::EmptyValue {
+                field: "EventClassification",
+            });
+        }
+
+        match value {
+            "PUBLIC" => Ok(Self::Public),
+            "INTERNAL" => Ok(Self::Internal),
+            "CONFIDENTIAL" => Ok(Self::Confidential),
+            "RESTRICTED" => Ok(Self::Restricted),
+            "CRITICAL" => Ok(Self::Critical),
+            _ => Err(DomainError::InvalidIdentifier {
+                kind: "EventClassification",
+                value: value.to_owned(),
+                expected: EVENT_CLASSIFICATION_EXPECTATION,
+            }),
+        }
+    }
+}
+
+impl fmt::Display for EventClassification {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str(self.as_str())
+    }
+}
+
+impl FromStr for EventClassification {
+    type Err = DomainError;
+
+    fn from_str(value: &str) -> DomainResult<Self> {
+        Self::new(value)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::collections::hash_map::DefaultHasher;
     use std::hash::{Hash, Hasher};
     use std::str::FromStr;
 
-    use super::{EventType, EventVersion};
+    use super::{EventClassification, EventType, EventVersion};
 
     #[test]
     fn event_type_accepts_canonical_dotted_type_traceability_k5_2() {
@@ -376,5 +437,68 @@ mod tests {
         assert!(error
             .to_string()
             .contains("invalid EventVersion identifier"));
+    }
+
+    #[test]
+    fn event_classification_accepts_all_canonical_values_traceability_k5_4() {
+        let cases = [
+            ("PUBLIC", EventClassification::Public),
+            ("INTERNAL", EventClassification::Internal),
+            ("CONFIDENTIAL", EventClassification::Confidential),
+            ("RESTRICTED", EventClassification::Restricted),
+            ("CRITICAL", EventClassification::Critical),
+        ];
+
+        for (value, expected) in cases {
+            let classification =
+                EventClassification::new(value).expect("valid event classification");
+
+            assert_eq!(classification, expected);
+            assert_eq!(classification.as_str(), value);
+        }
+    }
+
+    #[test]
+    fn event_classification_display_and_parsing_are_stable_traceability_k5_4() {
+        let classification =
+            EventClassification::from_str("CONFIDENTIAL").expect("valid classification");
+
+        assert_eq!(classification, EventClassification::Confidential);
+        assert_eq!(classification.to_string(), "CONFIDENTIAL");
+    }
+
+    #[test]
+    fn event_classification_order_is_stable_traceability_k5_4() {
+        assert!(EventClassification::Public < EventClassification::Internal);
+        assert!(EventClassification::Internal < EventClassification::Confidential);
+        assert!(EventClassification::Confidential < EventClassification::Restricted);
+        assert!(EventClassification::Restricted < EventClassification::Critical);
+    }
+
+    #[test]
+    fn event_classification_rejects_empty_value_traceability_k5_4() {
+        let error = EventClassification::new("").expect_err("empty event classification must fail");
+
+        assert_eq!(error.to_string(), "empty value: EventClassification");
+    }
+
+    #[test]
+    fn event_classification_rejects_lowercase_value_traceability_k5_4() {
+        let error =
+            EventClassification::new("internal").expect_err("lowercase value must be rejected");
+
+        assert!(error
+            .to_string()
+            .contains("invalid EventClassification identifier"));
+    }
+
+    #[test]
+    fn event_classification_rejects_unknown_value_traceability_k5_4() {
+        let error =
+            EventClassification::new("SECRET").expect_err("unknown classification must fail");
+
+        assert!(error
+            .to_string()
+            .contains("invalid EventClassification identifier"));
     }
 }

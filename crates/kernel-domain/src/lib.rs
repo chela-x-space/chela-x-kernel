@@ -53,7 +53,7 @@ pub use enforcement::{
     ScopeValidationResult, SeparationOfDutiesResult,
 };
 pub use errors::{DomainError, DomainResult};
-pub use event::{EventType, EventVersion};
+pub use event::{EventClassification, EventType, EventVersion};
 pub use identifier::{
     AgentId, AgentUuid, AuditEvidenceId, AuthorizationDecisionId, AuthorizationRequestId,
     CapabilityId, DecisionAuthorityId, DecisionId, DelegationId, EnglishNamespace, EnterpriseId,
