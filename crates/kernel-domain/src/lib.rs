@@ -6,6 +6,7 @@ pub mod decision;
 pub mod delegation;
 pub mod enforcement;
 pub mod errors;
+pub mod event;
 pub mod identifier;
 pub mod identity;
 pub mod lifecycle;
@@ -52,6 +53,7 @@ pub use enforcement::{
     ScopeValidationResult, SeparationOfDutiesResult,
 };
 pub use errors::{DomainError, DomainResult};
+pub use event::EventType;
 pub use identifier::{
     AgentId, AgentUuid, AuditEvidenceId, AuthorizationDecisionId, AuthorizationRequestId,
     CapabilityId, DecisionAuthorityId, DecisionId, DelegationId, EnglishNamespace, EnterpriseId,
