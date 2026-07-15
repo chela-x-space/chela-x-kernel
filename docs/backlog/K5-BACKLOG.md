@@ -28,7 +28,7 @@ Implementation shall follow the approved specifications.
 | K5-003 | EventVersion | TODO |
 | K5-004 | EventClassification | TODO |
 | K5-005 | CorrelationId | TODO |
-| K5-006 | CausationId | TODO |
+| K5-006 | Causation Reference using EventId | TODO |
 | K5-007 | EventSource | TODO |
 | K5-008 | EventSubject | TODO |
 | K5-009 | EventTrace | TODO |
