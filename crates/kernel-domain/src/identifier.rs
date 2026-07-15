@@ -115,6 +115,7 @@ define_identifier!(AuditEvidenceId, "AuditEvidenceId", "CX-AUD-", 6);
 define_identifier!(DelegationId, "DelegationId", "CX-DEL-", 6);
 define_identifier!(PolicyId, "PolicyId", "CX-POL-", 6);
 define_identifier!(WorkflowId, "WorkflowId", "CX-WF-", 6);
+define_identifier!(EventId, "EventId", "CX-EVT-", 6);
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct RuntimeId(String);
@@ -241,7 +242,7 @@ mod tests {
     use std::collections::hash_map::DefaultHasher;
     use std::hash::{Hash, Hasher};
 
-    use super::{AgentId, CapabilityId, EnterpriseId, NonEmptyText, RuntimeId};
+    use super::{AgentId, CapabilityId, EnterpriseId, EventId, NonEmptyText, RuntimeId};
 
     #[test]
     fn identifier_accepts_valid_opaque_identifier_ces_b0_025_1() {
@@ -267,8 +268,10 @@ mod tests {
         let right = AgentId::new("CX-AGT-000101").expect("right");
         let mut left_hasher = DefaultHasher::new();
         let mut right_hasher = DefaultHasher::new();
+
         left.hash(&mut left_hasher);
         right.hash(&mut right_hasher);
+
         assert_eq!(left, right);
         assert_eq!(left_hasher.finish(), right_hasher.finish());
     }
@@ -289,8 +292,41 @@ mod tests {
     fn runtime_id_rejects_invalid_namespace_characters_traceability_k4_1() {
         let error = RuntimeId::new("runtime id")
             .expect_err("runtime identifiers must use namespace-safe characters");
+
         assert!(error
             .to_string()
             .contains("ASCII letters, digits, dot, underscore, or hyphen"));
+    }
+
+    #[test]
+    fn event_id_accepts_canonical_identifier_traceability_k5_1() {
+        let identifier = EventId::new("CX-EVT-000001").expect("valid event id");
+
+        assert_eq!(identifier.as_str(), "CX-EVT-000001");
+        assert_eq!(identifier.to_string(), "CX-EVT-000001");
+    }
+
+    #[test]
+    fn event_id_rejects_invalid_prefix_traceability_k5_1() {
+        let error =
+            EventId::new("EVT-000001").expect_err("event id must use canonical CX-EVT prefix");
+
+        assert!(error.to_string().contains("invalid EventId identifier"));
+    }
+
+    #[test]
+    fn event_id_rejects_invalid_digit_count_traceability_k5_1() {
+        let error =
+            EventId::new("CX-EVT-00001").expect_err("event id must contain exactly six digits");
+
+        assert!(error.to_string().contains("invalid EventId identifier"));
+    }
+
+    #[test]
+    fn event_id_rejects_non_numeric_suffix_traceability_k5_1() {
+        let error =
+            EventId::new("CX-EVT-00A001").expect_err("event id suffix must contain only digits");
+
+        assert!(error.to_string().contains("invalid EventId identifier"));
     }
 }

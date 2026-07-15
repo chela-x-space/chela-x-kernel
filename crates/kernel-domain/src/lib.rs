@@ -55,9 +55,9 @@ pub use errors::{DomainError, DomainResult};
 pub use identifier::{
     AgentId, AgentUuid, AuditEvidenceId, AuthorizationDecisionId, AuthorizationRequestId,
     CapabilityId, DecisionAuthorityId, DecisionId, DelegationId, EnglishNamespace, EnterpriseId,
-    HeartbeatId, HumanId, LeaseId, NonEmptyText, OrganizationUnitId, OwnershipId, PermissionId,
-    PolicyId, PrincipalId, ProjectId, RoleId, RuntimeId, ScopeId, StableVersion, WorkflowId,
-    WorkspaceId,
+    EventId, HeartbeatId, HumanId, LeaseId, NonEmptyText, OrganizationUnitId, OwnershipId,
+    PermissionId, PolicyId, PrincipalId, ProjectId, RoleId, RuntimeId, ScopeId, StableVersion,
+    WorkflowId, WorkspaceId,
 };
 pub use identity::{AgentIdentity, HumanIdentity};
 pub use identity::{IdentityKind, IdentityReference};
