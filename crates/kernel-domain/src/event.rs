@@ -7,6 +7,12 @@ use crate::identifier::{EventId, RuntimeId};
 const EVENT_TYPE_EXPECTATION: &str =
     "lowercase dotted event type with an approved category and non-empty ASCII alphanumeric segments";
 
+const EVENT_SUBJECT_TYPE_EXPECTATION: &str =
+    "one of the approved lowercase ASCII event subject types";
+
+const EVENT_SUBJECT_ID_EXPECTATION: &str =
+    "non-empty ASCII subject reference using a-z, A-Z, 0-9, dot, underscore, or hyphen";
+
 const EVENT_COMPONENT_EXPECTATION: &str =
     "lowercase ASCII component using a-z, 0-9, hyphen, dot, or underscore, without leading, trailing, or adjacent separators";
 
@@ -27,6 +33,25 @@ const APPROVED_EVENT_CATEGORIES: &[&str] = &[
     "audit",
     "api",
     "studio",
+];
+
+const APPROVED_EVENT_SUBJECT_TYPES: &[&str] = &[
+    "enterprise",
+    "workspace",
+    "project",
+    "organization-unit",
+    "ownership",
+    "human",
+    "agent",
+    "runtime",
+    "workflow",
+    "decision",
+    "delegation",
+    "policy",
+    "api",
+    "task",
+    "execution",
+    "memory",
 ];
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -155,6 +180,132 @@ impl EventSource {
 
     pub const fn has_runtime_id(&self) -> bool {
         self.runtime_id.is_some()
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct EventSubjectType(String);
+
+impl EventSubjectType {
+    pub fn new(value: impl Into<String>) -> DomainResult<Self> {
+        let value = value.into().trim().to_owned();
+
+        if value.is_empty() {
+            return Err(DomainError::EmptyValue {
+                field: "EventSubjectType",
+            });
+        }
+
+        if !value
+            .chars()
+            .all(|character| character.is_ascii_lowercase() || character == '-')
+            || value.starts_with('-')
+            || value.ends_with('-')
+            || value.contains("--")
+            || !APPROVED_EVENT_SUBJECT_TYPES.contains(&value.as_str())
+        {
+            return Err(Self::invalid(value));
+        }
+
+        Ok(Self(value))
+    }
+
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+
+    fn invalid(value: String) -> DomainError {
+        DomainError::InvalidIdentifier {
+            kind: "EventSubjectType",
+            value,
+            expected: EVENT_SUBJECT_TYPE_EXPECTATION,
+        }
+    }
+}
+
+impl fmt::Display for EventSubjectType {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str(self.as_str())
+    }
+}
+
+impl FromStr for EventSubjectType {
+    type Err = DomainError;
+
+    fn from_str(value: &str) -> DomainResult<Self> {
+        Self::new(value.to_owned())
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct EventSubjectId(String);
+
+impl EventSubjectId {
+    pub fn new(value: impl Into<String>) -> DomainResult<Self> {
+        let value = value.into().trim().to_owned();
+
+        if value.is_empty() {
+            return Err(DomainError::EmptyValue {
+                field: "EventSubjectId",
+            });
+        }
+
+        if !value.chars().all(|character| {
+            character.is_ascii_alphanumeric() || matches!(character, '.' | '_' | '-')
+        }) {
+            return Err(Self::invalid(value));
+        }
+
+        Ok(Self(value))
+    }
+
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+
+    fn invalid(value: String) -> DomainError {
+        DomainError::InvalidIdentifier {
+            kind: "EventSubjectId",
+            value,
+            expected: EVENT_SUBJECT_ID_EXPECTATION,
+        }
+    }
+}
+
+impl fmt::Display for EventSubjectId {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str(self.as_str())
+    }
+}
+
+impl FromStr for EventSubjectId {
+    type Err = DomainError;
+
+    fn from_str(value: &str) -> DomainResult<Self> {
+        Self::new(value.to_owned())
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct EventSubject {
+    subject_type: EventSubjectType,
+    subject_id: EventSubjectId,
+}
+
+impl EventSubject {
+    pub const fn new(subject_type: EventSubjectType, subject_id: EventSubjectId) -> Self {
+        Self {
+            subject_type,
+            subject_id,
+        }
+    }
+
+    pub const fn subject_type(&self) -> &EventSubjectType {
+        &self.subject_type
+    }
+
+    pub const fn subject_id(&self) -> &EventSubjectId {
+        &self.subject_id
     }
 }
 
@@ -382,7 +533,8 @@ mod tests {
     use crate::identifier::{EventId, RuntimeId};
 
     use super::{
-        EventCausation, EventClassification, EventComponent, EventSource, EventType, EventVersion,
+        EventCausation, EventClassification, EventComponent, EventSource, EventSubject,
+        EventSubjectId, EventSubjectType, EventType, EventVersion,
     };
 
     #[test]
@@ -821,6 +973,164 @@ mod tests {
         let right = EventSource::new(
             EventComponent::new("api-gateway").expect("right component"),
             None,
+        );
+
+        assert_eq!(left, right);
+        assert_eq!(left.clone(), left);
+    }
+
+    #[test]
+    fn event_subject_type_accepts_approved_values() {
+        for value in [
+            "enterprise",
+            "workspace",
+            "project",
+            "organization-unit",
+            "ownership",
+            "human",
+            "agent",
+            "runtime",
+            "workflow",
+            "decision",
+            "delegation",
+            "policy",
+            "api",
+            "task",
+            "execution",
+            "memory",
+        ] {
+            let subject_type =
+                EventSubjectType::new(value).expect("approved subject type must be valid");
+
+            assert_eq!(subject_type.as_str(), value);
+            assert_eq!(subject_type.to_string(), value);
+        }
+    }
+
+    #[test]
+    fn event_subject_type_trims_outer_whitespace() {
+        let subject_type =
+            EventSubjectType::new("  runtime  ").expect("outer whitespace must be trimmed");
+
+        assert_eq!(subject_type.as_str(), "runtime");
+    }
+
+    #[test]
+    fn event_subject_type_rejects_empty_value() {
+        let error = EventSubjectType::new("   ").expect_err("empty subject type must be rejected");
+
+        assert_eq!(error.to_string(), "empty value: EventSubjectType");
+    }
+
+    #[test]
+    fn event_subject_type_rejects_unapproved_value() {
+        let error = EventSubjectType::new("unknown-subject")
+            .expect_err("unapproved subject type must be rejected");
+
+        assert!(error
+            .to_string()
+            .contains("invalid EventSubjectType identifier"));
+    }
+
+    #[test]
+    fn event_subject_type_rejects_non_canonical_values() {
+        for value in [
+            "Runtime",
+            "runtime_type",
+            "runtime.type",
+            "runtime type",
+            "-runtime",
+            "runtime-",
+            "runtime--agent",
+        ] {
+            EventSubjectType::new(value).expect_err("non-canonical subject type must be rejected");
+        }
+    }
+
+    #[test]
+    fn event_subject_type_supports_from_str() {
+        let subject_type: EventSubjectType = "organization-unit"
+            .parse()
+            .expect("subject type must parse");
+
+        assert_eq!(subject_type.as_str(), "organization-unit");
+    }
+
+    #[test]
+    fn event_subject_id_accepts_namespace_safe_values() {
+        for value in [
+            "runtime.primary",
+            "CX-AGT-000001",
+            "external_subject_01",
+            "workflow.execution-01",
+        ] {
+            let subject_id =
+                EventSubjectId::new(value).expect("namespace-safe subject id must be valid");
+
+            assert_eq!(subject_id.as_str(), value);
+            assert_eq!(subject_id.to_string(), value);
+        }
+    }
+
+    #[test]
+    fn event_subject_id_trims_outer_whitespace() {
+        let subject_id =
+            EventSubjectId::new("  runtime.primary  ").expect("outer whitespace must be trimmed");
+
+        assert_eq!(subject_id.as_str(), "runtime.primary");
+    }
+
+    #[test]
+    fn event_subject_id_rejects_empty_value() {
+        let error = EventSubjectId::new("   ").expect_err("empty subject id must be rejected");
+
+        assert_eq!(error.to_string(), "empty value: EventSubjectId");
+    }
+
+    #[test]
+    fn event_subject_id_rejects_internal_whitespace() {
+        EventSubjectId::new("runtime primary").expect_err("internal whitespace must be rejected");
+    }
+
+    #[test]
+    fn event_subject_id_rejects_unsafe_characters() {
+        for value in [
+            "runtime/primary",
+            "runtime:primary",
+            "runtime@primary",
+            "runtime#primary",
+        ] {
+            EventSubjectId::new(value).expect_err("unsafe subject identifier must be rejected");
+        }
+    }
+
+    #[test]
+    fn event_subject_id_supports_from_str() {
+        let subject_id: EventSubjectId = "runtime.primary".parse().expect("subject id must parse");
+
+        assert_eq!(subject_id.as_str(), "runtime.primary");
+    }
+
+    #[test]
+    fn event_subject_preserves_canonical_reference() {
+        let subject_type = EventSubjectType::new("runtime").expect("valid subject type");
+        let subject_id = EventSubjectId::new("runtime.primary").expect("valid subject id");
+
+        let subject = EventSubject::new(subject_type.clone(), subject_id.clone());
+
+        assert_eq!(subject.subject_type(), &subject_type);
+        assert_eq!(subject.subject_id(), &subject_id);
+    }
+
+    #[test]
+    fn event_subject_preserves_value_semantics() {
+        let left = EventSubject::new(
+            EventSubjectType::new("agent").expect("left subject type"),
+            EventSubjectId::new("CX-AGT-000001").expect("left subject id"),
+        );
+        let right = EventSubject::new(
+            EventSubjectType::new("agent").expect("right subject type"),
+            EventSubjectId::new("CX-AGT-000001").expect("right subject id"),
         );
 
         assert_eq!(left, right);
