@@ -116,6 +116,7 @@ define_identifier!(DelegationId, "DelegationId", "CX-DEL-", 6);
 define_identifier!(PolicyId, "PolicyId", "CX-POL-", 6);
 define_identifier!(WorkflowId, "WorkflowId", "CX-WF-", 6);
 define_identifier!(EventId, "EventId", "CX-EVT-", 6);
+define_identifier!(CorrelationId, "CorrelationId", "CX-COR-", 6);
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct RuntimeId(String);
@@ -242,7 +243,9 @@ mod tests {
     use std::collections::hash_map::DefaultHasher;
     use std::hash::{Hash, Hasher};
 
-    use super::{AgentId, CapabilityId, EnterpriseId, EventId, NonEmptyText, RuntimeId};
+    use super::{
+        AgentId, CapabilityId, CorrelationId, EnterpriseId, EventId, NonEmptyText, RuntimeId,
+    };
 
     #[test]
     fn identifier_accepts_valid_opaque_identifier_ces_b0_025_1() {
@@ -328,5 +331,74 @@ mod tests {
             EventId::new("CX-EVT-00A001").expect_err("event id suffix must contain only digits");
 
         assert!(error.to_string().contains("invalid EventId identifier"));
+    }
+
+    #[test]
+    fn correlation_id_accepts_canonical_identifier_traceability_k5_4() {
+        let identifier = CorrelationId::new("CX-COR-000001").expect("valid correlation identifier");
+
+        assert_eq!(identifier.as_str(), "CX-COR-000001");
+        assert_eq!(identifier.to_string(), "CX-COR-000001");
+    }
+
+    #[test]
+    fn correlation_id_parsing_is_stable_traceability_k5_4() {
+        let identifier: CorrelationId = "CX-COR-000042"
+            .parse()
+            .expect("valid parsed correlation identifier");
+
+        assert_eq!(identifier.as_str(), "CX-COR-000042");
+    }
+
+    #[test]
+    fn correlation_id_hash_is_stable_for_equal_values_traceability_k5_4() {
+        let left = CorrelationId::new("CX-COR-000101").expect("left correlation id");
+        let right = CorrelationId::new("CX-COR-000101").expect("right correlation id");
+
+        let mut left_hasher = DefaultHasher::new();
+        let mut right_hasher = DefaultHasher::new();
+
+        left.hash(&mut left_hasher);
+        right.hash(&mut right_hasher);
+
+        assert_eq!(left, right);
+        assert_eq!(left_hasher.finish(), right_hasher.finish());
+    }
+
+    #[test]
+    fn correlation_id_rejects_empty_value_traceability_k5_4() {
+        let error = CorrelationId::new("").expect_err("empty correlation identifier must fail");
+
+        assert_eq!(error.to_string(), "empty value: CorrelationId");
+    }
+
+    #[test]
+    fn correlation_id_rejects_invalid_prefix_traceability_k5_4() {
+        let error = CorrelationId::new("COR-000001")
+            .expect_err("correlation identifier must use canonical prefix");
+
+        assert!(error
+            .to_string()
+            .contains("invalid CorrelationId identifier"));
+    }
+
+    #[test]
+    fn correlation_id_rejects_invalid_digit_count_traceability_k5_4() {
+        let error = CorrelationId::new("CX-COR-00001")
+            .expect_err("correlation identifier requires exactly six digits");
+
+        assert!(error
+            .to_string()
+            .contains("invalid CorrelationId identifier"));
+    }
+
+    #[test]
+    fn correlation_id_rejects_non_numeric_suffix_traceability_k5_4() {
+        let error = CorrelationId::new("CX-COR-00A001")
+            .expect_err("correlation identifier suffix must contain only digits");
+
+        assert!(error
+            .to_string()
+            .contains("invalid CorrelationId identifier"));
     }
 }

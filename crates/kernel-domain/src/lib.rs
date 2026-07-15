@@ -56,10 +56,10 @@ pub use errors::{DomainError, DomainResult};
 pub use event::{EventClassification, EventType, EventVersion};
 pub use identifier::{
     AgentId, AgentUuid, AuditEvidenceId, AuthorizationDecisionId, AuthorizationRequestId,
-    CapabilityId, DecisionAuthorityId, DecisionId, DelegationId, EnglishNamespace, EnterpriseId,
-    EventId, HeartbeatId, HumanId, LeaseId, NonEmptyText, OrganizationUnitId, OwnershipId,
-    PermissionId, PolicyId, PrincipalId, ProjectId, RoleId, RuntimeId, ScopeId, StableVersion,
-    WorkflowId, WorkspaceId,
+    CapabilityId, CorrelationId, DecisionAuthorityId, DecisionId, DelegationId, EnglishNamespace,
+    EnterpriseId, EventId, HeartbeatId, HumanId, LeaseId, NonEmptyText, OrganizationUnitId,
+    OwnershipId, PermissionId, PolicyId, PrincipalId, ProjectId, RoleId, RuntimeId, ScopeId,
+    StableVersion, WorkflowId, WorkspaceId,
 };
 pub use identity::{AgentIdentity, HumanIdentity};
 pub use identity::{IdentityKind, IdentityReference};
