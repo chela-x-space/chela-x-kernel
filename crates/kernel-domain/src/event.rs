@@ -516,6 +516,13 @@ pub fn validate_event_timestamps<P>(envelope: &EventEnvelope<P>) -> DomainResult
     Ok(())
 }
 
+pub fn validate_event_payload<P, F>(envelope: &EventEnvelope<P>, validator: F) -> DomainResult<()>
+where
+    F: FnOnce(&P) -> DomainResult<()>,
+{
+    validator(envelope.payload())
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 struct CanonicalEventTimestamp {
     year: u16,
@@ -1001,14 +1008,16 @@ mod tests {
     use std::collections::hash_map::DefaultHasher;
     use std::hash::{Hash, Hasher};
     use std::str::FromStr;
+    use std::sync::atomic::{AtomicUsize, Ordering};
 
     use super::{
-        validate_event_envelope, validate_event_identity, validate_event_timestamps,
-        validate_event_version, EventActorId, EventCausation, EventClassification, EventComponent,
-        EventEnvelope, EventEnvelopeCandidate, EventSource, EventSubject, EventSubjectId,
-        EventSubjectType, EventTrace, EventTraceReference, EventType, EventVersion,
+        validate_event_envelope, validate_event_identity, validate_event_payload,
+        validate_event_timestamps, validate_event_version, EventActorId, EventCausation,
+        EventClassification, EventComponent, EventEnvelope, EventEnvelopeCandidate, EventSource,
+        EventSubject, EventSubjectId, EventSubjectType, EventTrace, EventTraceReference, EventType,
+        EventVersion,
     };
-    use crate::errors::DomainError;
+    use crate::errors::{DomainError, DomainResult};
     use crate::identifier::{AuditEvidenceId, CorrelationId, EventId, RuntimeId, WorkflowId};
     use crate::request::TimeReference;
 
@@ -1962,6 +1971,48 @@ mod tests {
         envelope
     }
 
+    fn test_envelope_with_payload<P>(
+        payload: P,
+        correlation_id: Option<CorrelationId>,
+    ) -> EventEnvelope<P> {
+        let source = EventSource::new(
+            EventComponent::new("kernel-runtime").expect("valid component"),
+            Some(RuntimeId::new("kernel.runtime.primary").expect("valid runtime id")),
+        );
+
+        let subject = EventSubject::new(
+            EventSubjectType::new("runtime").expect("valid subject type"),
+            EventSubjectId::new("kernel.runtime.primary").expect("valid subject id"),
+        );
+
+        let trace = EventTrace::new(
+            Some(EventActorId::new("system.supervisor").expect("valid actor id")),
+            None,
+            None,
+            Some(
+                EventTraceReference::new("execution.health-assessment")
+                    .expect("valid execution reference"),
+            ),
+            vec![],
+        )
+        .expect("valid trace");
+
+        EventEnvelope::new(
+            EventId::new("CX-EVT-000100").expect("valid event id"),
+            EventType::new("runtime.health.assessed").expect("valid event type"),
+            EventVersion::new("1.0.0").expect("valid event version"),
+            TimeReference::new("2026-07-16T12:00:00Z").expect("valid occurrence time"),
+            TimeReference::new("2026-07-16T12:00:01Z").expect("valid recording time"),
+            source,
+            subject,
+            payload,
+            EventClassification::Internal,
+            trace,
+            correlation_id,
+            EventCausation::root(),
+        )
+    }
+
     #[test]
     fn event_envelope_preserves_all_mandatory_fields() {
         let envelope = canonical_test_envelope(None, EventCausation::root());
@@ -2644,5 +2695,151 @@ mod tests {
 
         assert_eq!(without_correlation_result, with_correlation_result);
         assert_eq!(with_correlation_result, Ok(()));
+    }
+
+    #[test]
+    fn event_payload_validation_valid_payload_passes() {
+        let envelope = canonical_test_envelope(None, EventCausation::root());
+
+        let result = validate_event_payload(&envelope, |payload| {
+            if payload.current_health == "HEALTHY" {
+                Ok(())
+            } else {
+                Err(DomainError::InvalidEventReference(
+                    "payload must be healthy",
+                ))
+            }
+        });
+
+        assert_eq!(result, Ok(()));
+    }
+
+    #[test]
+    fn event_payload_validation_invalid_payload_propagates_canonical_error() {
+        let envelope = canonical_test_envelope(None, EventCausation::root());
+
+        let error = validate_event_payload(&envelope, |_| {
+            Err(DomainError::InvalidEventReference(
+                "payload must satisfy caller validation",
+            ))
+        })
+        .expect_err("invalid payload must fail");
+
+        assert_eq!(
+            error,
+            DomainError::InvalidEventReference("payload must satisfy caller validation")
+        );
+        assert_eq!(
+            error.to_string(),
+            "invalid event reference: payload must satisfy caller validation"
+        );
+    }
+
+    #[test]
+    fn event_payload_validation_validator_receives_payload_by_shared_reference() {
+        let envelope = canonical_test_envelope(None, EventCausation::root());
+        let payload_reference = envelope.payload() as *const TestPayload;
+
+        let result = validate_event_payload(&envelope, |payload| {
+            assert!(std::ptr::eq(payload, envelope.payload()));
+            assert_eq!(payload as *const TestPayload, payload_reference);
+            Ok(())
+        });
+
+        assert_eq!(result, Ok(()));
+    }
+
+    #[test]
+    fn event_payload_validation_payload_is_not_mutated() {
+        let envelope = canonical_test_envelope(None, EventCausation::root());
+        let original = envelope.clone();
+
+        let result = validate_event_payload(&envelope, |payload| {
+            assert_eq!(payload.previous_health, "DEGRADED");
+            assert_eq!(payload.current_health, "HEALTHY");
+            Ok(())
+        });
+
+        assert_eq!(result, Ok(()));
+        assert_eq!(envelope, original);
+    }
+
+    #[test]
+    fn event_payload_validation_deterministic_repeated_validation() {
+        let envelope = canonical_test_envelope(None, EventCausation::root());
+        static VALIDATION_CALLS: AtomicUsize = AtomicUsize::new(0);
+
+        fn deterministic_validator(payload: &TestPayload) -> DomainResult<()> {
+            VALIDATION_CALLS.fetch_add(1, Ordering::Relaxed);
+
+            if payload.previous_health == "DEGRADED" && payload.current_health == "HEALTHY" {
+                Ok(())
+            } else {
+                Err(DomainError::InvalidEventReference(
+                    "payload must match canonical health transition",
+                ))
+            }
+        }
+
+        let first = validate_event_payload(&envelope, deterministic_validator);
+        let second = validate_event_payload(&envelope, deterministic_validator);
+
+        assert_eq!(first, second);
+        assert_eq!(first, Ok(()));
+        assert_eq!(VALIDATION_CALLS.load(Ordering::Relaxed), 2);
+    }
+
+    #[test]
+    fn event_payload_validation_correlation_does_not_change_result() {
+        let without_correlation = canonical_test_envelope(None, EventCausation::root());
+        let with_correlation = canonical_test_envelope(
+            Some(CorrelationId::new("CX-COR-000100").expect("valid correlation id")),
+            EventCausation::root(),
+        );
+
+        fn validator(payload: &TestPayload) -> DomainResult<()> {
+            if payload.current_health == "HEALTHY" {
+                Ok(())
+            } else {
+                Err(DomainError::InvalidEventReference(
+                    "payload must be healthy",
+                ))
+            }
+        }
+
+        let without_correlation_result = validate_event_payload(&without_correlation, validator);
+        let with_correlation_result = validate_event_payload(&with_correlation, validator);
+
+        assert_eq!(without_correlation_result, with_correlation_result);
+        assert_eq!(with_correlation_result, Ok(()));
+    }
+
+    #[test]
+    fn event_payload_validation_different_payload_types_are_supported() {
+        let string_payload_envelope =
+            test_envelope_with_payload(String::from("canonical payload"), None);
+        let integer_payload_envelope = test_envelope_with_payload(42_u32, None);
+
+        let string_result = validate_event_payload(&string_payload_envelope, |payload| {
+            if payload == "canonical payload" {
+                Ok(())
+            } else {
+                Err(DomainError::InvalidEventReference(
+                    "string payload must match",
+                ))
+            }
+        });
+        let integer_result = validate_event_payload(&integer_payload_envelope, |payload| {
+            if *payload == 42 {
+                Ok(())
+            } else {
+                Err(DomainError::InvalidEventReference(
+                    "integer payload must match",
+                ))
+            }
+        });
+
+        assert_eq!(string_result, Ok(()));
+        assert_eq!(integer_result, Ok(()));
     }
 }
