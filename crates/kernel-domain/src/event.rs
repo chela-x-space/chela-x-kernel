@@ -437,6 +437,60 @@ pub trait EventReplaySource<P> {
     fn replay(&self, request: &EventReplayRequest) -> DomainResult<Vec<EventEnvelope<P>>>;
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EventReplayEntry<P> {
+    position: StreamPosition,
+    event: EventEnvelope<P>,
+}
+
+impl<P> EventReplayEntry<P> {
+    pub const fn new(position: StreamPosition, event: EventEnvelope<P>) -> Self {
+        Self { position, event }
+    }
+
+    pub const fn position(&self) -> &StreamPosition {
+        &self.position
+    }
+
+    pub const fn event(&self) -> &EventEnvelope<P> {
+        &self.event
+    }
+}
+
+pub fn validate_replay_ordering<P>(entries: &[EventReplayEntry<P>]) -> DomainResult<()> {
+    let mut stream_heads: Vec<(&EventStreamId, EventSequence)> = Vec::new();
+
+    for entry in entries {
+        let position = entry.position();
+
+        match stream_heads
+            .iter_mut()
+            .find(|(stream_id, _)| *stream_id == position.stream_id())
+        {
+            None => {
+                if position.sequence().value() != 1 {
+                    return Err(DomainError::InvalidReplayOrdering(
+                        "stream replay must begin at sequence 1",
+                    ));
+                }
+
+                stream_heads.push((position.stream_id(), position.sequence()));
+            }
+            Some((_, previous_sequence)) => {
+                if position.sequence() != previous_sequence.next() {
+                    return Err(DomainError::InvalidReplayOrdering(
+                        "replay sequence must advance by exactly one",
+                    ));
+                }
+
+                *previous_sequence = position.sequence();
+            }
+        }
+    }
+
+    Ok(())
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct EventSubjectType(String);
 
@@ -1266,11 +1320,12 @@ mod tests {
     use super::{
         validate_event_envelope, validate_event_identity, validate_event_integrity,
         validate_event_payload, validate_event_timestamps, validate_event_version,
-        validate_stream_append, EventActorId, EventCausation, EventClassification, EventComponent,
-        EventEnvelope, EventEnvelopeCandidate, EventReplayRequest, EventReplaySource,
-        EventReplayStart, EventSequence, EventSource, EventStream, EventStreamId, EventSubject,
-        EventSubjectId, EventSubjectType, EventTrace, EventTraceReference, EventType, EventVersion,
-        StreamAppendCandidate, StreamPosition,
+        validate_replay_ordering, validate_stream_append, EventActorId, EventCausation,
+        EventClassification, EventComponent, EventEnvelope, EventEnvelopeCandidate,
+        EventReplayEntry, EventReplayRequest, EventReplaySource, EventReplayStart, EventSequence,
+        EventSource, EventStream, EventStreamId, EventSubject, EventSubjectId, EventSubjectType,
+        EventTrace, EventTraceReference, EventType, EventVersion, StreamAppendCandidate,
+        StreamPosition,
     };
     use crate::errors::{DomainError, DomainResult};
     use crate::identifier::{AuditEvidenceId, CorrelationId, EventId, RuntimeId, WorkflowId};
@@ -2448,6 +2503,236 @@ mod tests {
             error,
             DomainError::InvalidEventReference("replay source rejected request")
         );
+    }
+
+    fn test_replay_entry(
+        stream_id: &str,
+        sequence: u64,
+        event_id: &str,
+    ) -> EventReplayEntry<TestPayload> {
+        let mut event = canonical_test_envelope(None, EventCausation::root());
+        event.event_id = EventId::new(event_id).expect("valid event id");
+
+        EventReplayEntry::new(
+            StreamPosition::new(
+                EventStreamId::new(stream_id).expect("valid stream id"),
+                EventSequence::new(sequence).expect("valid sequence"),
+            ),
+            event,
+        )
+    }
+
+    #[test]
+    fn event_replay_ordering_empty_is_valid() {
+        let entries: Vec<EventReplayEntry<TestPayload>> = vec![];
+
+        assert_eq!(validate_replay_ordering(&entries), Ok(()));
+    }
+
+    #[test]
+    fn event_replay_ordering_single_event_valid() {
+        let entries = vec![test_replay_entry("runtime.primary", 1, "CX-EVT-000100")];
+
+        assert_eq!(validate_replay_ordering(&entries), Ok(()));
+    }
+
+    #[test]
+    fn event_replay_ordering_single_non_1_rejected() {
+        let entries = vec![test_replay_entry("runtime.primary", 2, "CX-EVT-000100")];
+
+        let error = validate_replay_ordering(&entries).expect_err("single non-1 must fail");
+
+        assert_eq!(
+            error,
+            DomainError::InvalidReplayOrdering("stream replay must begin at sequence 1")
+        );
+    }
+
+    #[test]
+    fn event_replay_ordering_valid_sequence() {
+        let entries = vec![
+            test_replay_entry("runtime.primary", 1, "CX-EVT-000100"),
+            test_replay_entry("runtime.primary", 2, "CX-EVT-000101"),
+            test_replay_entry("runtime.primary", 3, "CX-EVT-000102"),
+        ];
+
+        assert_eq!(validate_replay_ordering(&entries), Ok(()));
+    }
+
+    #[test]
+    fn event_replay_ordering_rejects_gap() {
+        let entries = vec![
+            test_replay_entry("runtime.primary", 1, "CX-EVT-000100"),
+            test_replay_entry("runtime.primary", 3, "CX-EVT-000101"),
+        ];
+
+        let error = validate_replay_ordering(&entries).expect_err("gap must fail");
+
+        assert_eq!(
+            error,
+            DomainError::InvalidReplayOrdering("replay sequence must advance by exactly one")
+        );
+    }
+
+    #[test]
+    fn event_replay_ordering_rejects_duplicate() {
+        let entries = vec![
+            test_replay_entry("runtime.primary", 1, "CX-EVT-000100"),
+            test_replay_entry("runtime.primary", 1, "CX-EVT-000101"),
+        ];
+
+        let error = validate_replay_ordering(&entries).expect_err("duplicate must fail");
+
+        assert_eq!(
+            error,
+            DomainError::InvalidReplayOrdering("replay sequence must advance by exactly one")
+        );
+    }
+
+    #[test]
+    fn event_replay_ordering_rejects_lower_sequence() {
+        let entries = vec![
+            test_replay_entry("runtime.primary", 1, "CX-EVT-000100"),
+            test_replay_entry("runtime.primary", 2, "CX-EVT-000101"),
+            test_replay_entry("runtime.primary", 1, "CX-EVT-000102"),
+        ];
+
+        let error = validate_replay_ordering(&entries).expect_err("lower must fail");
+
+        assert_eq!(
+            error,
+            DomainError::InvalidReplayOrdering("replay sequence must advance by exactly one")
+        );
+    }
+
+    #[test]
+    fn event_replay_ordering_multiple_independent_streams_valid() {
+        let entries = vec![
+            test_replay_entry("runtime.primary", 1, "CX-EVT-000100"),
+            test_replay_entry("runtime.secondary", 1, "CX-EVT-000101"),
+        ];
+
+        assert_eq!(validate_replay_ordering(&entries), Ok(()));
+    }
+
+    #[test]
+    fn event_replay_ordering_streams_validated_independently() {
+        let entries = vec![
+            test_replay_entry("runtime.primary", 1, "CX-EVT-000100"),
+            test_replay_entry("runtime.secondary", 1, "CX-EVT-000101"),
+            test_replay_entry("runtime.primary", 2, "CX-EVT-000102"),
+            test_replay_entry("runtime.secondary", 2, "CX-EVT-000103"),
+        ];
+
+        assert_eq!(validate_replay_ordering(&entries), Ok(()));
+    }
+
+    #[test]
+    fn event_replay_ordering_one_invalid_stream_rejects_full_replay() {
+        let entries = vec![
+            test_replay_entry("runtime.primary", 1, "CX-EVT-000100"),
+            test_replay_entry("runtime.secondary", 1, "CX-EVT-000101"),
+            test_replay_entry("runtime.primary", 3, "CX-EVT-000102"),
+        ];
+
+        let error = validate_replay_ordering(&entries).expect_err("invalid stream must fail");
+
+        assert_eq!(
+            error,
+            DomainError::InvalidReplayOrdering("replay sequence must advance by exactly one")
+        );
+    }
+
+    #[test]
+    fn event_replay_ordering_first_encountered_position_per_stream_must_be_1() {
+        let entries = vec![
+            test_replay_entry("runtime.primary", 1, "CX-EVT-000100"),
+            test_replay_entry("runtime.secondary", 2, "CX-EVT-000101"),
+        ];
+
+        let error = validate_replay_ordering(&entries).expect_err("first per stream must be 1");
+
+        assert_eq!(
+            error,
+            DomainError::InvalidReplayOrdering("stream replay must begin at sequence 1")
+        );
+    }
+
+    #[test]
+    fn event_replay_ordering_interleaved_streams_preserve_independent_ordering() {
+        let entries = vec![
+            test_replay_entry("runtime.primary", 1, "CX-EVT-000100"),
+            test_replay_entry("runtime.secondary", 1, "CX-EVT-000101"),
+            test_replay_entry("runtime.primary", 2, "CX-EVT-000102"),
+            test_replay_entry("runtime.secondary", 2, "CX-EVT-000103"),
+            test_replay_entry("runtime.primary", 3, "CX-EVT-000104"),
+        ];
+
+        assert_eq!(validate_replay_ordering(&entries), Ok(()));
+    }
+
+    #[test]
+    fn event_replay_ordering_deterministic() {
+        let entries = vec![
+            test_replay_entry("runtime.primary", 1, "CX-EVT-000100"),
+            test_replay_entry("runtime.primary", 3, "CX-EVT-000101"),
+        ];
+
+        let first = validate_replay_ordering(&entries);
+        let second = validate_replay_ordering(&entries);
+
+        assert_eq!(first, second);
+        assert_eq!(
+            first,
+            Err(DomainError::InvalidReplayOrdering(
+                "replay sequence must advance by exactly one",
+            ))
+        );
+    }
+
+    #[test]
+    fn event_replay_ordering_equivalent_errors() {
+        let left = vec![
+            test_replay_entry("runtime.primary", 1, "CX-EVT-000100"),
+            test_replay_entry("runtime.primary", 3, "CX-EVT-000101"),
+        ];
+        let right = vec![
+            test_replay_entry("runtime.primary", 1, "CX-EVT-000102"),
+            test_replay_entry("runtime.primary", 3, "CX-EVT-000103"),
+        ];
+
+        let left_error = validate_replay_ordering(&left).expect_err("left must fail");
+        let right_error = validate_replay_ordering(&right).expect_err("right must fail");
+
+        assert_eq!(left_error, right_error);
+    }
+
+    #[test]
+    fn event_replay_ordering_does_not_mutate_input() {
+        let entries = vec![
+            test_replay_entry("runtime.primary", 1, "CX-EVT-000100"),
+            test_replay_entry("runtime.primary", 2, "CX-EVT-000101"),
+        ];
+        let original = entries.clone();
+
+        let result = validate_replay_ordering(&entries);
+
+        assert_eq!(result, Ok(()));
+        assert_eq!(entries, original);
+    }
+
+    #[test]
+    fn event_replay_ordering_replay_entry_preserves_position_and_event() {
+        let position = StreamPosition::new(
+            EventStreamId::new("runtime.primary").expect("position stream id"),
+            EventSequence::new(1).expect("position sequence"),
+        );
+        let event = canonical_test_envelope(None, EventCausation::root());
+
+        let entry = EventReplayEntry::new(position.clone(), event.clone());
+
+        assert_eq!(entry.position(), &position);
+        assert_eq!(entry.event(), &event);
     }
 
     #[test]
