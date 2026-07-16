@@ -36,6 +36,7 @@ pub enum DomainError {
     IntegrityFailure(&'static str),
     InvalidStreamAppend(&'static str),
     InvalidReplayOrdering(&'static str),
+    InvalidReplayValidation(&'static str),
     MissingEventField(&'static str),
     UnsupportedAuthorizationSemantics(&'static str),
 }
@@ -123,6 +124,9 @@ impl fmt::Display for DomainError {
             }
             Self::InvalidReplayOrdering(message) => {
                 write!(formatter, "invalid replay ordering: {message}")
+            }
+            Self::InvalidReplayValidation(message) => {
+                write!(formatter, "invalid replay validation: {message}")
             }
             Self::MissingEventField(field) => {
                 write!(formatter, "missing mandatory event field: {field}")

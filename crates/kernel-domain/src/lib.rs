@@ -55,12 +55,13 @@ pub use enforcement::{
 pub use errors::{DomainError, DomainResult};
 pub use event::{
     validate_event_envelope, validate_event_identity, validate_event_integrity,
-    validate_event_payload, validate_event_timestamps, validate_event_version,
-    validate_replay_ordering, validate_stream_append, EventActorId, EventCausation,
-    EventClassification, EventComponent, EventEnvelope, EventEnvelopeCandidate, EventReplayEntry,
-    EventReplayRequest, EventReplaySource, EventReplayStart, EventSequence, EventSource,
-    EventStream, EventStreamId, EventSubject, EventSubjectId, EventSubjectType, EventTrace,
-    EventTraceReference, EventType, EventVersion, StreamAppendCandidate, StreamPosition,
+    validate_event_payload, validate_event_replay, validate_event_timestamps,
+    validate_event_version, validate_replay_ordering, validate_stream_append, EventActorId,
+    EventCausation, EventClassification, EventComponent, EventEnvelope, EventEnvelopeCandidate,
+    EventReplayEntry, EventReplayRequest, EventReplaySource, EventReplayStart, EventSequence,
+    EventSource, EventStream, EventStreamId, EventSubject, EventSubjectId, EventSubjectType,
+    EventTrace, EventTraceReference, EventType, EventVersion, StreamAppendCandidate,
+    StreamPosition,
 };
 pub use identifier::{
     AgentId, AgentUuid, AuditEvidenceId, AuthorizationDecisionId, AuthorizationRequestId,
