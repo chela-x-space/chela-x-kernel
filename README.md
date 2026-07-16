@@ -52,7 +52,7 @@ AI Engineering OS -> CHELA-X CES -> CHELA-X Kernel -> CHELA-X Runtime -> CHELA-X
 | K5.3 Event Streams | PASS |
 | K5.4 Replay | PASS |
 | K5 Enterprise Event System | PASS / COMPLETE |
-| K6 Runtime Event Bus | NEXT |
+| K6 Workflow Engine | NEXT |
 
 Canonical host validation:
 
@@ -90,7 +90,7 @@ Canonical host validation:
 - K5.2 validation implementation is complete.
 - K5.2-K5.4 canonical host validation passed with `382 passed`, `0 failed`.
 - K5 Enterprise Event System is complete.
-- K6 Runtime Event Bus is next.
+- K6 Workflow Engine is next.
 - Runtime execution is not implemented.
 - Domain API baseline is frozen for K2 consumers.
 - No business logic, persistence, networking, or workflow execution is introduced in K1.
