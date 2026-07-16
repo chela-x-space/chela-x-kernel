@@ -3,7 +3,8 @@ use std::fmt;
 use std::str::FromStr;
 
 use crate::errors::{DomainError, DomainResult};
-use crate::identifier::{AuditEvidenceId, EventId, RuntimeId, WorkflowId};
+use crate::identifier::{AuditEvidenceId, CorrelationId, EventId, RuntimeId, WorkflowId};
+use crate::request::TimeReference;
 
 const EVENT_TYPE_EXPECTATION: &str =
     "lowercase dotted event type with an approved category and non-empty ASCII alphanumeric segments";
@@ -419,6 +420,107 @@ impl EventTrace {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EventEnvelope<P> {
+    event_id: EventId,
+    event_type: EventType,
+    event_version: EventVersion,
+    occurred_at: TimeReference,
+    recorded_at: TimeReference,
+    source: EventSource,
+    subject: EventSubject,
+    payload: P,
+    classification: EventClassification,
+    trace: EventTrace,
+    correlation_id: Option<CorrelationId>,
+    causation: EventCausation,
+}
+
+impl<P> EventEnvelope<P> {
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(
+        event_id: EventId,
+        event_type: EventType,
+        event_version: EventVersion,
+        occurred_at: TimeReference,
+        recorded_at: TimeReference,
+        source: EventSource,
+        subject: EventSubject,
+        payload: P,
+        classification: EventClassification,
+        trace: EventTrace,
+        correlation_id: Option<CorrelationId>,
+        causation: EventCausation,
+    ) -> Self {
+        Self {
+            event_id,
+            event_type,
+            event_version,
+            occurred_at,
+            recorded_at,
+            source,
+            subject,
+            payload,
+            classification,
+            trace,
+            correlation_id,
+            causation,
+        }
+    }
+
+    pub const fn event_id(&self) -> &EventId {
+        &self.event_id
+    }
+
+    pub const fn event_type(&self) -> &EventType {
+        &self.event_type
+    }
+
+    pub const fn event_version(&self) -> &EventVersion {
+        &self.event_version
+    }
+
+    pub const fn occurred_at(&self) -> &TimeReference {
+        &self.occurred_at
+    }
+
+    pub const fn recorded_at(&self) -> &TimeReference {
+        &self.recorded_at
+    }
+
+    pub const fn source(&self) -> &EventSource {
+        &self.source
+    }
+
+    pub const fn subject(&self) -> &EventSubject {
+        &self.subject
+    }
+
+    pub const fn payload(&self) -> &P {
+        &self.payload
+    }
+
+    pub const fn classification(&self) -> &EventClassification {
+        &self.classification
+    }
+
+    pub const fn trace(&self) -> &EventTrace {
+        &self.trace
+    }
+
+    pub const fn correlation_id(&self) -> Option<&CorrelationId> {
+        self.correlation_id.as_ref()
+    }
+
+    pub const fn causation(&self) -> &EventCausation {
+        &self.causation
+    }
+
+    pub fn into_payload(self) -> P {
+        self.payload
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct EventSubjectId(String);
 
@@ -712,13 +814,13 @@ mod tests {
     use std::hash::{Hash, Hasher};
     use std::str::FromStr;
 
-    use crate::identifier::{AuditEvidenceId, EventId, RuntimeId, WorkflowId};
-
     use super::{
-        EventActorId, EventCausation, EventClassification, EventComponent, EventSource,
-        EventSubject, EventSubjectId, EventSubjectType, EventTrace, EventTraceReference, EventType,
-        EventVersion,
+        EventActorId, EventCausation, EventClassification, EventComponent, EventEnvelope,
+        EventSource, EventSubject, EventSubjectId, EventSubjectType, EventTrace,
+        EventTraceReference, EventType, EventVersion,
     };
+    use crate::identifier::{AuditEvidenceId, CorrelationId, EventId, RuntimeId, WorkflowId};
+    use crate::request::TimeReference;
 
     #[test]
     fn event_type_accepts_canonical_dotted_type_traceability_k5_2() {
@@ -1538,6 +1640,139 @@ mod tests {
             vec![],
         )
         .expect("right trace");
+
+        assert_eq!(left, right);
+        assert_eq!(left.clone(), left);
+    }
+
+    #[derive(Debug, Clone, PartialEq, Eq)]
+    struct TestPayload {
+        previous_health: &'static str,
+        current_health: &'static str,
+    }
+
+    fn canonical_test_envelope(
+        correlation_id: Option<CorrelationId>,
+        causation: EventCausation,
+    ) -> EventEnvelope<TestPayload> {
+        let source = EventSource::new(
+            EventComponent::new("kernel-runtime").expect("valid component"),
+            Some(RuntimeId::new("kernel.runtime.primary").expect("valid runtime id")),
+        );
+
+        let subject = EventSubject::new(
+            EventSubjectType::new("runtime").expect("valid subject type"),
+            EventSubjectId::new("kernel.runtime.primary").expect("valid subject id"),
+        );
+
+        let trace = EventTrace::new(
+            Some(EventActorId::new("system.supervisor").expect("valid actor id")),
+            None,
+            None,
+            Some(
+                EventTraceReference::new("execution.health-assessment")
+                    .expect("valid execution reference"),
+            ),
+            vec![],
+        )
+        .expect("valid trace");
+
+        EventEnvelope::new(
+            EventId::new("CX-EVT-000100").expect("valid event id"),
+            EventType::new("runtime.health.assessed").expect("valid event type"),
+            EventVersion::new("1.0.0").expect("valid event version"),
+            TimeReference::new("2026-07-16T12:00:00Z").expect("valid occurrence time"),
+            TimeReference::new("2026-07-16T12:00:01Z").expect("valid recording time"),
+            source,
+            subject,
+            TestPayload {
+                previous_health: "DEGRADED",
+                current_health: "HEALTHY",
+            },
+            EventClassification::Internal,
+            trace,
+            correlation_id,
+            causation,
+        )
+    }
+
+    #[test]
+    fn event_envelope_preserves_all_mandatory_fields() {
+        let envelope = canonical_test_envelope(None, EventCausation::root());
+
+        assert_eq!(envelope.event_id().as_str(), "CX-EVT-000100");
+        assert_eq!(envelope.event_type().as_str(), "runtime.health.assessed");
+        assert_eq!(envelope.event_version().as_str(), "1.0.0");
+        assert_eq!(envelope.occurred_at().as_str(), "2026-07-16T12:00:00Z");
+        assert_eq!(envelope.recorded_at().as_str(), "2026-07-16T12:00:01Z");
+        assert_eq!(envelope.source().component().as_str(), "kernel-runtime");
+        assert_eq!(envelope.subject().subject_type().as_str(), "runtime");
+        assert_eq!(
+            envelope.subject().subject_id().as_str(),
+            "kernel.runtime.primary"
+        );
+        assert_eq!(envelope.classification(), &EventClassification::Internal);
+        assert!(envelope.trace().actor_id().is_some());
+        assert!(envelope.causation().is_root());
+    }
+
+    #[test]
+    fn event_envelope_supports_optional_correlation() {
+        let correlation = CorrelationId::new("CX-COR-000100").expect("valid correlation id");
+
+        let envelope = canonical_test_envelope(Some(correlation.clone()), EventCausation::root());
+
+        assert_eq!(envelope.correlation_id(), Some(&correlation));
+    }
+
+    #[test]
+    fn event_envelope_supports_root_causation() {
+        let envelope = canonical_test_envelope(None, EventCausation::root());
+
+        assert!(envelope.causation().is_root());
+        assert_eq!(envelope.causation().parent_event_id(), None);
+    }
+
+    #[test]
+    fn event_envelope_supports_parent_event_causation() {
+        let current = EventId::new("CX-EVT-000100").expect("valid current event id");
+        let parent = EventId::new("CX-EVT-000099").expect("valid parent event id");
+
+        let causation =
+            EventCausation::caused_by(&current, parent.clone()).expect("valid causation");
+
+        let envelope = canonical_test_envelope(None, causation);
+
+        assert_eq!(envelope.causation().parent_event_id(), Some(&parent));
+    }
+
+    #[test]
+    fn event_envelope_preserves_generic_payload() {
+        let envelope = canonical_test_envelope(None, EventCausation::root());
+
+        assert_eq!(envelope.payload().previous_health, "DEGRADED");
+        assert_eq!(envelope.payload().current_health, "HEALTHY");
+    }
+
+    #[test]
+    fn event_envelope_returns_owned_payload() {
+        let envelope = canonical_test_envelope(None, EventCausation::root());
+
+        let payload = envelope.into_payload();
+
+        assert_eq!(
+            payload,
+            TestPayload {
+                previous_health: "DEGRADED",
+                current_health: "HEALTHY",
+            }
+        );
+    }
+
+    #[test]
+    fn event_envelope_preserves_value_semantics() {
+        let left = canonical_test_envelope(None, EventCausation::root());
+        let right = canonical_test_envelope(None, EventCausation::root());
 
         assert_eq!(left, right);
         assert_eq!(left.clone(), left);
