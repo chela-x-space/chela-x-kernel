@@ -481,6 +481,18 @@ pub fn validate_event_envelope<P>(
     ))
 }
 
+pub fn validate_event_identity<P>(envelope: &EventEnvelope<P>) -> DomainResult<()> {
+    match envelope.causation() {
+        EventCausation::Root => Ok(()),
+        EventCausation::CausedBy(parent_event_id) if parent_event_id != envelope.event_id() => {
+            Ok(())
+        }
+        EventCausation::CausedBy(_) => Err(DomainError::InvalidEventReference(
+            "causation_id must not equal event_id",
+        )),
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct EventEnvelope<P> {
     event_id: EventId,
@@ -876,9 +888,10 @@ mod tests {
     use std::str::FromStr;
 
     use super::{
-        validate_event_envelope, EventActorId, EventCausation, EventClassification, EventComponent,
-        EventEnvelope, EventEnvelopeCandidate, EventSource, EventSubject, EventSubjectId,
-        EventSubjectType, EventTrace, EventTraceReference, EventType, EventVersion,
+        validate_event_envelope, validate_event_identity, EventActorId, EventCausation,
+        EventClassification, EventComponent, EventEnvelope, EventEnvelopeCandidate, EventSource,
+        EventSubject, EventSubjectId, EventSubjectType, EventTrace, EventTraceReference, EventType,
+        EventVersion,
     };
     use crate::errors::DomainError;
     use crate::identifier::{AuditEvidenceId, CorrelationId, EventId, RuntimeId, WorkflowId};
@@ -1803,6 +1816,17 @@ mod tests {
         }
     }
 
+    fn self_caused_test_envelope(
+        correlation_id: Option<CorrelationId>,
+    ) -> EventEnvelope<TestPayload> {
+        canonical_test_envelope(
+            correlation_id,
+            EventCausation::CausedBy(
+                EventId::new("CX-EVT-000100").expect("valid self-caused parent event id"),
+            ),
+        )
+    }
+
     #[test]
     fn event_envelope_preserves_all_mandatory_fields() {
         let envelope = canonical_test_envelope(None, EventCausation::root());
@@ -2052,5 +2076,105 @@ mod tests {
 
         assert_eq!(left_error, right_error);
         assert_eq!(left_error, DomainError::MissingEventField("subject"));
+    }
+
+    #[test]
+    fn event_identity_validation_root_event_passes() {
+        let envelope = canonical_test_envelope(None, EventCausation::root());
+
+        assert_eq!(validate_event_identity(&envelope), Ok(()));
+    }
+
+    #[test]
+    fn event_identity_validation_distinct_parent_event_passes() {
+        let envelope = canonical_test_envelope(
+            None,
+            EventCausation::CausedBy(EventId::new("CX-EVT-000099").expect("valid parent event id")),
+        );
+
+        assert_eq!(validate_event_identity(&envelope), Ok(()));
+    }
+
+    #[test]
+    fn event_identity_validation_direct_self_causation_is_rejected() {
+        let envelope = self_caused_test_envelope(None);
+
+        let error =
+            validate_event_identity(&envelope).expect_err("self-causation must be rejected");
+
+        assert_eq!(
+            error,
+            DomainError::InvalidEventReference("causation_id must not equal event_id")
+        );
+    }
+
+    #[test]
+    fn event_identity_validation_self_causation_error_text_is_canonical() {
+        let envelope = self_caused_test_envelope(None);
+
+        let error =
+            validate_event_identity(&envelope).expect_err("self-causation must be rejected");
+
+        assert_eq!(
+            error.to_string(),
+            "invalid event reference: causation_id must not equal event_id"
+        );
+    }
+
+    #[test]
+    fn event_identity_validation_repeated_validation_of_valid_envelope_produces_equivalent_outcomes(
+    ) {
+        let envelope = canonical_test_envelope(None, EventCausation::root());
+
+        let first = validate_event_identity(&envelope);
+        let second = validate_event_identity(&envelope);
+
+        assert_eq!(first, second);
+        assert_eq!(first, Ok(()));
+    }
+
+    #[test]
+    fn event_identity_validation_equivalent_self_caused_envelopes_produce_equivalent_errors() {
+        let left = self_caused_test_envelope(None);
+        let right = self_caused_test_envelope(None);
+
+        let left_error = validate_event_identity(&left).expect_err("left must be rejected");
+        let right_error = validate_event_identity(&right).expect_err("right must be rejected");
+
+        assert_eq!(left_error, right_error);
+        assert_eq!(
+            left_error,
+            DomainError::InvalidEventReference("causation_id must not equal event_id")
+        );
+    }
+
+    #[test]
+    fn event_identity_validation_does_not_mutate_event_envelope() {
+        let envelope = canonical_test_envelope(
+            None,
+            EventCausation::CausedBy(EventId::new("CX-EVT-000099").expect("valid parent event id")),
+        );
+        let original = envelope.clone();
+
+        let result = validate_event_identity(&envelope);
+
+        assert_eq!(result, Ok(()));
+        assert_eq!(envelope, original);
+    }
+
+    #[test]
+    fn event_identity_validation_correlation_presence_does_not_change_identity_validation_outcome()
+    {
+        let without_correlation = canonical_test_envelope(None, EventCausation::root());
+        let with_correlation = canonical_test_envelope(
+            Some(CorrelationId::new("CX-COR-000100").expect("valid correlation id")),
+            EventCausation::root(),
+        );
+
+        let without_correlation_result = validate_event_identity(&without_correlation);
+        let with_correlation_result = validate_event_identity(&with_correlation);
+
+        assert_eq!(without_correlation_result, with_correlation_result);
+        assert_eq!(with_correlation_result, Ok(()));
     }
 }
