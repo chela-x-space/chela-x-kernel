@@ -493,6 +493,16 @@ pub fn validate_event_identity<P>(envelope: &EventEnvelope<P>) -> DomainResult<(
     }
 }
 
+pub fn validate_event_version<P>(envelope: &EventEnvelope<P>) -> DomainResult<()> {
+    if envelope.event_version().major() == 1 {
+        return Ok(());
+    }
+
+    Err(DomainError::InvalidEventReference(
+        "event_version is not supported",
+    ))
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct EventEnvelope<P> {
     event_id: EventId,
@@ -888,10 +898,10 @@ mod tests {
     use std::str::FromStr;
 
     use super::{
-        validate_event_envelope, validate_event_identity, EventActorId, EventCausation,
-        EventClassification, EventComponent, EventEnvelope, EventEnvelopeCandidate, EventSource,
-        EventSubject, EventSubjectId, EventSubjectType, EventTrace, EventTraceReference, EventType,
-        EventVersion,
+        validate_event_envelope, validate_event_identity, validate_event_version, EventActorId,
+        EventCausation, EventClassification, EventComponent, EventEnvelope, EventEnvelopeCandidate,
+        EventSource, EventSubject, EventSubjectId, EventSubjectType, EventTrace,
+        EventTraceReference, EventType, EventVersion,
     };
     use crate::errors::DomainError;
     use crate::identifier::{AuditEvidenceId, CorrelationId, EventId, RuntimeId, WorkflowId};
@@ -1827,6 +1837,15 @@ mod tests {
         )
     }
 
+    fn test_envelope_with_event_version(
+        event_version: EventVersion,
+        correlation_id: Option<CorrelationId>,
+    ) -> EventEnvelope<TestPayload> {
+        let mut envelope = canonical_test_envelope(correlation_id, EventCausation::root());
+        envelope.event_version = event_version;
+        envelope
+    }
+
     #[test]
     fn event_envelope_preserves_all_mandatory_fields() {
         let envelope = canonical_test_envelope(None, EventCausation::root());
@@ -2173,6 +2192,140 @@ mod tests {
 
         let without_correlation_result = validate_event_identity(&without_correlation);
         let with_correlation_result = validate_event_identity(&with_correlation);
+
+        assert_eq!(without_correlation_result, with_correlation_result);
+        assert_eq!(with_correlation_result, Ok(()));
+    }
+
+    #[test]
+    fn event_version_validation_supported_version_passes() {
+        let envelope = canonical_test_envelope(None, EventCausation::root());
+
+        assert_eq!(validate_event_version(&envelope), Ok(()));
+    }
+
+    #[test]
+    fn event_version_validation_supported_patch_version_passes() {
+        let envelope = test_envelope_with_event_version(
+            EventVersion::new("1.0.1").expect("valid supported event version"),
+            None,
+        );
+
+        assert_eq!(validate_event_version(&envelope), Ok(()));
+    }
+
+    #[test]
+    fn event_version_validation_unsupported_zero_major_version_is_rejected() {
+        let envelope = test_envelope_with_event_version(
+            EventVersion::new("0.9.0").expect("valid unsupported event version"),
+            None,
+        );
+
+        let error = validate_event_version(&envelope).expect_err("unsupported version must fail");
+
+        assert_eq!(
+            error,
+            DomainError::InvalidEventReference("event_version is not supported")
+        );
+    }
+
+    #[test]
+    fn event_version_validation_unsupported_major_version_is_rejected() {
+        let envelope = test_envelope_with_event_version(
+            EventVersion::new("2.0.0").expect("valid unsupported event version"),
+            None,
+        );
+
+        let error = validate_event_version(&envelope).expect_err("unsupported version must fail");
+
+        assert_eq!(
+            error,
+            DomainError::InvalidEventReference("event_version is not supported")
+        );
+    }
+
+    #[test]
+    fn event_version_validation_supported_minor_version_passes() {
+        let envelope = test_envelope_with_event_version(
+            EventVersion::new("1.1.0").expect("valid supported event version"),
+            None,
+        );
+
+        assert_eq!(validate_event_version(&envelope), Ok(()));
+    }
+
+    #[test]
+    fn event_version_validation_error_text_is_canonical() {
+        let envelope = test_envelope_with_event_version(
+            EventVersion::new("3.0.0").expect("valid unsupported event version"),
+            None,
+        );
+
+        let error = validate_event_version(&envelope).expect_err("unsupported version must fail");
+
+        assert_eq!(
+            error.to_string(),
+            "invalid event reference: event_version is not supported"
+        );
+    }
+
+    #[test]
+    fn event_version_validation_repeated_validation_of_supported_version_produces_equivalent_outcomes(
+    ) {
+        let envelope = canonical_test_envelope(None, EventCausation::root());
+
+        let first = validate_event_version(&envelope);
+        let second = validate_event_version(&envelope);
+
+        assert_eq!(first, second);
+        assert_eq!(first, Ok(()));
+    }
+
+    #[test]
+    fn event_version_validation_equivalent_unsupported_envelopes_produce_equivalent_errors() {
+        let left = test_envelope_with_event_version(
+            EventVersion::new("2.0.0").expect("valid unsupported event version"),
+            None,
+        );
+        let right = test_envelope_with_event_version(
+            EventVersion::new("2.0.0").expect("valid unsupported event version"),
+            None,
+        );
+
+        let left_error = validate_event_version(&left).expect_err("left must fail");
+        let right_error = validate_event_version(&right).expect_err("right must fail");
+
+        assert_eq!(left_error, right_error);
+        assert_eq!(
+            left_error,
+            DomainError::InvalidEventReference("event_version is not supported")
+        );
+    }
+
+    #[test]
+    fn event_version_validation_does_not_mutate_event_envelope() {
+        let envelope = test_envelope_with_event_version(
+            EventVersion::new("1.0.0").expect("valid supported event version"),
+            None,
+        );
+        let original = envelope.clone();
+
+        let result = validate_event_version(&envelope);
+
+        assert_eq!(result, Ok(()));
+        assert_eq!(envelope, original);
+    }
+
+    #[test]
+    fn event_version_validation_correlation_presence_does_not_change_version_validation_outcome() {
+        let without_correlation = canonical_test_envelope(None, EventCausation::root());
+        let with_correlation = canonical_test_envelope(
+            Some(CorrelationId::new("CX-COR-000100").expect("valid correlation id")),
+            EventCausation::root(),
+        );
+
+        let without_correlation_result = validate_event_version(&without_correlation);
+        let with_correlation_result = validate_event_version(&with_correlation);
 
         assert_eq!(without_correlation_result, with_correlation_result);
         assert_eq!(with_correlation_result, Ok(()));
