@@ -397,6 +397,46 @@ pub fn validate_stream_append(candidate: &StreamAppendCandidate) -> DomainResult
     Ok(())
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum EventReplayStart {
+    Beginning,
+    FromSequence(EventSequence),
+}
+
+impl EventReplayStart {
+    pub const fn beginning() -> Self {
+        Self::Beginning
+    }
+
+    pub const fn from_sequence(sequence: EventSequence) -> Self {
+        Self::FromSequence(sequence)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EventReplayRequest {
+    stream_id: EventStreamId,
+    start: EventReplayStart,
+}
+
+impl EventReplayRequest {
+    pub const fn new(stream_id: EventStreamId, start: EventReplayStart) -> Self {
+        Self { stream_id, start }
+    }
+
+    pub const fn stream_id(&self) -> &EventStreamId {
+        &self.stream_id
+    }
+
+    pub const fn start(&self) -> &EventReplayStart {
+        &self.start
+    }
+}
+
+pub trait EventReplaySource<P> {
+    fn replay(&self, request: &EventReplayRequest) -> DomainResult<Vec<EventEnvelope<P>>>;
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct EventSubjectType(String);
 
@@ -1227,9 +1267,10 @@ mod tests {
         validate_event_envelope, validate_event_identity, validate_event_integrity,
         validate_event_payload, validate_event_timestamps, validate_event_version,
         validate_stream_append, EventActorId, EventCausation, EventClassification, EventComponent,
-        EventEnvelope, EventEnvelopeCandidate, EventSequence, EventSource, EventStream,
-        EventStreamId, EventSubject, EventSubjectId, EventSubjectType, EventTrace,
-        EventTraceReference, EventType, EventVersion, StreamAppendCandidate, StreamPosition,
+        EventEnvelope, EventEnvelopeCandidate, EventReplayRequest, EventReplaySource,
+        EventReplayStart, EventSequence, EventSource, EventStream, EventStreamId, EventSubject,
+        EventSubjectId, EventSubjectType, EventTrace, EventTraceReference, EventType, EventVersion,
+        StreamAppendCandidate, StreamPosition,
     };
     use crate::errors::{DomainError, DomainResult};
     use crate::identifier::{AuditEvidenceId, CorrelationId, EventId, RuntimeId, WorkflowId};
@@ -2250,6 +2291,162 @@ mod tests {
         assert_eq!(
             error.to_string(),
             "invalid stream append: new stream must begin at sequence 1"
+        );
+    }
+
+    #[test]
+    fn event_replay_interface_beginning_start_is_preserved() {
+        let start = EventReplayStart::beginning();
+
+        assert_eq!(start, EventReplayStart::Beginning);
+    }
+
+    #[test]
+    fn event_replay_interface_from_sequence_start_is_preserved() {
+        let sequence = EventSequence::new(4).expect("valid sequence");
+        let start = EventReplayStart::from_sequence(sequence);
+
+        assert_eq!(start, EventReplayStart::FromSequence(sequence));
+    }
+
+    #[test]
+    fn event_replay_interface_request_preserves_stream_id() {
+        let stream_id = EventStreamId::new("runtime.primary").expect("valid stream id");
+        let request = EventReplayRequest::new(stream_id.clone(), EventReplayStart::beginning());
+
+        assert_eq!(request.stream_id(), &stream_id);
+    }
+
+    #[test]
+    fn event_replay_interface_request_preserves_beginning_selection() {
+        let request = EventReplayRequest::new(
+            EventStreamId::new("runtime.primary").expect("valid stream id"),
+            EventReplayStart::beginning(),
+        );
+
+        assert_eq!(request.start(), &EventReplayStart::Beginning);
+    }
+
+    #[test]
+    fn event_replay_interface_request_preserves_sequence_selection() {
+        let sequence = EventSequence::new(9).expect("valid sequence");
+        let request = EventReplayRequest::new(
+            EventStreamId::new("runtime.primary").expect("valid stream id"),
+            EventReplayStart::from_sequence(sequence),
+        );
+
+        assert_eq!(request.start(), &EventReplayStart::FromSequence(sequence));
+    }
+
+    #[test]
+    fn event_replay_interface_request_value_semantics_are_stable() {
+        let left = EventReplayRequest::new(
+            EventStreamId::new("runtime.primary").expect("left stream id"),
+            EventReplayStart::from_sequence(EventSequence::new(3).expect("left sequence")),
+        );
+        let right = EventReplayRequest::new(
+            EventStreamId::new("runtime.primary").expect("right stream id"),
+            EventReplayStart::from_sequence(EventSequence::new(3).expect("right sequence")),
+        );
+
+        assert_eq!(left, right);
+        assert_eq!(left.clone(), left);
+    }
+
+    #[test]
+    fn event_replay_interface_beginning_constructors_are_equivalent() {
+        let left = EventReplayStart::beginning();
+        let right = EventReplayStart::Beginning;
+
+        assert_eq!(left, right);
+    }
+
+    #[test]
+    fn event_replay_interface_from_sequence_constructors_are_equivalent() {
+        let sequence = EventSequence::new(6).expect("valid sequence");
+        let left = EventReplayStart::from_sequence(sequence);
+        let right = EventReplayStart::FromSequence(sequence);
+
+        assert_eq!(left, right);
+    }
+
+    #[test]
+    fn event_replay_interface_request_does_not_mutate_supplied_identity() {
+        let stream_id = EventStreamId::new("runtime.primary").expect("valid stream id");
+        let original = stream_id.clone();
+
+        let request = EventReplayRequest::new(stream_id, EventReplayStart::beginning());
+
+        assert_eq!(request.stream_id(), &original);
+        assert_eq!(original.as_str(), "runtime.primary");
+    }
+
+    struct MockReplaySource<P> {
+        response: DomainResult<Vec<EventEnvelope<P>>>,
+        observed_requests: std::cell::RefCell<Vec<EventReplayRequest>>,
+    }
+
+    impl<P: Clone> EventReplaySource<P> for MockReplaySource<P> {
+        fn replay(&self, request: &EventReplayRequest) -> DomainResult<Vec<EventEnvelope<P>>> {
+            self.observed_requests.borrow_mut().push(request.clone());
+            self.response.clone()
+        }
+    }
+
+    #[test]
+    fn event_replay_interface_mock_replay_source_receives_the_exact_request() {
+        let request = EventReplayRequest::new(
+            EventStreamId::new("runtime.primary").expect("valid stream id"),
+            EventReplayStart::from_sequence(EventSequence::new(2).expect("valid sequence")),
+        );
+        let source = MockReplaySource::<TestPayload> {
+            response: Ok(vec![]),
+            observed_requests: std::cell::RefCell::new(vec![]),
+        };
+
+        let result = source.replay(&request);
+
+        assert_eq!(result, Ok(vec![]));
+        assert_eq!(source.observed_requests.borrow().as_slice(), &[request]);
+    }
+
+    #[test]
+    fn event_replay_interface_mock_replay_source_can_return_envelopes() {
+        let request = EventReplayRequest::new(
+            EventStreamId::new("runtime.primary").expect("valid stream id"),
+            EventReplayStart::beginning(),
+        );
+        let envelope = canonical_test_envelope(None, EventCausation::root());
+        let source = MockReplaySource {
+            response: Ok(vec![envelope.clone()]),
+            observed_requests: std::cell::RefCell::new(vec![]),
+        };
+
+        let result = source.replay(&request);
+
+        assert_eq!(result, Ok(vec![envelope]));
+    }
+
+    #[test]
+    fn event_replay_interface_replay_source_errors_propagate_unchanged() {
+        let request = EventReplayRequest::new(
+            EventStreamId::new("runtime.primary").expect("valid stream id"),
+            EventReplayStart::beginning(),
+        );
+        let source = MockReplaySource::<TestPayload> {
+            response: Err(DomainError::InvalidEventReference(
+                "replay source rejected request",
+            )),
+            observed_requests: std::cell::RefCell::new(vec![]),
+        };
+
+        let error = source
+            .replay(&request)
+            .expect_err("replay source error must propagate");
+
+        assert_eq!(
+            error,
+            DomainError::InvalidEventReference("replay source rejected request")
         );
     }
 

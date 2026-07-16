@@ -57,9 +57,10 @@ pub use event::{
     validate_event_envelope, validate_event_identity, validate_event_integrity,
     validate_event_payload, validate_event_timestamps, validate_event_version,
     validate_stream_append, EventActorId, EventCausation, EventClassification, EventComponent,
-    EventEnvelope, EventEnvelopeCandidate, EventSequence, EventSource, EventStream, EventStreamId,
-    EventSubject, EventSubjectId, EventSubjectType, EventTrace, EventTraceReference, EventType,
-    EventVersion, StreamAppendCandidate, StreamPosition,
+    EventEnvelope, EventEnvelopeCandidate, EventReplayRequest, EventReplaySource, EventReplayStart,
+    EventSequence, EventSource, EventStream, EventStreamId, EventSubject, EventSubjectId,
+    EventSubjectType, EventTrace, EventTraceReference, EventType, EventVersion,
+    StreamAppendCandidate, StreamPosition,
 };
 pub use identifier::{
     AgentId, AgentUuid, AuditEvidenceId, AuthorizationDecisionId, AuthorizationRequestId,
