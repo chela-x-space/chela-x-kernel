@@ -421,6 +421,67 @@ impl EventTrace {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EventEnvelopeCandidate<P> {
+    pub event_id: Option<EventId>,
+    pub event_type: Option<EventType>,
+    pub event_version: Option<EventVersion>,
+    pub occurred_at: Option<TimeReference>,
+    pub recorded_at: Option<TimeReference>,
+    pub source: Option<EventSource>,
+    pub subject: Option<EventSubject>,
+    pub payload: Option<P>,
+    pub classification: Option<EventClassification>,
+    pub trace: Option<EventTrace>,
+    pub correlation_id: Option<CorrelationId>,
+    pub causation: EventCausation,
+}
+
+pub fn validate_event_envelope<P>(
+    candidate: EventEnvelopeCandidate<P>,
+) -> DomainResult<EventEnvelope<P>> {
+    let EventEnvelopeCandidate {
+        event_id,
+        event_type,
+        event_version,
+        occurred_at,
+        recorded_at,
+        source,
+        subject,
+        payload,
+        classification,
+        trace,
+        correlation_id,
+        causation,
+    } = candidate;
+
+    let event_id = event_id.ok_or(DomainError::MissingEventField("event_id"))?;
+    let event_type = event_type.ok_or(DomainError::MissingEventField("event_type"))?;
+    let event_version = event_version.ok_or(DomainError::MissingEventField("event_version"))?;
+    let occurred_at = occurred_at.ok_or(DomainError::MissingEventField("occurred_at"))?;
+    let recorded_at = recorded_at.ok_or(DomainError::MissingEventField("recorded_at"))?;
+    let source = source.ok_or(DomainError::MissingEventField("source"))?;
+    let subject = subject.ok_or(DomainError::MissingEventField("subject"))?;
+    let payload = payload.ok_or(DomainError::MissingEventField("payload"))?;
+    let classification = classification.ok_or(DomainError::MissingEventField("classification"))?;
+    let trace = trace.ok_or(DomainError::MissingEventField("trace"))?;
+
+    Ok(EventEnvelope::new(
+        event_id,
+        event_type,
+        event_version,
+        occurred_at,
+        recorded_at,
+        source,
+        subject,
+        payload,
+        classification,
+        trace,
+        correlation_id,
+        causation,
+    ))
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct EventEnvelope<P> {
     event_id: EventId,
     event_type: EventType,
@@ -815,10 +876,11 @@ mod tests {
     use std::str::FromStr;
 
     use super::{
-        EventActorId, EventCausation, EventClassification, EventComponent, EventEnvelope,
-        EventSource, EventSubject, EventSubjectId, EventSubjectType, EventTrace,
-        EventTraceReference, EventType, EventVersion,
+        validate_event_envelope, EventActorId, EventCausation, EventClassification, EventComponent,
+        EventEnvelope, EventEnvelopeCandidate, EventSource, EventSubject, EventSubjectId,
+        EventSubjectType, EventTrace, EventTraceReference, EventType, EventVersion,
     };
+    use crate::errors::DomainError;
     use crate::identifier::{AuditEvidenceId, CorrelationId, EventId, RuntimeId, WorkflowId};
     use crate::request::TimeReference;
 
@@ -1696,6 +1758,51 @@ mod tests {
         )
     }
 
+    fn canonical_test_candidate(
+        correlation_id: Option<CorrelationId>,
+        causation: EventCausation,
+    ) -> EventEnvelopeCandidate<TestPayload> {
+        EventEnvelopeCandidate {
+            event_id: Some(EventId::new("CX-EVT-000100").expect("valid event id")),
+            event_type: Some(EventType::new("runtime.health.assessed").expect("valid event type")),
+            event_version: Some(EventVersion::new("1.0.0").expect("valid event version")),
+            occurred_at: Some(
+                TimeReference::new("2026-07-16T12:00:00Z").expect("valid occurrence time"),
+            ),
+            recorded_at: Some(
+                TimeReference::new("2026-07-16T12:00:01Z").expect("valid recording time"),
+            ),
+            source: Some(EventSource::new(
+                EventComponent::new("kernel-runtime").expect("valid component"),
+                Some(RuntimeId::new("kernel.runtime.primary").expect("valid runtime id")),
+            )),
+            subject: Some(EventSubject::new(
+                EventSubjectType::new("runtime").expect("valid subject type"),
+                EventSubjectId::new("kernel.runtime.primary").expect("valid subject id"),
+            )),
+            payload: Some(TestPayload {
+                previous_health: "DEGRADED",
+                current_health: "HEALTHY",
+            }),
+            classification: Some(EventClassification::Internal),
+            trace: Some(
+                EventTrace::new(
+                    Some(EventActorId::new("system.supervisor").expect("valid actor id")),
+                    None,
+                    None,
+                    Some(
+                        EventTraceReference::new("execution.health-assessment")
+                            .expect("valid execution reference"),
+                    ),
+                    vec![],
+                )
+                .expect("valid trace"),
+            ),
+            correlation_id,
+            causation,
+        }
+    }
+
     #[test]
     fn event_envelope_preserves_all_mandatory_fields() {
         let envelope = canonical_test_envelope(None, EventCausation::root());
@@ -1776,5 +1883,174 @@ mod tests {
 
         assert_eq!(left, right);
         assert_eq!(left.clone(), left);
+    }
+
+    #[test]
+    fn event_envelope_validation_complete_candidate_succeeds() {
+        let candidate = canonical_test_candidate(None, EventCausation::root());
+
+        let envelope = validate_event_envelope(candidate).expect("complete candidate");
+
+        assert_eq!(
+            envelope,
+            canonical_test_envelope(None, EventCausation::root())
+        );
+    }
+
+    #[test]
+    fn event_envelope_validation_missing_event_id_returns_error() {
+        let mut candidate = canonical_test_candidate(None, EventCausation::root());
+        candidate.event_id = None;
+
+        let error = validate_event_envelope(candidate).expect_err("event_id is required");
+
+        assert_eq!(error, DomainError::MissingEventField("event_id"));
+        assert_eq!(error.to_string(), "missing mandatory event field: event_id");
+    }
+
+    #[test]
+    fn event_envelope_validation_missing_event_type_returns_error() {
+        let mut candidate = canonical_test_candidate(None, EventCausation::root());
+        candidate.event_type = None;
+
+        let error = validate_event_envelope(candidate).expect_err("event_type is required");
+
+        assert_eq!(error, DomainError::MissingEventField("event_type"));
+    }
+
+    #[test]
+    fn event_envelope_validation_missing_event_version_returns_error() {
+        let mut candidate = canonical_test_candidate(None, EventCausation::root());
+        candidate.event_version = None;
+
+        let error = validate_event_envelope(candidate).expect_err("event_version is required");
+
+        assert_eq!(error, DomainError::MissingEventField("event_version"));
+    }
+
+    #[test]
+    fn event_envelope_validation_missing_occurred_at_returns_error() {
+        let mut candidate = canonical_test_candidate(None, EventCausation::root());
+        candidate.occurred_at = None;
+
+        let error = validate_event_envelope(candidate).expect_err("occurred_at is required");
+
+        assert_eq!(error, DomainError::MissingEventField("occurred_at"));
+    }
+
+    #[test]
+    fn event_envelope_validation_missing_recorded_at_returns_error() {
+        let mut candidate = canonical_test_candidate(None, EventCausation::root());
+        candidate.recorded_at = None;
+
+        let error = validate_event_envelope(candidate).expect_err("recorded_at is required");
+
+        assert_eq!(error, DomainError::MissingEventField("recorded_at"));
+    }
+
+    #[test]
+    fn event_envelope_validation_missing_source_returns_error() {
+        let mut candidate = canonical_test_candidate(None, EventCausation::root());
+        candidate.source = None;
+
+        let error = validate_event_envelope(candidate).expect_err("source is required");
+
+        assert_eq!(error, DomainError::MissingEventField("source"));
+    }
+
+    #[test]
+    fn event_envelope_validation_missing_subject_returns_error() {
+        let mut candidate = canonical_test_candidate(None, EventCausation::root());
+        candidate.subject = None;
+
+        let error = validate_event_envelope(candidate).expect_err("subject is required");
+
+        assert_eq!(error, DomainError::MissingEventField("subject"));
+    }
+
+    #[test]
+    fn event_envelope_validation_missing_payload_returns_error() {
+        let mut candidate = canonical_test_candidate(None, EventCausation::root());
+        candidate.payload = None;
+
+        let error = validate_event_envelope(candidate).expect_err("payload is required");
+
+        assert_eq!(error, DomainError::MissingEventField("payload"));
+    }
+
+    #[test]
+    fn event_envelope_validation_missing_classification_returns_error() {
+        let mut candidate = canonical_test_candidate(None, EventCausation::root());
+        candidate.classification = None;
+
+        let error = validate_event_envelope(candidate).expect_err("classification is required");
+
+        assert_eq!(error, DomainError::MissingEventField("classification"));
+    }
+
+    #[test]
+    fn event_envelope_validation_missing_trace_returns_error() {
+        let mut candidate = canonical_test_candidate(None, EventCausation::root());
+        candidate.trace = None;
+
+        let error = validate_event_envelope(candidate).expect_err("trace is required");
+
+        assert_eq!(error, DomainError::MissingEventField("trace"));
+    }
+
+    #[test]
+    fn event_envelope_validation_event_id_precedes_later_missing_fields() {
+        let mut candidate = canonical_test_candidate(None, EventCausation::root());
+        candidate.event_id = None;
+        candidate.trace = None;
+
+        let error = validate_event_envelope(candidate).expect_err("event_id must win");
+
+        assert_eq!(error, DomainError::MissingEventField("event_id"));
+    }
+
+    #[test]
+    fn event_envelope_validation_event_type_precedes_later_missing_fields() {
+        let mut candidate = canonical_test_candidate(None, EventCausation::root());
+        candidate.event_type = None;
+        candidate.payload = None;
+
+        let error = validate_event_envelope(candidate).expect_err("event_type must win");
+
+        assert_eq!(error, DomainError::MissingEventField("event_type"));
+    }
+
+    #[test]
+    fn event_envelope_validation_preserves_optional_correlation() {
+        let correlation = CorrelationId::new("CX-COR-000100").expect("valid correlation id");
+        let candidate = canonical_test_candidate(Some(correlation.clone()), EventCausation::root());
+
+        let envelope = validate_event_envelope(candidate).expect("complete candidate");
+
+        assert_eq!(envelope.correlation_id(), Some(&correlation));
+    }
+
+    #[test]
+    fn event_envelope_validation_preserves_root_causation() {
+        let candidate = canonical_test_candidate(None, EventCausation::root());
+
+        let envelope = validate_event_envelope(candidate).expect("complete candidate");
+
+        assert!(envelope.causation().is_root());
+    }
+
+    #[test]
+    fn event_envelope_validation_equivalent_invalid_candidates_produce_equivalent_errors() {
+        let mut left = canonical_test_candidate(None, EventCausation::root());
+        left.subject = None;
+
+        let mut right = canonical_test_candidate(None, EventCausation::root());
+        right.subject = None;
+
+        let left_error = validate_event_envelope(left).expect_err("subject is required");
+        let right_error = validate_event_envelope(right).expect_err("subject is required");
+
+        assert_eq!(left_error, right_error);
+        assert_eq!(left_error, DomainError::MissingEventField("subject"));
     }
 }

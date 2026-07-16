@@ -32,13 +32,16 @@ pub enum DomainError {
     InvalidPolicyReference(&'static str),
     InvalidWorkflowReference(&'static str),
     InvalidEventReference(&'static str),
+    MissingEventField(&'static str),
     UnsupportedAuthorizationSemantics(&'static str),
 }
 
 impl fmt::Display for DomainError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::EmptyValue { field } => write!(formatter, "empty value: {field}"),
+            Self::EmptyValue { field } => {
+                write!(formatter, "empty value: {field}")
+            }
             Self::InvalidIdentifier {
                 kind,
                 value,
@@ -62,7 +65,9 @@ impl fmt::Display for DomainError {
                     "invalid {lifecycle} transition from {from} to {to}"
                 )
             }
-            Self::InvalidIdentity(message) => write!(formatter, "invalid identity: {message}"),
+            Self::InvalidIdentity(message) => {
+                write!(formatter, "invalid identity: {message}")
+            }
             Self::InvalidRequestRecord(message) => {
                 write!(formatter, "invalid request record: {message}")
             }
@@ -98,6 +103,9 @@ impl fmt::Display for DomainError {
             }
             Self::InvalidEventReference(message) => {
                 write!(formatter, "invalid event reference: {message}")
+            }
+            Self::MissingEventField(field) => {
+                write!(formatter, "missing mandatory event field: {field}")
             }
             Self::UnsupportedAuthorizationSemantics(message) => {
                 write!(formatter, "unsupported authorization semantics: {message}")
