@@ -83,3 +83,64 @@ INTERNAL
 | CES | `CES-B0-030.17#normative-specification` | Workflow state snapshots and transitions preserve deterministic audit replay inputs. | `kernel-domain::state::{WorkflowStateSnapshot, TransitionEvidenceReference}` | VERIFIED | Passed (host verified; 58/0/0 suite) | `crates/kernel-domain/src/state.rs`; tests: `workflow_state_snapshot_preserves_definition_version_ces_b0_030_17`; commit: `7f70c80`; canonical host validation accepted 2026-07-14 |
 | CES | `CES-B0-030.18#normative-specification` | Workflow invariants remain downstream-only and deterministic for identical evidence inputs. | `kernel-domain::state::WorkflowTransitionOutcome` | VERIFIED | Passed (host verified; 58/0/0 suite) | `crates/kernel-domain/src/state.rs`; tests: `workflow_repeated_validation_is_deterministic_ces_b0_030_17`; commit: `7f70c80`; canonical host validation accepted 2026-07-14 |
 | Program | `CX-PGM-008#repository-dependencies` | Kernel depends only on CES and AI Engineering OS and precedes Runtime. | `README.md`, `ARCHITECTURE.md`, `docs/BASELINE.md` | IMPLEMENTED | Covered by repository validation evidence | `README.md`, `ARCHITECTURE.md`, `docs/BASELINE.md`; commits: `500286b..900041e`, host validation accepted 2026-07-14 |
+
+---
+
+# K5.1 Canonical Event Envelope Traceability
+
+| K5 Item | Canonical Implementation | Status |
+|---------|--------------------------|--------|
+| K5-001 | `EventId` | PASS |
+| K5-002 | `EventType` | PASS |
+| K5-003 | `EventVersion` | PASS |
+| K5-004 | `EventClassification` | PASS |
+| K5-005 | `CorrelationId` | PASS |
+| K5-006 | `EventCausation` using `EventId` | PASS |
+| K5-007 | `EventComponent`, `EventSource` | PASS |
+| K5-008 | `EventSubjectType`, `EventSubjectId`, `EventSubject` | PASS |
+| K5-009 | `EventActorId`, `EventTraceReference`, `EventTrace` | PASS |
+| K5-010 | `EventEnvelope<P>` | PASS |
+
+## Canonical Properties
+
+- Event identity is caller supplied.
+- Event time references are caller supplied.
+- Event source supports runtime and non-runtime origins.
+- Event subject is an opaque canonical reference.
+- Event trace rejects empty traces.
+- Event trace rejects duplicate evidence identifiers.
+- Evidence order is preserved.
+- Event payload remains generic and caller supplied.
+- Correlation is optional.
+- Causation supports root and parent-event forms.
+- Direct self-causation is rejected.
+- EventEnvelope does not own transport, persistence, publishing, or replay.
+---
+
+# K5.1 Canonical Event Envelope
+
+| Requirement | Implementation | Status |
+|------------|----------------|--------|
+| K5-001 | EventId | PASS |
+| K5-002 | EventType | PASS |
+| K5-003 | EventVersion | PASS |
+| K5-004 | EventClassification | PASS |
+| K5-005 | CorrelationId | PASS |
+| K5-006 | EventCausation | PASS |
+| K5-007 | EventSource | PASS |
+| K5-008 | EventSubject | PASS |
+| K5-009 | EventTrace | PASS |
+| K5-010 | EventEnvelope | PASS |
+
+## Canonical Guarantees
+
+- Immutable event identity
+- Immutable source
+- Immutable subject
+- Immutable trace
+- Generic payload
+- Caller-supplied timestamps
+- Caller-supplied identifiers
+- Optional correlation
+- Root and parent causation
+- Duplicate evidence rejection

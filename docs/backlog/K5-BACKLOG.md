@@ -23,16 +23,16 @@ Implementation shall follow the approved specifications.
 
 | ID | Feature | Status |
 |----|---------|--------|
-| K5-001 | EventId | TODO |
-| K5-002 | EventType | TODO |
-| K5-003 | EventVersion | TODO |
-| K5-004 | EventClassification | TODO |
-| K5-005 | CorrelationId | TODO |
-| K5-006 | Causation Reference using EventId | TODO |
-| K5-007 | EventSource | TODO |
-| K5-008 | EventSubject | TODO |
-| K5-009 | EventTrace | TODO |
-| K5-010 | EventEnvelope | TODO |
+| K5-001 | EventId | PASS |
+| K5-002 | EventType | PASS |
+| K5-003 | EventVersion | PASS |
+| K5-004 | EventClassification | PASS |
+| K5-005 | CorrelationId | PASS |
+| K5-006 | Causation Reference using EventId | PASS |
+| K5-007 | EventSource | PASS |
+| K5-008 | EventSubject | PASS |
+| K5-009 | EventTrace | PASS |
+| K5-010 | EventEnvelope | PASS |
 
 ---
 

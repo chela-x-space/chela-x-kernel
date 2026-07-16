@@ -254,3 +254,113 @@ This precedence applies only when the higher-authority validation was actually e
 - New K4.2 tests: `35`
 - Expected total: `143`
 - Sandbox compile baseline: `143` tests discovered in source
+
+---
+
+# K5.1 Canonical Event Envelope Validation
+
+## Status
+
+PASS
+
+## Implementation Scope
+
+The following canonical Enterprise Event domain types are implemented:
+
+- EventId
+- EventType
+- EventVersion
+- EventClassification
+- CorrelationId
+- EventCausation
+- EventComponent
+- EventSource
+- EventSubjectType
+- EventSubjectId
+- EventSubject
+- EventActorId
+- EventTraceReference
+- EventTrace
+- EventEnvelope
+
+## Engineering Gates
+
+| Gate | Result |
+|------|--------|
+| `cargo fmt --all` | PASS |
+| `cargo check --workspace --all-targets` | PASS |
+| `cargo test --workspace --all-targets` | PASS — 236 passed, 0 failed |
+| `cargo clippy --workspace --all-targets -- -D warnings` | PASS |
+| `cargo doc --workspace --no-deps` | PASS |
+| `cargo test --doc --workspace` | PASS |
+| `git diff --check` | PASS |
+
+## Architecture Compliance
+
+- Architecture Freeze preserved: YES
+- New ADR required: NO
+- Infrastructure dependency introduced: NO
+- Event transport implemented: NO
+- Event storage implemented: NO
+- Runtime Event Bus implemented: NO
+- Domain-generated identifiers or timestamps: NO
+- Caller-supplied payload preserved: YES
+- Immutable canonical event references preserved: YES
+
+## Validation Boundary
+
+K5.1 validates canonical construction and value-object invariants.
+
+The following remain assigned to later K5 backlog items:
+
+- K5-011 Envelope Validation
+- K5-012 Identity Validation
+- K5-013 Version Validation
+- K5-014 Timestamp Validation
+- K5-015 Payload Validation
+- K5-016 Integrity Validation
+- K5-017 to K5-019 Event Streams
+- K5-020 to K5-022 Replay
+
+---
+
+# K5.1 Canonical Event Envelope Validation
+
+## Status
+
+PASS
+
+## Engineering Gates
+
+| Gate | Result |
+|------|--------|
+| cargo fmt | PASS |
+| cargo check | PASS |
+| cargo test | PASS (236 passed, 0 failed) |
+| cargo clippy | PASS |
+| cargo doc | PASS |
+| cargo test --doc | PASS |
+
+## Validation Scope
+
+Validated:
+
+- EventId
+- EventType
+- EventVersion
+- EventClassification
+- CorrelationId
+- EventCausation
+- EventSource
+- EventSubject
+- EventTrace
+- EventEnvelope
+
+Deferred:
+
+- K5-011 Envelope Validation
+- K5-012 Identity Validation
+- K5-013 Version Validation
+- K5-014 Timestamp Validation
+- K5-015 Payload Validation
+- K5-016 Integrity Validation

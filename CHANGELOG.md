@@ -27,6 +27,35 @@ Kernel Platform Team
 ## Classification
 INTERNAL
 
+## K5.1 Canonical Event Envelope
+
+### Added
+
+- Canonical `EventId`
+- Canonical `EventType`
+- Canonical `EventVersion`
+- Canonical `EventClassification`
+- Canonical `CorrelationId`
+- Canonical `EventCausation`
+- Canonical `EventComponent` and `EventSource`
+- Canonical `EventSubjectType`, `EventSubjectId`, and `EventSubject`
+- Canonical `EventActorId`, `EventTraceReference`, and `EventTrace`
+- Generic canonical `EventEnvelope<P>`
+
+### Validation
+
+- 236 unit tests passed
+- 0 tests failed
+- Formatting, checking, Clippy, documentation, and doc-test gates passed
+
+### Boundaries
+
+- No Event Bus
+- No Event Store
+- No transport
+- No publishing
+- No replay execution
+
 ## 0.5.0
 - Finalized K3 and K4.1 canonical host validation evidence as `108 passed`, `0 failed`, and `0 ignored`.
 - Added additive K4.2 runtime lifecycle control primitives for validated heartbeat ingestion, heartbeat freshness classification, lease assessment and renewal, deterministic runtime health assessment, immutable runtime state snapshots, recovery eligibility, and pure supervisor outcomes.
@@ -90,3 +119,42 @@ INTERNAL
 - Initialized CHELA-X Kernel repository baseline.
 - Added bootstrap documentation, traceability framework, and validation guidance.
 - Added minimal Rust workspace scaffolding without business logic.
+
+## K5.1 Canonical Event Envelope
+
+### Status
+
+PASS
+
+### Added
+
+- Canonical `EventId`
+- Canonical `EventType`
+- Canonical `EventVersion`
+- Canonical `EventClassification`
+- Canonical `CorrelationId`
+- Canonical `EventCausation`
+- Canonical `EventComponent`
+- Canonical `EventSource`
+- Canonical `EventSubjectType`
+- Canonical `EventSubjectId`
+- Canonical `EventSubject`
+- Canonical `EventActorId`
+- Canonical `EventTraceReference`
+- Canonical `EventTrace`
+- Generic `EventEnvelope<P>`
+
+### Engineering Gates
+
+- cargo fmt — PASS
+- cargo check — PASS
+- cargo test — PASS (236 passed, 0 failed)
+- cargo clippy — PASS
+- cargo doc — PASS
+- cargo test --doc — PASS
+
+### Notes
+
+The implementation remains domain-only.
+
+No Event Bus, persistence, transport, replay, scheduling, or runtime execution has been introduced.

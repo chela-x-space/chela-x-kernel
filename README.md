@@ -1,7 +1,7 @@
 # CHELA-X Kernel
 
 ## Status
-Draft
+Implementation (K5.1 Complete)
 
 ## Version
 0.5.0
@@ -10,7 +10,7 @@ Draft
 Kernel Platform Team
 
 ## Last Updated
-2026-07-15
+2026-07-16
 
 ## Applies To
 CHELA-X Kernel repository baseline, bootstrap, and future implementation work.
@@ -39,8 +39,27 @@ AI Engineering OS -> CHELA-X CES -> CHELA-X Kernel -> CHELA-X Runtime -> CHELA-X
 - CHELA-X Program defines product dependency direction and portfolio ordering.
 - CHELA-X Library provides the read-only retrieval index used for traceability and verification.
 
+## Current Kernel Status
+
+| Milestone | Status |
+|-----------|--------|
+| K1 Domain Foundation | PASS |
+| K2 State Lifecycle | PASS |
+| K3 Authorization Foundation | PASS |
+| K4 Runtime Supervision | PASS |
+| K5.1 Canonical Event Envelope | PASS |
+| K5.2 Validation | NOT STARTED |
+| K5.3 Event Streams | NOT STARTED |
+| K5.4 Replay | NOT STARTED |
+| K6 Runtime Event Bus | NOT STARTED |
+
+Canonical host validation:
+
+- **236 passed**
+- **0 failed**
+
 ## Current Status
-`K4.2 Runtime Lifecycle Control Implemented`
+`K5.1 Canonical Enterprise Event Envelope Implemented`
 
 ## Constraints
 - Architecture is frozen.
@@ -64,6 +83,10 @@ AI Engineering OS -> CHELA-X CES -> CHELA-X Kernel -> CHELA-X Runtime -> CHELA-X
 - K4.2 implementation is additive in `crates/kernel-domain/src/runtime.rs`.
 - K4.2 implementation is complete in source and awaits canonical host validation because native unit-test linking still requires a host with `cc` in this environment.
 - K4.3 has not started.
+- K5.1 implementation is additive in `crates/kernel-domain/src/event.rs`.
+- K5.1 implementation is complete.
+- K5.1 canonical host validation passed with `236 passed`, `0 failed`.
+- K5.2 validation work has not started.
 - Runtime execution is not implemented.
 - Domain API baseline is frozen for K2 consumers.
 - No business logic, persistence, networking, or workflow execution is introduced in K1.
