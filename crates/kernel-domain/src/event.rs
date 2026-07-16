@@ -283,6 +283,52 @@ impl EventStream {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct EventSequence(u64);
+
+impl EventSequence {
+    pub fn new(value: u64) -> DomainResult<Self> {
+        if value == 0 {
+            return Err(DomainError::InvalidEventReference(
+                "event sequence must be greater than zero",
+            ));
+        }
+
+        Ok(Self(value))
+    }
+
+    pub const fn value(self) -> u64 {
+        self.0
+    }
+
+    pub const fn next(self) -> Self {
+        Self(self.0 + 1)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct StreamPosition {
+    stream_id: EventStreamId,
+    sequence: EventSequence,
+}
+
+impl StreamPosition {
+    pub const fn new(stream_id: EventStreamId, sequence: EventSequence) -> Self {
+        Self {
+            stream_id,
+            sequence,
+        }
+    }
+
+    pub const fn stream_id(&self) -> &EventStreamId {
+        &self.stream_id
+    }
+
+    pub const fn sequence(&self) -> EventSequence {
+        self.sequence
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct EventSubjectType(String);
 
@@ -1113,8 +1159,8 @@ mod tests {
         validate_event_envelope, validate_event_identity, validate_event_integrity,
         validate_event_payload, validate_event_timestamps, validate_event_version, EventActorId,
         EventCausation, EventClassification, EventComponent, EventEnvelope, EventEnvelopeCandidate,
-        EventSource, EventStream, EventStreamId, EventSubject, EventSubjectId, EventSubjectType,
-        EventTrace, EventTraceReference, EventType, EventVersion,
+        EventSequence, EventSource, EventStream, EventStreamId, EventSubject, EventSubjectId,
+        EventSubjectType, EventTrace, EventTraceReference, EventType, EventVersion, StreamPosition,
     };
     use crate::errors::{DomainError, DomainResult};
     use crate::identifier::{AuditEvidenceId, CorrelationId, EventId, RuntimeId, WorkflowId};
@@ -1825,6 +1871,70 @@ mod tests {
                 EventSubjectType::new("runtime").expect("right subject type"),
                 EventSubjectId::new("kernel.runtime.primary").expect("right subject id"),
             ),
+        );
+
+        assert_eq!(left, right);
+        assert_eq!(left.clone(), left);
+    }
+
+    #[test]
+    fn event_sequence_accepts_minimum_value() {
+        let sequence = EventSequence::new(1).expect("minimum valid sequence");
+
+        assert_eq!(sequence.value(), 1);
+    }
+
+    #[test]
+    fn event_sequence_rejects_zero() {
+        let error = EventSequence::new(0).expect_err("zero must be rejected");
+
+        assert_eq!(
+            error,
+            DomainError::InvalidEventReference("event sequence must be greater than zero")
+        );
+        assert_eq!(
+            error.to_string(),
+            "invalid event reference: event sequence must be greater than zero"
+        );
+    }
+
+    #[test]
+    fn event_sequence_next_increments_by_exactly_one() {
+        let current = EventSequence::new(41).expect("valid sequence");
+        let next = current.next();
+
+        assert_eq!(current.value(), 41);
+        assert_eq!(next.value(), 42);
+    }
+
+    #[test]
+    fn event_sequence_preserves_value_semantics() {
+        let left = EventSequence::new(7).expect("left sequence");
+        let right = EventSequence::new(7).expect("right sequence");
+
+        assert_eq!(left, right);
+    }
+
+    #[test]
+    fn stream_position_preserves_stream_id_and_sequence() {
+        let stream_id = EventStreamId::new("runtime.primary").expect("valid stream id");
+        let sequence = EventSequence::new(3).expect("valid sequence");
+
+        let position = StreamPosition::new(stream_id.clone(), sequence);
+
+        assert_eq!(position.stream_id(), &stream_id);
+        assert_eq!(position.sequence(), sequence);
+    }
+
+    #[test]
+    fn stream_position_preserves_value_semantics() {
+        let left = StreamPosition::new(
+            EventStreamId::new("runtime.primary").expect("left stream id"),
+            EventSequence::new(5).expect("left sequence"),
+        );
+        let right = StreamPosition::new(
+            EventStreamId::new("runtime.primary").expect("right stream id"),
+            EventSequence::new(5).expect("right sequence"),
         );
 
         assert_eq!(left, right);
