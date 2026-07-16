@@ -503,6 +503,111 @@ pub fn validate_event_version<P>(envelope: &EventEnvelope<P>) -> DomainResult<()
     ))
 }
 
+pub fn validate_event_timestamps<P>(envelope: &EventEnvelope<P>) -> DomainResult<()> {
+    let occurred_at = parse_event_timestamp(envelope.occurred_at(), "occurred_at")?;
+    let recorded_at = parse_event_timestamp(envelope.recorded_at(), "recorded_at")?;
+
+    if recorded_at < occurred_at {
+        return Err(DomainError::InvalidEventTimestamp(
+            "recorded_at must not precede occurred_at",
+        ));
+    }
+
+    Ok(())
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+struct CanonicalEventTimestamp {
+    year: u16,
+    month: u8,
+    day: u8,
+    hour: u8,
+    minute: u8,
+    second: u8,
+}
+
+fn parse_event_timestamp(
+    timestamp: &TimeReference,
+    field: &'static str,
+) -> DomainResult<CanonicalEventTimestamp> {
+    let value = timestamp.as_str();
+    let bytes = value.as_bytes();
+
+    if bytes.len() != 20
+        || bytes[4] != b'-'
+        || bytes[7] != b'-'
+        || bytes[10] != b'T'
+        || bytes[13] != b':'
+        || bytes[16] != b':'
+        || bytes[19] != b'Z'
+    {
+        return Err(DomainError::InvalidEventTimestamp(field));
+    }
+
+    for index in [0_usize, 1, 2, 3, 5, 6, 8, 9, 11, 12, 14, 15, 17, 18] {
+        if !bytes[index].is_ascii_digit() {
+            return Err(DomainError::InvalidEventTimestamp(field));
+        }
+    }
+
+    let year =
+        parse_four_digit_number(bytes, 0).ok_or(DomainError::InvalidEventTimestamp(field))?;
+    let month =
+        parse_two_digit_number(bytes, 5).ok_or(DomainError::InvalidEventTimestamp(field))?;
+    let day = parse_two_digit_number(bytes, 8).ok_or(DomainError::InvalidEventTimestamp(field))?;
+    let hour =
+        parse_two_digit_number(bytes, 11).ok_or(DomainError::InvalidEventTimestamp(field))?;
+    let minute =
+        parse_two_digit_number(bytes, 14).ok_or(DomainError::InvalidEventTimestamp(field))?;
+    let second =
+        parse_two_digit_number(bytes, 17).ok_or(DomainError::InvalidEventTimestamp(field))?;
+
+    if !(1..=12).contains(&month) || hour > 23 || minute > 59 || second > 59 {
+        return Err(DomainError::InvalidEventTimestamp(field));
+    }
+
+    let max_day = days_in_month(year, month);
+    if day == 0 || day > max_day {
+        return Err(DomainError::InvalidEventTimestamp(field));
+    }
+
+    Ok(CanonicalEventTimestamp {
+        year,
+        month,
+        day,
+        hour,
+        minute,
+        second,
+    })
+}
+
+fn parse_two_digit_number(bytes: &[u8], start: usize) -> Option<u8> {
+    Some((bytes[start] - b'0') * 10 + (bytes[start + 1] - b'0'))
+}
+
+fn parse_four_digit_number(bytes: &[u8], start: usize) -> Option<u16> {
+    Some(
+        u16::from(bytes[start] - b'0') * 1000
+            + u16::from(bytes[start + 1] - b'0') * 100
+            + u16::from(bytes[start + 2] - b'0') * 10
+            + u16::from(bytes[start + 3] - b'0'),
+    )
+}
+
+fn days_in_month(year: u16, month: u8) -> u8 {
+    match month {
+        1 | 3 | 5 | 7 | 8 | 10 | 12 => 31,
+        4 | 6 | 9 | 11 => 30,
+        2 if is_leap_year(year) => 29,
+        2 => 28,
+        _ => 0,
+    }
+}
+
+fn is_leap_year(year: u16) -> bool {
+    year.is_multiple_of(4) && (!year.is_multiple_of(100) || year.is_multiple_of(400))
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct EventEnvelope<P> {
     event_id: EventId,
@@ -898,10 +1003,10 @@ mod tests {
     use std::str::FromStr;
 
     use super::{
-        validate_event_envelope, validate_event_identity, validate_event_version, EventActorId,
-        EventCausation, EventClassification, EventComponent, EventEnvelope, EventEnvelopeCandidate,
-        EventSource, EventSubject, EventSubjectId, EventSubjectType, EventTrace,
-        EventTraceReference, EventType, EventVersion,
+        validate_event_envelope, validate_event_identity, validate_event_timestamps,
+        validate_event_version, EventActorId, EventCausation, EventClassification, EventComponent,
+        EventEnvelope, EventEnvelopeCandidate, EventSource, EventSubject, EventSubjectId,
+        EventSubjectType, EventTrace, EventTraceReference, EventType, EventVersion,
     };
     use crate::errors::DomainError;
     use crate::identifier::{AuditEvidenceId, CorrelationId, EventId, RuntimeId, WorkflowId};
@@ -1846,6 +1951,17 @@ mod tests {
         envelope
     }
 
+    fn test_envelope_with_timestamps(
+        occurred_at: &str,
+        recorded_at: &str,
+        correlation_id: Option<CorrelationId>,
+    ) -> EventEnvelope<TestPayload> {
+        let mut envelope = canonical_test_envelope(correlation_id, EventCausation::root());
+        envelope.occurred_at = TimeReference::new(occurred_at).expect("valid test occurrence time");
+        envelope.recorded_at = TimeReference::new(recorded_at).expect("valid test recording time");
+        envelope
+    }
+
     #[test]
     fn event_envelope_preserves_all_mandatory_fields() {
         let envelope = canonical_test_envelope(None, EventCausation::root());
@@ -2326,6 +2442,205 @@ mod tests {
 
         let without_correlation_result = validate_event_version(&without_correlation);
         let with_correlation_result = validate_event_version(&with_correlation);
+
+        assert_eq!(without_correlation_result, with_correlation_result);
+        assert_eq!(with_correlation_result, Ok(()));
+    }
+
+    #[test]
+    fn event_timestamp_validation_valid_increasing_timestamps_pass() {
+        let envelope = canonical_test_envelope(None, EventCausation::root());
+
+        assert_eq!(validate_event_timestamps(&envelope), Ok(()));
+    }
+
+    #[test]
+    fn event_timestamp_validation_equal_timestamps_pass() {
+        let envelope =
+            test_envelope_with_timestamps("2026-07-16T12:00:00Z", "2026-07-16T12:00:00Z", None);
+
+        assert_eq!(validate_event_timestamps(&envelope), Ok(()));
+    }
+
+    #[test]
+    fn event_timestamp_validation_recorded_at_before_occurred_at_is_rejected() {
+        let envelope =
+            test_envelope_with_timestamps("2026-07-16T12:00:01Z", "2026-07-16T12:00:00Z", None);
+
+        let error =
+            validate_event_timestamps(&envelope).expect_err("recorded_at ordering must fail");
+
+        assert_eq!(
+            error,
+            DomainError::InvalidEventTimestamp("recorded_at must not precede occurred_at")
+        );
+        assert_eq!(
+            error.to_string(),
+            "recorded_at must not precede occurred_at"
+        );
+    }
+
+    #[test]
+    fn event_timestamp_validation_invalid_occurred_at_fails_before_invalid_recorded_at() {
+        let envelope =
+            test_envelope_with_timestamps("2026-13-16T12:00:00Z", "2026-13-16T12:00:00Z", None);
+
+        let error = validate_event_timestamps(&envelope).expect_err("occurred_at must win");
+
+        assert_eq!(error, DomainError::InvalidEventTimestamp("occurred_at"));
+    }
+
+    #[test]
+    fn event_timestamp_validation_invalid_recorded_at_is_rejected() {
+        let envelope =
+            test_envelope_with_timestamps("2026-07-16T12:00:00Z", "2026-13-16T12:00:00Z", None);
+
+        let error =
+            validate_event_timestamps(&envelope).expect_err("invalid recorded_at must fail");
+
+        assert_eq!(error, DomainError::InvalidEventTimestamp("recorded_at"));
+        assert_eq!(error.to_string(), "invalid event timestamp: recorded_at");
+    }
+
+    #[test]
+    fn event_timestamp_validation_invalid_month() {
+        let envelope =
+            test_envelope_with_timestamps("2026-00-16T12:00:00Z", "2026-07-16T12:00:01Z", None);
+
+        let error = validate_event_timestamps(&envelope).expect_err("invalid month must fail");
+
+        assert_eq!(error, DomainError::InvalidEventTimestamp("occurred_at"));
+    }
+
+    #[test]
+    fn event_timestamp_validation_invalid_day() {
+        let envelope =
+            test_envelope_with_timestamps("2026-04-31T12:00:00Z", "2026-07-16T12:00:01Z", None);
+
+        let error = validate_event_timestamps(&envelope).expect_err("invalid day must fail");
+
+        assert_eq!(error, DomainError::InvalidEventTimestamp("occurred_at"));
+    }
+
+    #[test]
+    fn event_timestamp_validation_leap_year_february_29_passes() {
+        let envelope =
+            test_envelope_with_timestamps("2024-02-29T12:00:00Z", "2024-02-29T12:00:01Z", None);
+
+        assert_eq!(validate_event_timestamps(&envelope), Ok(()));
+    }
+
+    #[test]
+    fn event_timestamp_validation_non_leap_february_29_fails() {
+        let envelope =
+            test_envelope_with_timestamps("2025-02-29T12:00:00Z", "2025-02-29T12:00:01Z", None);
+
+        let error = validate_event_timestamps(&envelope).expect_err("invalid leap day must fail");
+
+        assert_eq!(error, DomainError::InvalidEventTimestamp("occurred_at"));
+    }
+
+    #[test]
+    fn event_timestamp_validation_invalid_hour() {
+        let envelope =
+            test_envelope_with_timestamps("2026-07-16T24:00:00Z", "2026-07-16T24:00:01Z", None);
+
+        let error = validate_event_timestamps(&envelope).expect_err("invalid hour must fail");
+
+        assert_eq!(error, DomainError::InvalidEventTimestamp("occurred_at"));
+    }
+
+    #[test]
+    fn event_timestamp_validation_invalid_minute() {
+        let envelope =
+            test_envelope_with_timestamps("2026-07-16T12:60:00Z", "2026-07-16T12:60:01Z", None);
+
+        let error = validate_event_timestamps(&envelope).expect_err("invalid minute must fail");
+
+        assert_eq!(error, DomainError::InvalidEventTimestamp("occurred_at"));
+    }
+
+    #[test]
+    fn event_timestamp_validation_invalid_second() {
+        let envelope =
+            test_envelope_with_timestamps("2026-07-16T12:00:60Z", "2026-07-16T12:00:59Z", None);
+
+        let error = validate_event_timestamps(&envelope).expect_err("invalid second must fail");
+
+        assert_eq!(error, DomainError::InvalidEventTimestamp("occurred_at"));
+    }
+
+    #[test]
+    fn event_timestamp_validation_fractional_seconds_rejected() {
+        let envelope =
+            test_envelope_with_timestamps("2026-07-16T12:00:00.1Z", "2026-07-16T12:00:01Z", None);
+
+        let error = validate_event_timestamps(&envelope).expect_err("fractional seconds must fail");
+
+        assert_eq!(error, DomainError::InvalidEventTimestamp("occurred_at"));
+    }
+
+    #[test]
+    fn event_timestamp_validation_timezone_offset_rejected() {
+        let envelope = test_envelope_with_timestamps(
+            "2026-07-16T12:00:00+00:00",
+            "2026-07-16T12:00:01Z",
+            None,
+        );
+
+        let error = validate_event_timestamps(&envelope).expect_err("offset must fail");
+
+        assert_eq!(error, DomainError::InvalidEventTimestamp("occurred_at"));
+    }
+
+    #[test]
+    fn event_timestamp_validation_lowercase_t_z_rejected() {
+        let envelope =
+            test_envelope_with_timestamps("2026-07-16t12:00:00z", "2026-07-16T12:00:01Z", None);
+
+        let error = validate_event_timestamps(&envelope).expect_err("lowercase must fail");
+
+        assert_eq!(error, DomainError::InvalidEventTimestamp("occurred_at"));
+    }
+
+    #[test]
+    fn event_timestamp_validation_is_deterministic() {
+        let envelope =
+            test_envelope_with_timestamps("2026-07-16T12:00:01Z", "2026-07-16T12:00:00Z", None);
+
+        let first = validate_event_timestamps(&envelope);
+        let second = validate_event_timestamps(&envelope);
+
+        assert_eq!(first, second);
+        assert_eq!(
+            first,
+            Err(DomainError::InvalidEventTimestamp(
+                "recorded_at must not precede occurred_at",
+            ))
+        );
+    }
+
+    #[test]
+    fn event_timestamp_validation_does_not_mutate_envelope() {
+        let envelope = canonical_test_envelope(None, EventCausation::root());
+        let original = envelope.clone();
+
+        let result = validate_event_timestamps(&envelope);
+
+        assert_eq!(result, Ok(()));
+        assert_eq!(envelope, original);
+    }
+
+    #[test]
+    fn event_timestamp_validation_correlation_presence_does_not_affect_timestamp_result() {
+        let without_correlation = canonical_test_envelope(None, EventCausation::root());
+        let with_correlation = canonical_test_envelope(
+            Some(CorrelationId::new("CX-COR-000100").expect("valid correlation id")),
+            EventCausation::root(),
+        );
+
+        let without_correlation_result = validate_event_timestamps(&without_correlation);
+        let with_correlation_result = validate_event_timestamps(&with_correlation);
 
         assert_eq!(without_correlation_result, with_correlation_result);
         assert_eq!(with_correlation_result, Ok(()));

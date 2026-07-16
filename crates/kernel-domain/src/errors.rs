@@ -32,6 +32,7 @@ pub enum DomainError {
     InvalidPolicyReference(&'static str),
     InvalidWorkflowReference(&'static str),
     InvalidEventReference(&'static str),
+    InvalidEventTimestamp(&'static str),
     MissingEventField(&'static str),
     UnsupportedAuthorizationSemantics(&'static str),
 }
@@ -103,6 +104,13 @@ impl fmt::Display for DomainError {
             }
             Self::InvalidEventReference(message) => {
                 write!(formatter, "invalid event reference: {message}")
+            }
+            Self::InvalidEventTimestamp(message) => {
+                if *message == "recorded_at must not precede occurred_at" {
+                    formatter.write_str(message)
+                } else {
+                    write!(formatter, "invalid event timestamp: {message}")
+                }
             }
             Self::MissingEventField(field) => {
                 write!(formatter, "missing mandatory event field: {field}")
