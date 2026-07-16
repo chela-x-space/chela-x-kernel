@@ -34,6 +34,7 @@ pub enum DomainError {
     InvalidEventReference(&'static str),
     InvalidEventTimestamp(&'static str),
     IntegrityFailure(&'static str),
+    InvalidStreamAppend(&'static str),
     MissingEventField(&'static str),
     UnsupportedAuthorizationSemantics(&'static str),
 }
@@ -115,6 +116,9 @@ impl fmt::Display for DomainError {
             }
             Self::IntegrityFailure(message) => {
                 write!(formatter, "integrity failure: {message}")
+            }
+            Self::InvalidStreamAppend(message) => {
+                write!(formatter, "invalid stream append: {message}")
             }
             Self::MissingEventField(field) => {
                 write!(formatter, "missing mandatory event field: {field}")

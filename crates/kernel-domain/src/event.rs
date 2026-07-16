@@ -329,6 +329,74 @@ impl StreamPosition {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct StreamAppendCandidate {
+    stream_id: EventStreamId,
+    current_head: Option<StreamPosition>,
+    proposed_position: StreamPosition,
+}
+
+impl StreamAppendCandidate {
+    pub const fn new(
+        stream_id: EventStreamId,
+        current_head: Option<StreamPosition>,
+        proposed_position: StreamPosition,
+    ) -> Self {
+        Self {
+            stream_id,
+            current_head,
+            proposed_position,
+        }
+    }
+
+    pub const fn stream_id(&self) -> &EventStreamId {
+        &self.stream_id
+    }
+
+    pub const fn current_head(&self) -> Option<&StreamPosition> {
+        self.current_head.as_ref()
+    }
+
+    pub const fn proposed_position(&self) -> &StreamPosition {
+        &self.proposed_position
+    }
+}
+
+pub fn validate_stream_append(candidate: &StreamAppendCandidate) -> DomainResult<()> {
+    if candidate.proposed_position().stream_id() != candidate.stream_id() {
+        return Err(DomainError::InvalidStreamAppend(
+            "proposed position must belong to stream",
+        ));
+    }
+
+    if let Some(current_head) = candidate.current_head() {
+        if current_head.stream_id() != candidate.stream_id() {
+            return Err(DomainError::InvalidStreamAppend(
+                "current head must belong to stream",
+            ));
+        }
+    }
+
+    match candidate.current_head() {
+        None => {
+            if candidate.proposed_position().sequence().value() != 1 {
+                return Err(DomainError::InvalidStreamAppend(
+                    "new stream must begin at sequence 1",
+                ));
+            }
+        }
+        Some(current_head) => {
+            if candidate.proposed_position().sequence() != current_head.sequence().next() {
+                return Err(DomainError::InvalidStreamAppend(
+                    "proposed sequence must advance current head by exactly one",
+                ));
+            }
+        }
+    }
+
+    Ok(())
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct EventSubjectType(String);
 
@@ -1157,10 +1225,11 @@ mod tests {
 
     use super::{
         validate_event_envelope, validate_event_identity, validate_event_integrity,
-        validate_event_payload, validate_event_timestamps, validate_event_version, EventActorId,
-        EventCausation, EventClassification, EventComponent, EventEnvelope, EventEnvelopeCandidate,
-        EventSequence, EventSource, EventStream, EventStreamId, EventSubject, EventSubjectId,
-        EventSubjectType, EventTrace, EventTraceReference, EventType, EventVersion, StreamPosition,
+        validate_event_payload, validate_event_timestamps, validate_event_version,
+        validate_stream_append, EventActorId, EventCausation, EventClassification, EventComponent,
+        EventEnvelope, EventEnvelopeCandidate, EventSequence, EventSource, EventStream,
+        EventStreamId, EventSubject, EventSubjectId, EventSubjectType, EventTrace,
+        EventTraceReference, EventType, EventVersion, StreamAppendCandidate, StreamPosition,
     };
     use crate::errors::{DomainError, DomainResult};
     use crate::identifier::{AuditEvidenceId, CorrelationId, EventId, RuntimeId, WorkflowId};
@@ -1939,6 +2008,249 @@ mod tests {
 
         assert_eq!(left, right);
         assert_eq!(left.clone(), left);
+    }
+
+    fn test_stream_append_candidate(
+        stream_id: &str,
+        current_head: Option<(&str, u64)>,
+        proposed_position: (&str, u64),
+    ) -> StreamAppendCandidate {
+        StreamAppendCandidate::new(
+            EventStreamId::new(stream_id).expect("valid candidate stream id"),
+            current_head.map(|(head_stream_id, sequence)| {
+                StreamPosition::new(
+                    EventStreamId::new(head_stream_id).expect("valid head stream id"),
+                    EventSequence::new(sequence).expect("valid head sequence"),
+                )
+            }),
+            StreamPosition::new(
+                EventStreamId::new(proposed_position.0).expect("valid proposed stream id"),
+                EventSequence::new(proposed_position.1).expect("valid proposed sequence"),
+            ),
+        )
+    }
+
+    #[test]
+    fn stream_append_validation_new_stream_accepts_sequence_1() {
+        let candidate =
+            test_stream_append_candidate("runtime.primary", None, ("runtime.primary", 1));
+
+        assert_eq!(validate_stream_append(&candidate), Ok(()));
+    }
+
+    #[test]
+    fn stream_append_validation_new_stream_rejects_sequence_greater_than_1() {
+        let candidate =
+            test_stream_append_candidate("runtime.primary", None, ("runtime.primary", 2));
+
+        let error = validate_stream_append(&candidate).expect_err("new stream must start at one");
+
+        assert_eq!(
+            error,
+            DomainError::InvalidStreamAppend("new stream must begin at sequence 1")
+        );
+    }
+
+    #[test]
+    fn stream_append_validation_existing_stream_accepts_exact_next_sequence() {
+        let candidate = test_stream_append_candidate(
+            "runtime.primary",
+            Some(("runtime.primary", 4)),
+            ("runtime.primary", 5),
+        );
+
+        assert_eq!(validate_stream_append(&candidate), Ok(()));
+    }
+
+    #[test]
+    fn stream_append_validation_existing_stream_rejects_same_sequence_overwrite() {
+        let candidate = test_stream_append_candidate(
+            "runtime.primary",
+            Some(("runtime.primary", 4)),
+            ("runtime.primary", 4),
+        );
+
+        let error = validate_stream_append(&candidate).expect_err("same sequence must fail");
+
+        assert_eq!(
+            error,
+            DomainError::InvalidStreamAppend(
+                "proposed sequence must advance current head by exactly one",
+            )
+        );
+    }
+
+    #[test]
+    fn stream_append_validation_existing_stream_rejects_lower_sequence() {
+        let candidate = test_stream_append_candidate(
+            "runtime.primary",
+            Some(("runtime.primary", 4)),
+            ("runtime.primary", 3),
+        );
+
+        let error = validate_stream_append(&candidate).expect_err("lower sequence must fail");
+
+        assert_eq!(
+            error,
+            DomainError::InvalidStreamAppend(
+                "proposed sequence must advance current head by exactly one",
+            )
+        );
+    }
+
+    #[test]
+    fn stream_append_validation_existing_stream_rejects_sequence_gap() {
+        let candidate = test_stream_append_candidate(
+            "runtime.primary",
+            Some(("runtime.primary", 4)),
+            ("runtime.primary", 6),
+        );
+
+        let error = validate_stream_append(&candidate).expect_err("gap must fail");
+
+        assert_eq!(
+            error,
+            DomainError::InvalidStreamAppend(
+                "proposed sequence must advance current head by exactly one",
+            )
+        );
+    }
+
+    #[test]
+    fn stream_append_validation_proposed_position_from_another_stream_is_rejected_first() {
+        let candidate = test_stream_append_candidate(
+            "runtime.primary",
+            Some(("runtime.primary", 4)),
+            ("runtime.secondary", 5),
+        );
+
+        let error = validate_stream_append(&candidate).expect_err("proposed stream mismatch");
+
+        assert_eq!(
+            error,
+            DomainError::InvalidStreamAppend("proposed position must belong to stream")
+        );
+    }
+
+    #[test]
+    fn stream_append_validation_current_head_from_another_stream_is_rejected() {
+        let candidate = test_stream_append_candidate(
+            "runtime.primary",
+            Some(("runtime.secondary", 4)),
+            ("runtime.primary", 5),
+        );
+
+        let error = validate_stream_append(&candidate).expect_err("head stream mismatch");
+
+        assert_eq!(
+            error,
+            DomainError::InvalidStreamAppend("current head must belong to stream")
+        );
+    }
+
+    #[test]
+    fn stream_append_validation_proposed_stream_mismatch_precedes_current_head_mismatch() {
+        let candidate = test_stream_append_candidate(
+            "runtime.primary",
+            Some(("runtime.secondary", 4)),
+            ("runtime.tertiary", 5),
+        );
+
+        let error = validate_stream_append(&candidate).expect_err("proposed mismatch must win");
+
+        assert_eq!(
+            error,
+            DomainError::InvalidStreamAppend("proposed position must belong to stream")
+        );
+    }
+
+    #[test]
+    fn stream_append_validation_repeated_valid_validation_is_deterministic() {
+        let candidate = test_stream_append_candidate(
+            "runtime.primary",
+            Some(("runtime.primary", 2)),
+            ("runtime.primary", 3),
+        );
+
+        let first = validate_stream_append(&candidate);
+        let second = validate_stream_append(&candidate);
+
+        assert_eq!(first, second);
+        assert_eq!(first, Ok(()));
+    }
+
+    #[test]
+    fn stream_append_validation_equivalent_invalid_candidates_produce_equivalent_errors() {
+        let left = test_stream_append_candidate(
+            "runtime.primary",
+            Some(("runtime.primary", 7)),
+            ("runtime.primary", 9),
+        );
+        let right = test_stream_append_candidate(
+            "runtime.primary",
+            Some(("runtime.primary", 7)),
+            ("runtime.primary", 9),
+        );
+
+        let left_error = validate_stream_append(&left).expect_err("left must fail");
+        let right_error = validate_stream_append(&right).expect_err("right must fail");
+
+        assert_eq!(left_error, right_error);
+        assert_eq!(
+            left_error,
+            DomainError::InvalidStreamAppend(
+                "proposed sequence must advance current head by exactly one",
+            )
+        );
+    }
+
+    #[test]
+    fn stream_append_validation_does_not_mutate_candidate() {
+        let candidate = test_stream_append_candidate(
+            "runtime.primary",
+            Some(("runtime.primary", 1)),
+            ("runtime.primary", 2),
+        );
+        let original = candidate.clone();
+
+        let result = validate_stream_append(&candidate);
+
+        assert_eq!(result, Ok(()));
+        assert_eq!(candidate, original);
+    }
+
+    #[test]
+    fn stream_append_validation_candidate_preserves_current_head_and_proposed_position() {
+        let current_head = StreamPosition::new(
+            EventStreamId::new("runtime.primary").expect("head stream id"),
+            EventSequence::new(8).expect("head sequence"),
+        );
+        let proposed_position = StreamPosition::new(
+            EventStreamId::new("runtime.primary").expect("proposed stream id"),
+            EventSequence::new(9).expect("proposed sequence"),
+        );
+
+        let candidate = StreamAppendCandidate::new(
+            EventStreamId::new("runtime.primary").expect("candidate stream id"),
+            Some(current_head.clone()),
+            proposed_position.clone(),
+        );
+
+        assert_eq!(candidate.current_head(), Some(&current_head));
+        assert_eq!(candidate.proposed_position(), &proposed_position);
+    }
+
+    #[test]
+    fn stream_append_validation_error_display_is_canonical() {
+        let candidate =
+            test_stream_append_candidate("runtime.primary", None, ("runtime.primary", 2));
+
+        let error = validate_stream_append(&candidate).expect_err("display case must fail");
+
+        assert_eq!(
+            error.to_string(),
+            "invalid stream append: new stream must begin at sequence 1"
+        );
     }
 
     #[test]
