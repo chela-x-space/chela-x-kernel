@@ -313,18 +313,12 @@ K5.1 validates canonical construction and value-object invariants.
 
 The following remain assigned to later K5 backlog items:
 
-- K5-011 Envelope Validation
-- K5-012 Identity Validation
-- K5-013 Version Validation
-- K5-014 Timestamp Validation
-- K5-015 Payload Validation
-- K5-016 Integrity Validation
 - K5-017 to K5-019 Event Streams
 - K5-020 to K5-022 Replay
 
 ---
 
-# K5.1 Canonical Event Envelope Validation
+# K5.2 Event Validation
 
 ## Status
 
@@ -336,7 +330,7 @@ PASS
 |------|--------|
 | cargo fmt | PASS |
 | cargo check | PASS |
-| cargo test | PASS (236 passed, 0 failed) |
+| cargo test | PASS (304 passed, 0 failed) |
 | cargo clippy | PASS |
 | cargo doc | PASS |
 | cargo test --doc | PASS |
@@ -345,22 +339,19 @@ PASS
 
 Validated:
 
-- EventId
-- EventType
-- EventVersion
-- EventClassification
-- CorrelationId
-- EventCausation
-- EventSource
-- EventSubject
-- EventTrace
-- EventEnvelope
-
-Deferred:
-
 - K5-011 Envelope Validation
 - K5-012 Identity Validation
 - K5-013 Version Validation
 - K5-014 Timestamp Validation
 - K5-015 Payload Validation
 - K5-016 Integrity Validation
+
+Deferred:
+
+- K5-017 to K5-019 Event Streams
+- K5-020 to K5-022 Replay
+
+## Milestone Status
+
+- K5.2 Validation: PASS
+- K5.3 Event Streams: NEXT

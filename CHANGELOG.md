@@ -27,6 +27,33 @@ Kernel Platform Team
 ## Classification
 INTERNAL
 
+## K5.2 Event Validation
+
+### Added
+
+- Canonical `validate_event_envelope`
+- Canonical `validate_event_identity`
+- Canonical `validate_event_version`
+- Canonical `validate_event_timestamps`
+- Canonical `validate_event_payload`
+- Canonical `validate_event_integrity`
+
+### Validation
+
+- 304 unit tests passed
+- 0 tests failed
+- Formatting, checking, Clippy, documentation, and doc-test gates passed
+
+### Boundaries
+
+- K5.3 Event Streams is next
+- K5-017 through K5-022 remain TODO
+- No Event Bus
+- No Event Store
+- No transport
+- No publishing
+- No replay execution
+
 ## K5.1 Canonical Event Envelope
 
 ### Added
@@ -57,6 +84,8 @@ INTERNAL
 - No replay execution
 
 ## 0.5.0
+- Finalized K5.2 event validation with canonical host evidence of `304 passed` and `0 failed`.
+- Marked K5-011 through K5-016 as `PASS` and K5.3 Event Streams as `NEXT` while preserving K5-017 through K5-022 as `TODO`.
 - Finalized K3 and K4.1 canonical host validation evidence as `108 passed`, `0 failed`, and `0 ignored`.
 - Added additive K4.2 runtime lifecycle control primitives for validated heartbeat ingestion, heartbeat freshness classification, lease assessment and renewal, deterministic runtime health assessment, immutable runtime state snapshots, recovery eligibility, and pure supervisor outcomes.
 - Added validated registry operations that apply heartbeat, lease, presence, and supervisor updates atomically without introducing runtime execution, scheduling, or background workers.

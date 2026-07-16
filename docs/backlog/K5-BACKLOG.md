@@ -40,16 +40,16 @@ Implementation shall follow the approved specifications.
 
 | ID | Feature | Status |
 |----|---------|--------|
-| K5-011 | Envelope Validation | TODO |
-| K5-012 | Identity Validation | TODO |
-| K5-013 | Version Validation | TODO |
-| K5-014 | Timestamp Validation | TODO |
-| K5-015 | Payload Validation | TODO |
-| K5-016 | Integrity Validation | TODO |
+| K5-011 | Envelope Validation | PASS |
+| K5-012 | Identity Validation | PASS |
+| K5-013 | Version Validation | PASS |
+| K5-014 | Timestamp Validation | PASS |
+| K5-015 | Payload Validation | PASS |
+| K5-016 | Integrity Validation | PASS |
 
 ---
 
-# Epic K5.3 — Event Streams
+# Epic K5.3 — Event Streams (NEXT)
 
 | ID | Feature | Status |
 |----|---------|--------|

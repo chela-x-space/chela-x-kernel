@@ -144,3 +144,23 @@ INTERNAL
 - Optional correlation
 - Root and parent causation
 - Duplicate evidence rejection
+
+---
+
+# K5.2 Event Validation
+
+| K5 Item | Canonical Implementation | Status |
+|---------|--------------------------|--------|
+| K5-011 | `validate_event_envelope` | PASS |
+| K5-012 | `validate_event_identity` | PASS |
+| K5-013 | `validate_event_version` | PASS |
+| K5-014 | `validate_event_timestamps` | PASS |
+| K5-015 | `validate_event_payload` | PASS |
+| K5-016 | `validate_event_integrity` | PASS |
+
+## Validation Evidence
+
+- Canonical host validation passed with `304 passed`, `0 failed`.
+- K5.2 Validation status is `PASS`.
+- K5.3 Event Streams status is `NEXT`.
+- K5-017 through K5-022 remain `TODO`.

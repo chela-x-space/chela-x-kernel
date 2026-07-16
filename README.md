@@ -48,14 +48,14 @@ AI Engineering OS -> CHELA-X CES -> CHELA-X Kernel -> CHELA-X Runtime -> CHELA-X
 | K3 Authorization Foundation | PASS |
 | K4 Runtime Supervision | PASS |
 | K5.1 Canonical Event Envelope | PASS |
-| K5.2 Validation | NOT STARTED |
-| K5.3 Event Streams | NOT STARTED |
+| K5.2 Validation | PASS |
+| K5.3 Event Streams | NEXT |
 | K5.4 Replay | NOT STARTED |
 | K6 Runtime Event Bus | NOT STARTED |
 
 Canonical host validation:
 
-- **236 passed**
+- **304 passed**
 - **0 failed**
 
 ## Current Status
@@ -86,7 +86,9 @@ Canonical host validation:
 - K5.1 implementation is additive in `crates/kernel-domain/src/event.rs`.
 - K5.1 implementation is complete.
 - K5.1 canonical host validation passed with `236 passed`, `0 failed`.
-- K5.2 validation work has not started.
+- K5.2 validation implementation is complete.
+- K5.2 canonical host validation passed with `304 passed`, `0 failed`.
+- K5.3 Event Streams is next.
 - Runtime execution is not implemented.
 - Domain API baseline is frozen for K2 consumers.
 - No business logic, persistence, networking, or workflow execution is introduced in K1.
