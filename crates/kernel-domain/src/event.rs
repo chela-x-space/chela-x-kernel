@@ -18,6 +18,9 @@ const EVENT_SUBJECT_ID_EXPECTATION: &str =
 const EVENT_COMPONENT_EXPECTATION: &str =
     "lowercase ASCII component using a-z, 0-9, hyphen, dot, or underscore, without leading, trailing, or adjacent separators";
 
+const EVENT_STREAM_ID_EXPECTATION: &str =
+    "lowercase ASCII stream id using a-z, 0-9, hyphen, dot, or underscore, without leading, trailing, or adjacent separators";
+
 const EVENT_ACTOR_ID_EXPECTATION: &str =
     "non-empty ASCII actor reference using letters, digits, dot, underscore, or hyphen";
 
@@ -188,6 +191,95 @@ impl EventSource {
 
     pub const fn has_runtime_id(&self) -> bool {
         self.runtime_id.is_some()
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct EventStreamId(String);
+
+impl EventStreamId {
+    pub fn new(value: impl Into<String>) -> DomainResult<Self> {
+        let value = value.into().trim().to_owned();
+
+        if value.is_empty() {
+            return Err(DomainError::EmptyValue {
+                field: "EventStreamId",
+            });
+        }
+
+        let mut previous_was_separator = false;
+
+        for character in value.chars() {
+            let is_separator = matches!(character, '-' | '.' | '_');
+            let is_allowed =
+                character.is_ascii_lowercase() || character.is_ascii_digit() || is_separator;
+
+            if !is_allowed || (is_separator && previous_was_separator) {
+                return Err(Self::invalid(value));
+            }
+
+            previous_was_separator = is_separator;
+        }
+
+        if value
+            .chars()
+            .next()
+            .is_some_and(|character| matches!(character, '-' | '.' | '_'))
+            || value
+                .chars()
+                .last()
+                .is_some_and(|character| matches!(character, '-' | '.' | '_'))
+        {
+            return Err(Self::invalid(value));
+        }
+
+        Ok(Self(value))
+    }
+
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+
+    fn invalid(value: String) -> DomainError {
+        DomainError::InvalidIdentifier {
+            kind: "EventStreamId",
+            value,
+            expected: EVENT_STREAM_ID_EXPECTATION,
+        }
+    }
+}
+
+impl fmt::Display for EventStreamId {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str(self.as_str())
+    }
+}
+
+impl FromStr for EventStreamId {
+    type Err = DomainError;
+
+    fn from_str(value: &str) -> DomainResult<Self> {
+        Self::new(value.to_owned())
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EventStream {
+    stream_id: EventStreamId,
+    subject: EventSubject,
+}
+
+impl EventStream {
+    pub const fn new(stream_id: EventStreamId, subject: EventSubject) -> Self {
+        Self { stream_id, subject }
+    }
+
+    pub const fn stream_id(&self) -> &EventStreamId {
+        &self.stream_id
+    }
+
+    pub const fn subject(&self) -> &EventSubject {
+        &self.subject
     }
 }
 
@@ -1021,8 +1113,8 @@ mod tests {
         validate_event_envelope, validate_event_identity, validate_event_integrity,
         validate_event_payload, validate_event_timestamps, validate_event_version, EventActorId,
         EventCausation, EventClassification, EventComponent, EventEnvelope, EventEnvelopeCandidate,
-        EventSource, EventSubject, EventSubjectId, EventSubjectType, EventTrace,
-        EventTraceReference, EventType, EventVersion,
+        EventSource, EventStream, EventStreamId, EventSubject, EventSubjectId, EventSubjectType,
+        EventTrace, EventTraceReference, EventType, EventVersion,
     };
     use crate::errors::{DomainError, DomainResult};
     use crate::identifier::{AuditEvidenceId, CorrelationId, EventId, RuntimeId, WorkflowId};
@@ -1622,6 +1714,117 @@ mod tests {
         let right = EventSubject::new(
             EventSubjectType::new("agent").expect("right subject type"),
             EventSubjectId::new("CX-AGT-000001").expect("right subject id"),
+        );
+
+        assert_eq!(left, right);
+        assert_eq!(left.clone(), left);
+    }
+
+    #[test]
+    fn event_stream_id_accepts_canonical_values() {
+        for value in [
+            "runtime.primary",
+            "workflow-queue",
+            "event_stream_01",
+            "api.audit.stream",
+        ] {
+            let stream_id = EventStreamId::new(value).expect("canonical stream id");
+
+            assert_eq!(stream_id.as_str(), value);
+        }
+    }
+
+    #[test]
+    fn event_stream_id_trims_outer_whitespace() {
+        let stream_id = EventStreamId::new("  runtime.primary  ").expect("trimmed stream id");
+
+        assert_eq!(stream_id.as_str(), "runtime.primary");
+    }
+
+    #[test]
+    fn event_stream_id_rejects_empty_value() {
+        let error = EventStreamId::new("   ").expect_err("empty stream id must fail");
+
+        assert_eq!(error.to_string(), "empty value: EventStreamId");
+    }
+
+    #[test]
+    fn event_stream_id_rejects_internal_whitespace() {
+        let error =
+            EventStreamId::new("runtime primary").expect_err("internal whitespace must fail");
+
+        assert!(error
+            .to_string()
+            .contains("invalid EventStreamId identifier"));
+    }
+
+    #[test]
+    fn event_stream_id_rejects_leading_trailing_and_adjacent_separators() {
+        for value in [
+            ".runtime",
+            "runtime-",
+            "_runtime",
+            "runtime..primary",
+            "runtime--primary",
+            "runtime__primary",
+            "runtime._primary",
+        ] {
+            let error =
+                EventStreamId::new(value).expect_err("non-canonical separator placement fails");
+
+            assert!(error
+                .to_string()
+                .contains("invalid EventStreamId identifier"));
+        }
+    }
+
+    #[test]
+    fn event_stream_id_rejects_uppercase_and_unsafe_characters() {
+        for value in ["Runtime.Primary", "runtime/primary", "runtime+primary"] {
+            let error = EventStreamId::new(value).expect_err("unsafe stream identifier must fail");
+
+            assert!(error
+                .to_string()
+                .contains("invalid EventStreamId identifier"));
+        }
+    }
+
+    #[test]
+    fn event_stream_id_display_and_parsing_are_stable() {
+        let stream_id: EventStreamId = "runtime.primary".parse().expect("stream id parses");
+
+        assert_eq!(stream_id.to_string(), "runtime.primary");
+    }
+
+    #[test]
+    fn event_stream_preserves_stream_id_and_subject() {
+        let stream_id = EventStreamId::new("runtime.primary").expect("valid stream id");
+        let subject = EventSubject::new(
+            EventSubjectType::new("runtime").expect("valid subject type"),
+            EventSubjectId::new("kernel.runtime.primary").expect("valid subject id"),
+        );
+
+        let stream = EventStream::new(stream_id.clone(), subject.clone());
+
+        assert_eq!(stream.stream_id(), &stream_id);
+        assert_eq!(stream.subject(), &subject);
+    }
+
+    #[test]
+    fn event_stream_preserves_value_semantics() {
+        let left = EventStream::new(
+            EventStreamId::new("runtime.primary").expect("left stream id"),
+            EventSubject::new(
+                EventSubjectType::new("runtime").expect("left subject type"),
+                EventSubjectId::new("kernel.runtime.primary").expect("left subject id"),
+            ),
+        );
+        let right = EventStream::new(
+            EventStreamId::new("runtime.primary").expect("right stream id"),
+            EventSubject::new(
+                EventSubjectType::new("runtime").expect("right subject type"),
+                EventSubjectId::new("kernel.runtime.primary").expect("right subject id"),
+            ),
         );
 
         assert_eq!(left, right);
