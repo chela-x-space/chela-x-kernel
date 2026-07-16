@@ -10,7 +10,7 @@ Draft
 Kernel Platform Team
 
 ## Last Updated
-2026-07-15
+2026-07-16
 
 ## Applies To
 CHELA-X Kernel repository history.
@@ -26,6 +26,33 @@ Kernel Platform Team
 
 ## Classification
 INTERNAL
+
+## K5 Enterprise Event System
+
+### Added
+
+- Canonical `EventStreamId` and `EventStream`
+- Canonical `EventSequence` and `StreamPosition`
+- Canonical `StreamAppendCandidate` and `validate_stream_append`
+- Canonical `EventReplayStart`, `EventReplayRequest`, and `EventReplaySource`
+- Canonical `EventReplayEntry`
+- Canonical `validate_replay_ordering` and `validate_event_replay`
+
+### Validation
+
+- 382 unit tests passed
+- 0 tests failed
+- Formatting, checking, Clippy, documentation, and doc-test gates passed
+
+### Boundaries
+
+- Architecture freeze preserved
+- K6 Runtime Event Bus is next
+- No Event Bus
+- No Event Store
+- No transport
+- No publishing
+- No replay execution engine
 
 ## K5.2 Event Validation
 
@@ -84,6 +111,8 @@ INTERNAL
 - No replay execution
 
 ## 0.5.0
+- Finalized K5 Enterprise Event System with canonical host evidence of `382 passed` and `0 failed`.
+- Marked K5-017 through K5-022 as `PASS`, K5.3 Event Streams as `PASS`, K5.4 Replay as `PASS`, and K6 Runtime Event Bus as `NEXT`.
 - Finalized K5.2 event validation with canonical host evidence of `304 passed` and `0 failed`.
 - Marked K5-011 through K5-016 as `PASS` and K5.3 Event Streams as `NEXT` while preserving K5-017 through K5-022 as `TODO`.
 - Finalized K3 and K4.1 canonical host validation evidence as `108 passed`, `0 failed`, and `0 ignored`.

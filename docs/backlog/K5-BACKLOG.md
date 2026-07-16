@@ -49,23 +49,31 @@ Implementation shall follow the approved specifications.
 
 ---
 
-# Epic K5.3 — Event Streams (NEXT)
+# Epic K5.3 — Event Streams (PASS)
 
 | ID | Feature | Status |
 |----|---------|--------|
-| K5-017 | Stream Identity | TODO |
-| K5-018 | Stream Ordering | TODO |
-| K5-019 | Append-only Rules | TODO |
+| K5-017 | Stream Identity | PASS |
+| K5-018 | Stream Ordering | PASS |
+| K5-019 | Append-only Rules | PASS |
 
 ---
 
-# Epic K5.4 — Replay
+# Epic K5.4 — Replay (PASS)
 
 | ID | Feature | Status |
 |----|---------|--------|
-| K5-020 | Replay Interface | TODO |
-| K5-021 | Replay Ordering | TODO |
-| K5-022 | Replay Validation | TODO |
+| K5-020 | Replay Interface | PASS |
+| K5-021 | Replay Ordering | PASS |
+| K5-022 | Replay Validation | PASS |
+
+---
+
+# K5 Enterprise Event System
+
+- Status: PASS / COMPLETE
+- Canonical host validation: `382 passed`, `0 failed`
+- Next milestone: `K6 Runtime Event Bus`
 
 ---
 

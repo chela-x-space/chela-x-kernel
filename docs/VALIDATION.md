@@ -330,7 +330,7 @@ PASS
 |------|--------|
 | cargo fmt | PASS |
 | cargo check | PASS |
-| cargo test | PASS (304 passed, 0 failed) |
+| cargo test | PASS (382 passed, 0 failed) |
 | cargo clippy | PASS |
 | cargo doc | PASS |
 | cargo test --doc | PASS |
@@ -348,10 +348,12 @@ Validated:
 
 Deferred:
 
-- K5-017 to K5-019 Event Streams
-- K5-020 to K5-022 Replay
+- None
 
 ## Milestone Status
 
 - K5.2 Validation: PASS
-- K5.3 Event Streams: NEXT
+- K5.3 Event Streams: PASS
+- K5.4 Replay: PASS
+- K5 Enterprise Event System: PASS / COMPLETE
+- K6 Runtime Event Bus: NEXT

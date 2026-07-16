@@ -160,7 +160,9 @@ INTERNAL
 
 ## Validation Evidence
 
-- Canonical host validation passed with `304 passed`, `0 failed`.
+- Canonical host validation passed with `382 passed`, `0 failed`.
 - K5.2 Validation status is `PASS`.
-- K5.3 Event Streams status is `NEXT`.
-- K5-017 through K5-022 remain `TODO`.
+- K5.3 Event Streams status is `PASS`.
+- K5.4 Replay status is `PASS`.
+- K5 Enterprise Event System status is `PASS / COMPLETE`.
+- K5-017 through K5-022 status is `PASS`.
