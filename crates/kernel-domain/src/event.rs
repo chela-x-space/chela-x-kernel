@@ -523,6 +523,13 @@ where
     validator(envelope.payload())
 }
 
+pub fn validate_event_integrity<P, F>(envelope: &EventEnvelope<P>, validator: F) -> DomainResult<()>
+where
+    F: FnOnce(&EventEnvelope<P>) -> DomainResult<()>,
+{
+    validator(envelope)
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 struct CanonicalEventTimestamp {
     year: u16,
@@ -1011,11 +1018,11 @@ mod tests {
     use std::sync::atomic::{AtomicUsize, Ordering};
 
     use super::{
-        validate_event_envelope, validate_event_identity, validate_event_payload,
-        validate_event_timestamps, validate_event_version, EventActorId, EventCausation,
-        EventClassification, EventComponent, EventEnvelope, EventEnvelopeCandidate, EventSource,
-        EventSubject, EventSubjectId, EventSubjectType, EventTrace, EventTraceReference, EventType,
-        EventVersion,
+        validate_event_envelope, validate_event_identity, validate_event_integrity,
+        validate_event_payload, validate_event_timestamps, validate_event_version, EventActorId,
+        EventCausation, EventClassification, EventComponent, EventEnvelope, EventEnvelopeCandidate,
+        EventSource, EventSubject, EventSubjectId, EventSubjectType, EventTrace,
+        EventTraceReference, EventType, EventVersion,
     };
     use crate::errors::{DomainError, DomainResult};
     use crate::identifier::{AuditEvidenceId, CorrelationId, EventId, RuntimeId, WorkflowId};
@@ -2841,5 +2848,186 @@ mod tests {
 
         assert_eq!(string_result, Ok(()));
         assert_eq!(integer_result, Ok(()));
+    }
+
+    #[test]
+    fn event_integrity_validation_valid_integrity_validator_passes() {
+        let envelope = canonical_test_envelope(None, EventCausation::root());
+
+        let result = validate_event_integrity(&envelope, |candidate| {
+            if candidate.event_id().as_str() == "CX-EVT-000100" {
+                Ok(())
+            } else {
+                Err(DomainError::IntegrityFailure(
+                    "event_id must match canonical envelope",
+                ))
+            }
+        });
+
+        assert_eq!(result, Ok(()));
+    }
+
+    #[test]
+    fn event_integrity_validation_integrity_failure_propagates_canonical_domain_error() {
+        let envelope = canonical_test_envelope(None, EventCausation::root());
+
+        let error = validate_event_integrity(&envelope, |_| {
+            Err(DomainError::IntegrityFailure(
+                "integrity validator rejected envelope",
+            ))
+        })
+        .expect_err("integrity failure must propagate");
+
+        assert_eq!(
+            error,
+            DomainError::IntegrityFailure("integrity validator rejected envelope")
+        );
+        assert_eq!(
+            error.to_string(),
+            "integrity failure: integrity validator rejected envelope"
+        );
+    }
+
+    #[test]
+    fn event_integrity_validation_validator_receives_envelope_by_shared_reference() {
+        let envelope = canonical_test_envelope(None, EventCausation::root());
+        let envelope_reference = &envelope as *const EventEnvelope<TestPayload>;
+
+        let result = validate_event_integrity(&envelope, |candidate| {
+            assert!(std::ptr::eq(candidate, &envelope));
+            assert_eq!(
+                candidate as *const EventEnvelope<TestPayload>,
+                envelope_reference
+            );
+            Ok(())
+        });
+
+        assert_eq!(result, Ok(()));
+    }
+
+    #[test]
+    fn event_integrity_validation_envelope_is_not_mutated() {
+        let envelope = canonical_test_envelope(None, EventCausation::root());
+        let original = envelope.clone();
+
+        let result = validate_event_integrity(&envelope, |candidate| {
+            assert_eq!(candidate.payload().current_health, "HEALTHY");
+            Ok(())
+        });
+
+        assert_eq!(result, Ok(()));
+        assert_eq!(envelope, original);
+    }
+
+    #[test]
+    fn event_integrity_validation_repeated_validation_is_deterministic() {
+        let envelope = canonical_test_envelope(None, EventCausation::root());
+
+        fn deterministic_validator(candidate: &EventEnvelope<TestPayload>) -> DomainResult<()> {
+            if candidate.trace().actor_id().is_some() {
+                Ok(())
+            } else {
+                Err(DomainError::IntegrityFailure("trace actor must be present"))
+            }
+        }
+
+        let first = validate_event_integrity(&envelope, deterministic_validator);
+        let second = validate_event_integrity(&envelope, deterministic_validator);
+
+        assert_eq!(first, second);
+        assert_eq!(first, Ok(()));
+    }
+
+    #[test]
+    fn event_integrity_validation_equivalent_invalid_envelopes_return_equivalent_errors() {
+        let left = canonical_test_envelope(None, EventCausation::root());
+        let right = canonical_test_envelope(None, EventCausation::root());
+
+        fn rejecting_validator(_: &EventEnvelope<TestPayload>) -> DomainResult<()> {
+            Err(DomainError::IntegrityFailure(
+                "integrity validator rejected equivalent envelopes",
+            ))
+        }
+
+        let left_error =
+            validate_event_integrity(&left, rejecting_validator).expect_err("left must fail");
+        let right_error =
+            validate_event_integrity(&right, rejecting_validator).expect_err("right must fail");
+
+        assert_eq!(left_error, right_error);
+        assert_eq!(
+            left_error,
+            DomainError::IntegrityFailure("integrity validator rejected equivalent envelopes")
+        );
+    }
+
+    #[test]
+    fn event_integrity_validation_correlation_presence_does_not_change_outcome_unless_validator_checks_it(
+    ) {
+        let without_correlation = canonical_test_envelope(None, EventCausation::root());
+        let with_correlation = canonical_test_envelope(
+            Some(CorrelationId::new("CX-COR-000100").expect("valid correlation id")),
+            EventCausation::root(),
+        );
+
+        fn validator(candidate: &EventEnvelope<TestPayload>) -> DomainResult<()> {
+            if candidate.event_type().as_str() == "runtime.health.assessed" {
+                Ok(())
+            } else {
+                Err(DomainError::IntegrityFailure(
+                    "event_type must match canonical envelope",
+                ))
+            }
+        }
+
+        let without_correlation_result = validate_event_integrity(&without_correlation, validator);
+        let with_correlation_result = validate_event_integrity(&with_correlation, validator);
+
+        assert_eq!(without_correlation_result, with_correlation_result);
+        assert_eq!(with_correlation_result, Ok(()));
+    }
+
+    #[test]
+    fn event_integrity_validation_different_payload_types_are_supported() {
+        let string_payload_envelope =
+            test_envelope_with_payload(String::from("canonical payload"), None);
+        let integer_payload_envelope = test_envelope_with_payload(42_u32, None);
+
+        let string_result = validate_event_integrity(&string_payload_envelope, |candidate| {
+            if candidate.payload() == "canonical payload" {
+                Ok(())
+            } else {
+                Err(DomainError::IntegrityFailure(
+                    "string payload envelope integrity failed",
+                ))
+            }
+        });
+        let integer_result = validate_event_integrity(&integer_payload_envelope, |candidate| {
+            if *candidate.payload() == 42 {
+                Ok(())
+            } else {
+                Err(DomainError::IntegrityFailure(
+                    "integer payload envelope integrity failed",
+                ))
+            }
+        });
+
+        assert_eq!(string_result, Ok(()));
+        assert_eq!(integer_result, Ok(()));
+    }
+
+    #[test]
+    fn event_integrity_validation_validator_is_invoked_exactly_once() {
+        let envelope = canonical_test_envelope(None, EventCausation::root());
+        static INTEGRITY_VALIDATION_CALLS: AtomicUsize = AtomicUsize::new(0);
+        INTEGRITY_VALIDATION_CALLS.store(0, Ordering::Relaxed);
+
+        let result = validate_event_integrity(&envelope, |_| {
+            INTEGRITY_VALIDATION_CALLS.fetch_add(1, Ordering::Relaxed);
+            Ok(())
+        });
+
+        assert_eq!(result, Ok(()));
+        assert_eq!(INTEGRITY_VALIDATION_CALLS.load(Ordering::Relaxed), 1);
     }
 }

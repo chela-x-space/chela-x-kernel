@@ -33,6 +33,7 @@ pub enum DomainError {
     InvalidWorkflowReference(&'static str),
     InvalidEventReference(&'static str),
     InvalidEventTimestamp(&'static str),
+    IntegrityFailure(&'static str),
     MissingEventField(&'static str),
     UnsupportedAuthorizationSemantics(&'static str),
 }
@@ -111,6 +112,9 @@ impl fmt::Display for DomainError {
                 } else {
                     write!(formatter, "invalid event timestamp: {message}")
                 }
+            }
+            Self::IntegrityFailure(message) => {
+                write!(formatter, "integrity failure: {message}")
             }
             Self::MissingEventField(field) => {
                 write!(formatter, "missing mandatory event field: {field}")
