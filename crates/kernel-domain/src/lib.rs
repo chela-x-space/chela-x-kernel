@@ -120,6 +120,7 @@ pub use state::{
     WorkspaceStateSnapshot, WorkspaceTransitionOutcome, WorkspaceTransitionRequest,
 };
 pub use workflow::{
-    WorkflowAuditEvidenceReference, WorkflowEngineFoundation, WorkflowRecoveryReference,
-    WorkflowRetryLimit, WorkflowRetryPolicyReference,
+    WorkflowAuditEvidenceReference, WorkflowDefinition, WorkflowEngineFoundation,
+    WorkflowLifecycleMapReference, WorkflowRecoveryReference, WorkflowRetryLimit,
+    WorkflowRetryPolicyReference, WorkflowStepReference, WorkflowTerminalOutcomeReference,
 };

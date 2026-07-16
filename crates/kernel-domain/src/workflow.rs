@@ -1,9 +1,43 @@
+use std::fmt;
+use std::str::FromStr;
+
 use crate::errors::{DomainError, DomainResult};
 use crate::identifier::{
-    AuditEvidenceId, AuthorizationDecisionId, DecisionId, DelegationId, PolicyId, StableVersion,
-    WorkflowId,
+    AuditEvidenceId, AuthorizationDecisionId, DecisionId, DelegationId, EnglishNamespace, PolicyId,
+    StableVersion, WorkflowId,
 };
 use crate::ownership::OwnershipPath;
+
+const WORKFLOW_DEFINITION_REFERENCE_EXPECTATION: &str =
+    "ASCII letters, digits, dot, underscore, or hyphen";
+
+fn validate_workflow_definition_reference(
+    kind: &'static str,
+    value: impl Into<String>,
+) -> DomainResult<String> {
+    let value = value.into().trim().to_owned();
+
+    if value.is_empty() {
+        return Err(DomainError::InvalidIdentifier {
+            kind,
+            value,
+            expected: WORKFLOW_DEFINITION_REFERENCE_EXPECTATION,
+        });
+    }
+
+    if value
+        .chars()
+        .all(|character| character.is_ascii_alphanumeric() || matches!(character, '.' | '_' | '-'))
+    {
+        Ok(value)
+    } else {
+        Err(DomainError::InvalidIdentifier {
+            kind,
+            value,
+            expected: WORKFLOW_DEFINITION_REFERENCE_EXPECTATION,
+        })
+    }
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct WorkflowRetryLimit(u16);
@@ -121,6 +155,87 @@ impl WorkflowAuditEvidenceReference {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct WorkflowLifecycleMapReference(String);
+
+impl WorkflowLifecycleMapReference {
+    pub fn new(value: impl Into<String>) -> DomainResult<Self> {
+        validate_workflow_definition_reference("WorkflowLifecycleMapReference", value).map(Self)
+    }
+
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+
+impl fmt::Display for WorkflowLifecycleMapReference {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str(self.as_str())
+    }
+}
+
+impl FromStr for WorkflowLifecycleMapReference {
+    type Err = DomainError;
+
+    fn from_str(value: &str) -> DomainResult<Self> {
+        Self::new(value.to_owned())
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct WorkflowStepReference(String);
+
+impl WorkflowStepReference {
+    pub fn new(value: impl Into<String>) -> DomainResult<Self> {
+        validate_workflow_definition_reference("WorkflowStepReference", value).map(Self)
+    }
+
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+
+impl fmt::Display for WorkflowStepReference {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str(self.as_str())
+    }
+}
+
+impl FromStr for WorkflowStepReference {
+    type Err = DomainError;
+
+    fn from_str(value: &str) -> DomainResult<Self> {
+        Self::new(value.to_owned())
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct WorkflowTerminalOutcomeReference(String);
+
+impl WorkflowTerminalOutcomeReference {
+    pub fn new(value: impl Into<String>) -> DomainResult<Self> {
+        validate_workflow_definition_reference("WorkflowTerminalOutcomeReference", value).map(Self)
+    }
+
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+
+impl fmt::Display for WorkflowTerminalOutcomeReference {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str(self.as_str())
+    }
+}
+
+impl FromStr for WorkflowTerminalOutcomeReference {
+    type Err = DomainError;
+
+    fn from_str(value: &str) -> DomainResult<Self> {
+        Self::new(value.to_owned())
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct WorkflowEngineFoundation {
     workflow_id: WorkflowId,
@@ -199,12 +314,165 @@ impl WorkflowEngineFoundation {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WorkflowDefinition {
+    workflow_id: WorkflowId,
+    namespace: EnglishNamespace,
+    definition_version: StableVersion,
+    ownership: OwnershipPath,
+    lifecycle_map: WorkflowLifecycleMapReference,
+    entry_steps: Vec<WorkflowStepReference>,
+    terminal_outcomes: Vec<WorkflowTerminalOutcomeReference>,
+    policy_references: Vec<PolicyId>,
+    retry_policy: Option<WorkflowRetryPolicyReference>,
+    retry_limit: Option<WorkflowRetryLimit>,
+    recovery_reference: Option<WorkflowRecoveryReference>,
+    audit_evidence: Vec<WorkflowAuditEvidenceReference>,
+}
+
+impl WorkflowDefinition {
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(
+        workflow_id: WorkflowId,
+        namespace: EnglishNamespace,
+        definition_version: StableVersion,
+        ownership: OwnershipPath,
+        lifecycle_map: WorkflowLifecycleMapReference,
+        entry_steps: Vec<WorkflowStepReference>,
+        terminal_outcomes: Vec<WorkflowTerminalOutcomeReference>,
+        policy_references: Vec<PolicyId>,
+        retry_policy: Option<WorkflowRetryPolicyReference>,
+        retry_limit: Option<WorkflowRetryLimit>,
+        recovery_reference: Option<WorkflowRecoveryReference>,
+        audit_evidence: Vec<WorkflowAuditEvidenceReference>,
+    ) -> DomainResult<Self> {
+        if entry_steps.is_empty() {
+            return Err(DomainError::InvalidWorkflowDefinition(
+                "workflow definition requires at least one entry step",
+            ));
+        }
+
+        if retry_limit.is_some() && retry_policy.is_none() {
+            return Err(DomainError::InvalidWorkflowDefinition(
+                "retry limit requires retry policy",
+            ));
+        }
+
+        for (index, entry_step) in entry_steps.iter().enumerate() {
+            if entry_steps[..index].iter().any(|prior| prior == entry_step) {
+                return Err(DomainError::InvalidWorkflowDefinition(
+                    "duplicate workflow entry step reference",
+                ));
+            }
+        }
+
+        for (index, terminal_outcome) in terminal_outcomes.iter().enumerate() {
+            if terminal_outcomes[..index]
+                .iter()
+                .any(|prior| prior == terminal_outcome)
+            {
+                return Err(DomainError::InvalidWorkflowDefinition(
+                    "duplicate workflow terminal outcome reference",
+                ));
+            }
+        }
+
+        for (index, policy_reference) in policy_references.iter().enumerate() {
+            if policy_references[..index]
+                .iter()
+                .any(|prior| prior == policy_reference)
+            {
+                return Err(DomainError::InvalidWorkflowDefinition(
+                    "duplicate workflow policy reference",
+                ));
+            }
+        }
+
+        for (index, evidence) in audit_evidence.iter().enumerate() {
+            if audit_evidence[..index]
+                .iter()
+                .any(|prior| prior.audit_evidence_id() == evidence.audit_evidence_id())
+            {
+                return Err(DomainError::InvalidWorkflowDefinition(
+                    "duplicate workflow definition audit evidence reference",
+                ));
+            }
+        }
+
+        Ok(Self {
+            workflow_id,
+            namespace,
+            definition_version,
+            ownership,
+            lifecycle_map,
+            entry_steps,
+            terminal_outcomes,
+            policy_references,
+            retry_policy,
+            retry_limit,
+            recovery_reference,
+            audit_evidence,
+        })
+    }
+
+    pub fn workflow_id(&self) -> &WorkflowId {
+        &self.workflow_id
+    }
+
+    pub fn namespace(&self) -> &EnglishNamespace {
+        &self.namespace
+    }
+
+    pub fn definition_version(&self) -> &StableVersion {
+        &self.definition_version
+    }
+
+    pub fn ownership(&self) -> &OwnershipPath {
+        &self.ownership
+    }
+
+    pub fn lifecycle_map(&self) -> &WorkflowLifecycleMapReference {
+        &self.lifecycle_map
+    }
+
+    pub fn entry_steps(&self) -> &[WorkflowStepReference] {
+        &self.entry_steps
+    }
+
+    pub fn terminal_outcomes(&self) -> &[WorkflowTerminalOutcomeReference] {
+        &self.terminal_outcomes
+    }
+
+    pub fn policy_references(&self) -> &[PolicyId] {
+        &self.policy_references
+    }
+
+    pub fn retry_policy(&self) -> Option<&WorkflowRetryPolicyReference> {
+        self.retry_policy.as_ref()
+    }
+
+    pub fn retry_limit(&self) -> Option<WorkflowRetryLimit> {
+        self.retry_limit
+    }
+
+    pub fn recovery_reference(&self) -> Option<&WorkflowRecoveryReference> {
+        self.recovery_reference.as_ref()
+    }
+
+    pub fn audit_evidence(&self) -> &[WorkflowAuditEvidenceReference] {
+        &self.audit_evidence
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::{
-        WorkflowAuditEvidenceReference, WorkflowEngineFoundation, WorkflowRecoveryReference,
-        WorkflowRetryLimit, WorkflowRetryPolicyReference,
+        WorkflowAuditEvidenceReference, WorkflowDefinition, WorkflowEngineFoundation,
+        WorkflowLifecycleMapReference, WorkflowRecoveryReference, WorkflowRetryLimit,
+        WorkflowRetryPolicyReference, WorkflowStepReference, WorkflowTerminalOutcomeReference,
     };
+    use crate::errors::DomainError;
+    use crate::identifier::EnglishNamespace;
     use crate::identifier::{
         AuditEvidenceId, AuthorizationDecisionId, DecisionId, DelegationId, EnterpriseId, HumanId,
         OrganizationUnitId, PolicyId, ProjectId, StableVersion, WorkflowId, WorkspaceId,
@@ -284,6 +552,43 @@ mod tests {
             vec![DecisionId::new("CX-DEC-000002").expect("decision")],
         )
         .expect("audit evidence")
+    }
+
+    fn namespace() -> EnglishNamespace {
+        EnglishNamespace::new("workflow_namespace", "ops.approval-flow").expect("namespace")
+    }
+
+    fn lifecycle_map() -> WorkflowLifecycleMapReference {
+        WorkflowLifecycleMapReference::new("workflow.lifecycle.v1").expect("lifecycle map")
+    }
+
+    fn entry_step(value: &str) -> WorkflowStepReference {
+        WorkflowStepReference::new(value).expect("entry step")
+    }
+
+    fn terminal_outcome(value: &str) -> WorkflowTerminalOutcomeReference {
+        WorkflowTerminalOutcomeReference::new(value).expect("terminal outcome")
+    }
+
+    fn workflow_definition() -> WorkflowDefinition {
+        WorkflowDefinition::new(
+            workflow_id(),
+            namespace(),
+            definition_version(),
+            ownership(),
+            lifecycle_map(),
+            vec![entry_step("start.review"), entry_step("collect-input")],
+            vec![terminal_outcome("completed"), terminal_outcome("cancelled")],
+            vec![
+                PolicyId::new("CX-POL-000001").expect("policy"),
+                PolicyId::new("CX-POL-000002").expect("policy"),
+            ],
+            Some(retry_policy()),
+            Some(retry_limit()),
+            Some(recovery_reference()),
+            vec![audit_evidence("CX-AUD-000001"), second_audit_evidence()],
+        )
+        .expect("workflow definition")
     }
 
     #[test]
@@ -593,5 +898,477 @@ mod tests {
     fn workflow_engine_foundation_complete_foundation_owner_reference_remains_external() {
         let owner = OwnerReference::new(HumanId::new("CX-EMP-000001").expect("owner"));
         assert_eq!(owner.owner_id().as_str(), "CX-EMP-000001");
+    }
+
+    #[test]
+    fn workflow_definition_valid_definition_construction_passes() {
+        let definition = workflow_definition();
+        assert_eq!(definition.workflow_id().as_str(), "CX-WF-000001");
+        assert_eq!(definition.entry_steps().len(), 2);
+    }
+
+    #[test]
+    fn workflow_definition_identity_is_preserved() {
+        let workflow_id = workflow_id();
+        let definition = WorkflowDefinition::new(
+            workflow_id.clone(),
+            namespace(),
+            definition_version(),
+            ownership(),
+            lifecycle_map(),
+            vec![entry_step("start.review")],
+            vec![],
+            vec![],
+            None,
+            None,
+            None,
+            vec![],
+        )
+        .expect("definition");
+
+        assert_eq!(definition.workflow_id(), &workflow_id);
+    }
+
+    #[test]
+    fn workflow_definition_namespace_is_preserved() {
+        let namespace = namespace();
+        let definition = WorkflowDefinition::new(
+            workflow_id(),
+            namespace.clone(),
+            definition_version(),
+            ownership(),
+            lifecycle_map(),
+            vec![entry_step("start.review")],
+            vec![],
+            vec![],
+            None,
+            None,
+            None,
+            vec![],
+        )
+        .expect("definition");
+
+        assert_eq!(definition.namespace(), &namespace);
+    }
+
+    #[test]
+    fn workflow_definition_definition_version_is_preserved() {
+        let definition_version = definition_version();
+        let definition = WorkflowDefinition::new(
+            workflow_id(),
+            namespace(),
+            definition_version.clone(),
+            ownership(),
+            lifecycle_map(),
+            vec![entry_step("start.review")],
+            vec![],
+            vec![],
+            None,
+            None,
+            None,
+            vec![],
+        )
+        .expect("definition");
+
+        assert_eq!(definition.definition_version(), &definition_version);
+    }
+
+    #[test]
+    fn workflow_definition_ownership_is_preserved() {
+        let ownership = ownership();
+        let definition = WorkflowDefinition::new(
+            workflow_id(),
+            namespace(),
+            definition_version(),
+            ownership.clone(),
+            lifecycle_map(),
+            vec![entry_step("start.review")],
+            vec![],
+            vec![],
+            None,
+            None,
+            None,
+            vec![],
+        )
+        .expect("definition");
+
+        assert_eq!(definition.ownership(), &ownership);
+    }
+
+    #[test]
+    fn workflow_definition_entry_steps_are_preserved_in_caller_order() {
+        let first = entry_step("start.review");
+        let second = entry_step("collect-input");
+        let definition = WorkflowDefinition::new(
+            workflow_id(),
+            namespace(),
+            definition_version(),
+            ownership(),
+            lifecycle_map(),
+            vec![first.clone(), second.clone()],
+            vec![],
+            vec![],
+            None,
+            None,
+            None,
+            vec![],
+        )
+        .expect("definition");
+
+        assert_eq!(definition.entry_steps(), &[first, second]);
+    }
+
+    #[test]
+    fn workflow_definition_empty_entry_steps_are_rejected() {
+        let error = WorkflowDefinition::new(
+            workflow_id(),
+            namespace(),
+            definition_version(),
+            ownership(),
+            lifecycle_map(),
+            vec![],
+            vec![],
+            vec![],
+            None,
+            None,
+            None,
+            vec![],
+        )
+        .expect_err("empty entry steps must fail");
+
+        assert_eq!(
+            error,
+            DomainError::InvalidWorkflowDefinition(
+                "workflow definition requires at least one entry step",
+            )
+        );
+    }
+
+    #[test]
+    fn workflow_definition_duplicate_entry_step_is_rejected() {
+        let error = WorkflowDefinition::new(
+            workflow_id(),
+            namespace(),
+            definition_version(),
+            ownership(),
+            lifecycle_map(),
+            vec![entry_step("start.review"), entry_step("start.review")],
+            vec![],
+            vec![],
+            None,
+            None,
+            None,
+            vec![],
+        )
+        .expect_err("duplicate entry step must fail");
+
+        assert_eq!(
+            error,
+            DomainError::InvalidWorkflowDefinition("duplicate workflow entry step reference")
+        );
+    }
+
+    #[test]
+    fn workflow_definition_terminal_outcomes_are_preserved_in_caller_order() {
+        let first = terminal_outcome("completed");
+        let second = terminal_outcome("cancelled");
+        let definition = WorkflowDefinition::new(
+            workflow_id(),
+            namespace(),
+            definition_version(),
+            ownership(),
+            lifecycle_map(),
+            vec![entry_step("start.review")],
+            vec![first.clone(), second.clone()],
+            vec![],
+            None,
+            None,
+            None,
+            vec![],
+        )
+        .expect("definition");
+
+        assert_eq!(definition.terminal_outcomes(), &[first, second]);
+    }
+
+    #[test]
+    fn workflow_definition_duplicate_terminal_outcome_is_rejected() {
+        let error = WorkflowDefinition::new(
+            workflow_id(),
+            namespace(),
+            definition_version(),
+            ownership(),
+            lifecycle_map(),
+            vec![entry_step("start.review")],
+            vec![terminal_outcome("completed"), terminal_outcome("completed")],
+            vec![],
+            None,
+            None,
+            None,
+            vec![],
+        )
+        .expect_err("duplicate terminal outcome must fail");
+
+        assert_eq!(
+            error,
+            DomainError::InvalidWorkflowDefinition("duplicate workflow terminal outcome reference",)
+        );
+    }
+
+    #[test]
+    fn workflow_definition_policy_references_are_preserved() {
+        let first = PolicyId::new("CX-POL-000001").expect("policy");
+        let second = PolicyId::new("CX-POL-000002").expect("policy");
+        let definition = WorkflowDefinition::new(
+            workflow_id(),
+            namespace(),
+            definition_version(),
+            ownership(),
+            lifecycle_map(),
+            vec![entry_step("start.review")],
+            vec![],
+            vec![first.clone(), second.clone()],
+            None,
+            None,
+            None,
+            vec![],
+        )
+        .expect("definition");
+
+        assert_eq!(definition.policy_references(), &[first, second]);
+    }
+
+    #[test]
+    fn workflow_definition_duplicate_policy_reference_is_rejected() {
+        let error = WorkflowDefinition::new(
+            workflow_id(),
+            namespace(),
+            definition_version(),
+            ownership(),
+            lifecycle_map(),
+            vec![entry_step("start.review")],
+            vec![],
+            vec![
+                PolicyId::new("CX-POL-000001").expect("policy"),
+                PolicyId::new("CX-POL-000001").expect("policy"),
+            ],
+            None,
+            None,
+            None,
+            vec![],
+        )
+        .expect_err("duplicate policy must fail");
+
+        assert_eq!(
+            error,
+            DomainError::InvalidWorkflowDefinition("duplicate workflow policy reference")
+        );
+    }
+
+    #[test]
+    fn workflow_definition_audit_evidence_may_be_empty() {
+        let definition = WorkflowDefinition::new(
+            workflow_id(),
+            namespace(),
+            definition_version(),
+            ownership(),
+            lifecycle_map(),
+            vec![entry_step("start.review")],
+            vec![],
+            vec![],
+            Some(retry_policy()),
+            Some(retry_limit()),
+            Some(recovery_reference()),
+            vec![],
+        )
+        .expect("definition");
+
+        assert!(definition.audit_evidence().is_empty());
+    }
+
+    #[test]
+    fn workflow_definition_audit_evidence_order_is_preserved() {
+        let first = audit_evidence("CX-AUD-000001");
+        let second = second_audit_evidence();
+        let definition = WorkflowDefinition::new(
+            workflow_id(),
+            namespace(),
+            definition_version(),
+            ownership(),
+            lifecycle_map(),
+            vec![entry_step("start.review")],
+            vec![],
+            vec![],
+            None,
+            None,
+            None,
+            vec![first.clone(), second.clone()],
+        )
+        .expect("definition");
+
+        assert_eq!(definition.audit_evidence(), &[first, second]);
+    }
+
+    #[test]
+    fn workflow_definition_duplicate_audit_evidence_is_rejected() {
+        let error = WorkflowDefinition::new(
+            workflow_id(),
+            namespace(),
+            definition_version(),
+            ownership(),
+            lifecycle_map(),
+            vec![entry_step("start.review")],
+            vec![],
+            vec![],
+            None,
+            None,
+            None,
+            vec![
+                audit_evidence("CX-AUD-000001"),
+                audit_evidence("CX-AUD-000001"),
+            ],
+        )
+        .expect_err("duplicate audit evidence must fail");
+
+        assert_eq!(
+            error,
+            DomainError::InvalidWorkflowDefinition(
+                "duplicate workflow definition audit evidence reference",
+            )
+        );
+    }
+
+    #[test]
+    fn workflow_definition_construction_is_deterministic() {
+        let first = workflow_definition();
+        let second = workflow_definition();
+
+        assert_eq!(first, second);
+    }
+
+    #[test]
+    fn workflow_definition_equivalent_invalid_inputs_produce_equivalent_errors() {
+        let first = WorkflowDefinition::new(
+            workflow_id(),
+            namespace(),
+            definition_version(),
+            ownership(),
+            lifecycle_map(),
+            vec![],
+            vec![],
+            vec![],
+            None,
+            None,
+            None,
+            vec![],
+        )
+        .expect_err("invalid");
+        let second = WorkflowDefinition::new(
+            workflow_id(),
+            namespace(),
+            definition_version(),
+            ownership(),
+            lifecycle_map(),
+            vec![],
+            vec![],
+            vec![],
+            None,
+            None,
+            None,
+            vec![],
+        )
+        .expect_err("invalid");
+
+        assert_eq!(first, second);
+    }
+
+    #[test]
+    fn workflow_definition_value_semantics_are_preserved() {
+        let definition = workflow_definition();
+        assert_eq!(definition.clone(), definition);
+    }
+
+    #[test]
+    fn workflow_definition_supplied_values_are_not_mutated() {
+        let workflow_id = workflow_id();
+        let namespace = namespace();
+        let definition_version = definition_version();
+        let ownership = ownership();
+        let lifecycle_map = lifecycle_map();
+        let entry_steps = vec![entry_step("start.review"), entry_step("collect-input")];
+        let terminal_outcomes = vec![terminal_outcome("completed"), terminal_outcome("cancelled")];
+        let policy_references = vec![
+            PolicyId::new("CX-POL-000001").expect("policy"),
+            PolicyId::new("CX-POL-000002").expect("policy"),
+        ];
+        let retry_policy = retry_policy();
+        let retry_limit = retry_limit();
+        let recovery_reference = recovery_reference();
+        let audit_evidence = vec![audit_evidence("CX-AUD-000001"), second_audit_evidence()];
+
+        let workflow_id_before = workflow_id.clone();
+        let namespace_before = namespace.clone();
+        let definition_version_before = definition_version.clone();
+        let ownership_before = ownership.clone();
+        let lifecycle_map_before = lifecycle_map.clone();
+        let entry_steps_before = entry_steps.clone();
+        let terminal_outcomes_before = terminal_outcomes.clone();
+        let policy_references_before = policy_references.clone();
+        let retry_policy_before = retry_policy.clone();
+        let recovery_reference_before = recovery_reference.clone();
+        let audit_evidence_before = audit_evidence.clone();
+
+        let definition = WorkflowDefinition::new(
+            workflow_id.clone(),
+            namespace.clone(),
+            definition_version.clone(),
+            ownership.clone(),
+            lifecycle_map.clone(),
+            entry_steps.clone(),
+            terminal_outcomes.clone(),
+            policy_references.clone(),
+            Some(retry_policy.clone()),
+            Some(retry_limit),
+            Some(recovery_reference.clone()),
+            audit_evidence.clone(),
+        )
+        .expect("definition");
+
+        assert_eq!(workflow_id, workflow_id_before);
+        assert_eq!(namespace, namespace_before);
+        assert_eq!(definition_version, definition_version_before);
+        assert_eq!(ownership, ownership_before);
+        assert_eq!(lifecycle_map, lifecycle_map_before);
+        assert_eq!(entry_steps, entry_steps_before);
+        assert_eq!(terminal_outcomes, terminal_outcomes_before);
+        assert_eq!(policy_references, policy_references_before);
+        assert_eq!(retry_policy, retry_policy_before);
+        assert_eq!(recovery_reference, recovery_reference_before);
+        assert_eq!(audit_evidence, audit_evidence_before);
+        assert_eq!(definition.namespace(), &namespace_before);
+    }
+
+    #[test]
+    fn workflow_definition_external_reference_existence_is_not_checked() {
+        let definition = WorkflowDefinition::new(
+            workflow_id(),
+            namespace(),
+            definition_version(),
+            ownership(),
+            WorkflowLifecycleMapReference::new("custom.lifecycle.map").expect("lifecycle map"),
+            vec![WorkflowStepReference::new("entry.custom-step").expect("entry step")],
+            vec![
+                WorkflowTerminalOutcomeReference::new("terminal.custom-outcome")
+                    .expect("terminal outcome"),
+            ],
+            vec![PolicyId::new("CX-POL-999999").expect("policy")],
+            None,
+            None,
+            None,
+            vec![],
+        )
+        .expect("definition");
+
+        assert_eq!(definition.policy_references()[0].as_str(), "CX-POL-999999");
     }
 }
