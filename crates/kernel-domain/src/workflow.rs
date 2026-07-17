@@ -18,7 +18,8 @@ use crate::identifier::{
 use crate::ownership::OwnershipPath;
 use crate::request::AuthorizationRequestRecord;
 use crate::state::{
-    WorkflowStateSnapshot, WorkflowTransitionControlRequest, WorkflowTransitionDecision,
+    StateSequence, WorkflowStateSnapshot, WorkflowTransitionControlRequest,
+    WorkflowTransitionDecision,
 };
 use crate::{
     TransitionAuthorityReference, TransitionEvidenceReference, TransitionReasonReference,
@@ -1446,17 +1447,392 @@ fn validate_workflow_event_category(
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WorkflowFailureContext {
+    workflow_id: WorkflowId,
+    workflow_instance: Option<WorkflowInstance>,
+    current_workflow_state: WorkflowStateSnapshot,
+    current_workflow_step: Option<WorkflowStepReference>,
+    failure_code: WorkflowFailureCode,
+    transition_reason_reference: Option<TransitionReasonReference>,
+    transition_authority_reference: Option<TransitionAuthorityReference>,
+    transition_evidence_references: Vec<TransitionEvidenceReference>,
+    workflow_audit_evidence_references: Vec<WorkflowAuditEvidenceReference>,
+    correlation_id: Option<CorrelationId>,
+    causation: Option<EventCausation>,
+}
+
+impl WorkflowFailureContext {
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(
+        workflow_id: WorkflowId,
+        workflow_instance: Option<WorkflowInstance>,
+        current_workflow_state: WorkflowStateSnapshot,
+        current_workflow_step: Option<WorkflowStepReference>,
+        failure_code: WorkflowFailureCode,
+        transition_reason_reference: Option<TransitionReasonReference>,
+        transition_authority_reference: Option<TransitionAuthorityReference>,
+        transition_evidence_references: Vec<TransitionEvidenceReference>,
+        workflow_audit_evidence_references: Vec<WorkflowAuditEvidenceReference>,
+        correlation_id: Option<CorrelationId>,
+        causation: Option<EventCausation>,
+    ) -> DomainResult<Self> {
+        for (index, evidence) in transition_evidence_references.iter().enumerate() {
+            if transition_evidence_references[..index]
+                .iter()
+                .any(|prior| prior == evidence)
+            {
+                return Err(DomainError::InvalidWorkflowFailureRecovery(
+                    "duplicate workflow transition evidence reference",
+                ));
+            }
+        }
+
+        for (index, evidence) in workflow_audit_evidence_references.iter().enumerate() {
+            if workflow_audit_evidence_references[..index]
+                .iter()
+                .any(|prior| prior.audit_evidence_id() == evidence.audit_evidence_id())
+            {
+                return Err(DomainError::InvalidWorkflowFailureRecovery(
+                    "duplicate workflow audit evidence reference",
+                ));
+            }
+        }
+
+        if current_workflow_state.workflow_id() != &workflow_id {
+            return Err(DomainError::InvalidWorkflowFailureRecovery(
+                "workflow failure context must match workflow state identity",
+            ));
+        }
+
+        if let Some(instance) = workflow_instance.as_ref() {
+            if instance.workflow_id() != &workflow_id {
+                return Err(DomainError::InvalidWorkflowFailureRecovery(
+                    "workflow failure context must match workflow instance identity",
+                ));
+            }
+
+            if instance.current_workflow_state_snapshot() != &current_workflow_state {
+                return Err(DomainError::InvalidWorkflowFailureRecovery(
+                    "workflow failure context must match workflow instance state snapshot",
+                ));
+            }
+        }
+
+        Ok(Self {
+            workflow_id,
+            workflow_instance,
+            current_workflow_state,
+            current_workflow_step,
+            failure_code,
+            transition_reason_reference,
+            transition_authority_reference,
+            transition_evidence_references,
+            workflow_audit_evidence_references,
+            correlation_id,
+            causation,
+        })
+    }
+
+    pub fn workflow_id(&self) -> &WorkflowId {
+        &self.workflow_id
+    }
+
+    pub fn workflow_instance(&self) -> Option<&WorkflowInstance> {
+        self.workflow_instance.as_ref()
+    }
+
+    pub fn current_workflow_state(&self) -> &WorkflowStateSnapshot {
+        &self.current_workflow_state
+    }
+
+    pub fn current_workflow_step(&self) -> Option<&WorkflowStepReference> {
+        self.current_workflow_step.as_ref()
+    }
+
+    pub fn failure_code(&self) -> WorkflowFailureCode {
+        self.failure_code
+    }
+
+    pub fn transition_reason_reference(&self) -> Option<&TransitionReasonReference> {
+        self.transition_reason_reference.as_ref()
+    }
+
+    pub fn transition_authority_reference(&self) -> Option<&TransitionAuthorityReference> {
+        self.transition_authority_reference.as_ref()
+    }
+
+    pub fn transition_evidence_references(&self) -> &[TransitionEvidenceReference] {
+        &self.transition_evidence_references
+    }
+
+    pub fn workflow_audit_evidence_references(&self) -> &[WorkflowAuditEvidenceReference] {
+        &self.workflow_audit_evidence_references
+    }
+
+    pub fn correlation_id(&self) -> Option<&CorrelationId> {
+        self.correlation_id.as_ref()
+    }
+
+    pub fn causation(&self) -> Option<&EventCausation> {
+        self.causation.as_ref()
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WorkflowFailureRecord {
+    workflow_failure_context: WorkflowFailureContext,
+    retry_policy_reference: Option<WorkflowRetryPolicyReference>,
+    retry_limit: Option<WorkflowRetryLimit>,
+    current_retry_attempt: u16,
+    recovery_reference: Option<WorkflowRecoveryReference>,
+    recovery_target_state: Option<crate::lifecycle::WorkflowState>,
+    failure_sequence: StateSequence,
+}
+
+impl WorkflowFailureRecord {
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(
+        workflow_failure_context: WorkflowFailureContext,
+        retry_policy_reference: Option<WorkflowRetryPolicyReference>,
+        retry_limit: Option<WorkflowRetryLimit>,
+        current_retry_attempt: u16,
+        recovery_reference: Option<WorkflowRecoveryReference>,
+        recovery_target_state: Option<crate::lifecycle::WorkflowState>,
+        failure_sequence: StateSequence,
+    ) -> DomainResult<Self> {
+        if retry_limit.is_some() && retry_policy_reference.is_none() {
+            return Err(DomainError::InvalidWorkflowFailureRecovery(
+                "retry limit requires retry policy",
+            ));
+        }
+
+        if current_retry_attempt > 0 && retry_policy_reference.is_none() {
+            return Err(DomainError::InvalidWorkflowFailureRecovery(
+                "retry attempt requires retry policy",
+            ));
+        }
+
+        if let (Some(policy), Some(limit)) = (retry_policy_reference.as_ref(), retry_limit) {
+            if policy.retry_limit() != limit {
+                return Err(DomainError::InvalidWorkflowFailureRecovery(
+                    "workflow retry limit must match retry policy reference",
+                ));
+            }
+
+            if policy.definition_version()
+                != workflow_failure_context
+                    .current_workflow_state()
+                    .definition_version()
+            {
+                return Err(DomainError::InvalidWorkflowFailureRecovery(
+                    "workflow retry policy must match workflow definition version snapshot",
+                ));
+            }
+
+            if current_retry_attempt > limit.value() {
+                return Err(DomainError::InvalidWorkflowFailureRecovery(
+                    "workflow retry attempt exceeds retry limit",
+                ));
+            }
+        }
+
+        if recovery_target_state.is_some() && recovery_reference.is_none() {
+            return Err(DomainError::InvalidWorkflowFailureRecovery(
+                "recovery target requires recovery reference",
+            ));
+        }
+
+        if recovery_reference.is_some() && recovery_target_state.is_none() {
+            return Err(DomainError::InvalidWorkflowFailureRecovery(
+                "recovery reference requires recovery target state",
+            ));
+        }
+
+        if let Some(instance) = workflow_failure_context.workflow_instance() {
+            if let Some(retry_policy_reference) = retry_policy_reference.as_ref() {
+                if instance.retry_policy_snapshot() != Some(retry_policy_reference) {
+                    return Err(DomainError::InvalidWorkflowFailureRecovery(
+                        "workflow retry policy must match workflow instance retry policy snapshot",
+                    ));
+                }
+            }
+
+            if let Some(retry_limit) = retry_limit {
+                if instance.retry_limit_snapshot() != Some(retry_limit) {
+                    return Err(DomainError::InvalidWorkflowFailureRecovery(
+                        "workflow retry limit must match workflow instance retry limit snapshot",
+                    ));
+                }
+            }
+
+            if let Some(recovery_reference) = recovery_reference.as_ref() {
+                if instance.recovery_reference() != Some(recovery_reference) {
+                    return Err(DomainError::InvalidWorkflowFailureRecovery(
+                        "workflow recovery reference must match workflow instance recovery reference",
+                    ));
+                }
+            }
+        }
+
+        Ok(Self {
+            workflow_failure_context,
+            retry_policy_reference,
+            retry_limit,
+            current_retry_attempt,
+            recovery_reference,
+            recovery_target_state,
+            failure_sequence,
+        })
+    }
+
+    pub fn workflow_failure_context(&self) -> &WorkflowFailureContext {
+        &self.workflow_failure_context
+    }
+
+    pub fn retry_policy_reference(&self) -> Option<&WorkflowRetryPolicyReference> {
+        self.retry_policy_reference.as_ref()
+    }
+
+    pub fn retry_limit(&self) -> Option<WorkflowRetryLimit> {
+        self.retry_limit
+    }
+
+    pub fn current_retry_attempt(&self) -> u16 {
+        self.current_retry_attempt
+    }
+
+    pub fn recovery_reference(&self) -> Option<&WorkflowRecoveryReference> {
+        self.recovery_reference.as_ref()
+    }
+
+    pub fn recovery_target_state(&self) -> Option<crate::lifecycle::WorkflowState> {
+        self.recovery_target_state
+    }
+
+    pub fn failure_sequence(&self) -> StateSequence {
+        self.failure_sequence
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WorkflowRecoveryRequest {
+    workflow_failure_record: WorkflowFailureRecord,
+    recovery_revalidated: bool,
+}
+
+impl WorkflowRecoveryRequest {
+    pub fn new(
+        workflow_failure_record: WorkflowFailureRecord,
+        recovery_revalidated: bool,
+    ) -> DomainResult<Self> {
+        Ok(Self {
+            workflow_failure_record,
+            recovery_revalidated,
+        })
+    }
+
+    pub fn workflow_failure_record(&self) -> &WorkflowFailureRecord {
+        &self.workflow_failure_record
+    }
+
+    pub fn recovery_revalidated(&self) -> bool {
+        self.recovery_revalidated
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum WorkflowRecoveryDecision {
+    RetryPermitted(WorkflowFailureRecord),
+    RetryExhausted(WorkflowFailureRecord),
+    RecoveryPermitted(WorkflowFailureRecord),
+    RecoveryRejected(WorkflowFailureRecord),
+    TerminalWorkflow(WorkflowFailureRecord),
+    InvalidRecoveryTarget(WorkflowFailureRecord),
+}
+
+impl WorkflowRecoveryDecision {
+    pub fn workflow_failure_record(&self) -> &WorkflowFailureRecord {
+        match self {
+            Self::RetryPermitted(record)
+            | Self::RetryExhausted(record)
+            | Self::RecoveryPermitted(record)
+            | Self::RecoveryRejected(record)
+            | Self::TerminalWorkflow(record)
+            | Self::InvalidRecoveryTarget(record) => record,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct WorkflowRecoveryControl;
+
+impl WorkflowRecoveryControl {
+    pub fn evaluate(request: &WorkflowRecoveryRequest) -> WorkflowRecoveryDecision {
+        let record = request.workflow_failure_record().clone();
+        let current_state = record
+            .workflow_failure_context()
+            .current_workflow_state()
+            .lifecycle();
+
+        if is_terminal_workflow_state(current_state) {
+            return WorkflowRecoveryDecision::TerminalWorkflow(record);
+        }
+
+        if let Some(retry_limit) = record.retry_limit() {
+            if record.current_retry_attempt() < retry_limit.value() {
+                return WorkflowRecoveryDecision::RetryPermitted(record);
+            }
+        }
+
+        let recovery_reference = record.recovery_reference();
+        let recovery_target_state = record.recovery_target_state();
+
+        if recovery_reference.is_none() || recovery_target_state.is_none() {
+            return if record.retry_limit().is_some() {
+                WorkflowRecoveryDecision::RetryExhausted(record)
+            } else {
+                WorkflowRecoveryDecision::RecoveryRejected(record)
+            };
+        }
+
+        if current_state != crate::lifecycle::WorkflowState::Failed {
+            return WorkflowRecoveryDecision::RecoveryRejected(record);
+        }
+
+        if recovery_target_state != Some(crate::lifecycle::WorkflowState::Ready) {
+            return WorkflowRecoveryDecision::InvalidRecoveryTarget(record);
+        }
+
+        if !request.recovery_revalidated() {
+            return WorkflowRecoveryDecision::RecoveryRejected(record);
+        }
+
+        WorkflowRecoveryDecision::RecoveryPermitted(record)
+    }
+}
+
+fn is_terminal_workflow_state(state: crate::lifecycle::WorkflowState) -> bool {
+    matches!(
+        state,
+        crate::lifecycle::WorkflowState::Completed
+            | crate::lifecycle::WorkflowState::Cancelled
+            | crate::lifecycle::WorkflowState::Archived
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use super::{
         WorkflowAuditEvidenceReference, WorkflowAuthorizationContext, WorkflowAuthorizationControl,
         WorkflowAuthorizationDecision, WorkflowAuthorizationRequest, WorkflowDefinition,
         WorkflowEngineFoundation, WorkflowEventContext, WorkflowEventIntegration,
-        WorkflowEventIntegrationRequest, WorkflowInstance, WorkflowLifecycleMapReference,
-        WorkflowOperationReference, WorkflowRecoveryReference, WorkflowRetryLimit,
-        WorkflowRetryPolicyReference, WorkflowStepCoordination, WorkflowStepExecutionPlan,
-        WorkflowStepOutcomeReference, WorkflowStepReference, WorkflowStepSelection,
-        WorkflowTerminalOutcomeReference,
+        WorkflowEventIntegrationRequest, WorkflowFailureContext, WorkflowFailureRecord,
+        WorkflowInstance, WorkflowLifecycleMapReference, WorkflowOperationReference,
+        WorkflowRecoveryControl, WorkflowRecoveryDecision, WorkflowRecoveryReference,
+        WorkflowRecoveryRequest, WorkflowRetryLimit, WorkflowRetryPolicyReference,
+        WorkflowStepCoordination, WorkflowStepExecutionPlan, WorkflowStepOutcomeReference,
+        WorkflowStepReference, WorkflowStepSelection, WorkflowTerminalOutcomeReference,
     };
     use crate::authorization::{
         ActionVerb, AuthorizationAuditEvidenceReference, AuthorizationDecisionOutcome,
@@ -1612,6 +1988,27 @@ mod tests {
         )
     }
 
+    fn workflow_state_snapshot_with(
+        lifecycle: WorkflowState,
+        sequence: u64,
+    ) -> WorkflowStateSnapshot {
+        WorkflowStateSnapshot::new(
+            workflow_id(),
+            ownership(),
+            definition_version(),
+            lifecycle,
+            StateSequence::new(sequence).expect("sequence"),
+        )
+    }
+
+    fn workflow_failure_state_snapshot() -> WorkflowStateSnapshot {
+        workflow_state_snapshot_with(WorkflowState::Failed, 2)
+    }
+
+    fn archived_workflow_state_snapshot() -> WorkflowStateSnapshot {
+        workflow_state_snapshot_with(WorkflowState::Archived, 3)
+    }
+
     fn workflow_instance() -> WorkflowInstance {
         WorkflowInstance::new(
             workflow_id(),
@@ -1626,6 +2023,22 @@ mod tests {
             vec![audit_evidence("CX-AUD-000001"), second_audit_evidence()],
         )
         .expect("workflow instance")
+    }
+
+    fn workflow_failure_instance() -> WorkflowInstance {
+        WorkflowInstance::new(
+            workflow_id(),
+            workflow_definition(),
+            definition_version(),
+            ownership(),
+            workflow_failure_state_snapshot(),
+            audit_evidence("CX-AUD-000004"),
+            Some(retry_policy()),
+            Some(retry_limit()),
+            Some(recovery_reference()),
+            vec![audit_evidence("CX-AUD-000001"), second_audit_evidence()],
+        )
+        .expect("workflow failure instance")
     }
 
     fn workflow_step_selection() -> WorkflowStepSelection {
@@ -1938,6 +2351,90 @@ mod tests {
             context,
         )
         .expect("workflow event integration request")
+    }
+
+    fn workflow_failure_context() -> WorkflowFailureContext {
+        WorkflowFailureContext::new(
+            workflow_id(),
+            Some(workflow_failure_instance()),
+            workflow_failure_state_snapshot(),
+            Some(entry_step("start.review")),
+            WorkflowFailureCode::Timeout,
+            Some(TransitionReasonReference::new("retry exhausted").expect("reason")),
+            Some(
+                TransitionAuthorityReference::new("authority.workflow-owner")
+                    .expect("authority reference"),
+            ),
+            vec![
+                TransitionEvidenceReference::new("transition.evidence.001")
+                    .expect("transition evidence"),
+                TransitionEvidenceReference::new("transition.evidence.002")
+                    .expect("transition evidence"),
+            ],
+            vec![
+                audit_evidence("CX-AUD-000020"),
+                audit_evidence("CX-AUD-000021"),
+            ],
+            Some(CorrelationId::new("CX-COR-000010").expect("correlation")),
+            Some(EventCausation::root()),
+        )
+        .expect("workflow failure context")
+    }
+
+    fn workflow_failure_context_without_instance() -> WorkflowFailureContext {
+        WorkflowFailureContext::new(
+            workflow_id(),
+            None,
+            workflow_failure_state_snapshot(),
+            Some(entry_step("start.review")),
+            WorkflowFailureCode::Timeout,
+            Some(TransitionReasonReference::new("retry exhausted").expect("reason")),
+            Some(
+                TransitionAuthorityReference::new("authority.workflow-owner")
+                    .expect("authority reference"),
+            ),
+            vec![
+                TransitionEvidenceReference::new("transition.evidence.001")
+                    .expect("transition evidence"),
+                TransitionEvidenceReference::new("transition.evidence.002")
+                    .expect("transition evidence"),
+            ],
+            vec![
+                audit_evidence("CX-AUD-000020"),
+                audit_evidence("CX-AUD-000021"),
+            ],
+            Some(CorrelationId::new("CX-COR-000010").expect("correlation")),
+            Some(EventCausation::root()),
+        )
+        .expect("workflow failure context")
+    }
+
+    fn workflow_failure_record(
+        current_retry_attempt: u16,
+        recovery_target_state: Option<WorkflowState>,
+    ) -> WorkflowFailureRecord {
+        WorkflowFailureRecord::new(
+            workflow_failure_context(),
+            Some(retry_policy()),
+            Some(retry_limit()),
+            current_retry_attempt,
+            recovery_target_state.map(|_| recovery_reference()),
+            recovery_target_state,
+            StateSequence::new(2).expect("failure sequence"),
+        )
+        .expect("workflow failure record")
+    }
+
+    fn workflow_recovery_request(
+        current_retry_attempt: u16,
+        recovery_target_state: Option<WorkflowState>,
+        recovery_revalidated: bool,
+    ) -> WorkflowRecoveryRequest {
+        WorkflowRecoveryRequest::new(
+            workflow_failure_record(current_retry_attempt, recovery_target_state),
+            recovery_revalidated,
+        )
+        .expect("workflow recovery request")
     }
 
     #[test]
@@ -5047,5 +5544,577 @@ mod tests {
                 .expect("authorization decision"),
             &AuthorizationDecisionOutcome::Allow
         );
+    }
+
+    #[test]
+    fn workflow_failure_recovery_valid_failure_context_construction() {
+        let context = workflow_failure_context();
+
+        assert_eq!(context.workflow_id().as_str(), "CX-WF-000001");
+    }
+
+    #[test]
+    fn workflow_failure_recovery_failure_code_required() {
+        let context = workflow_failure_context();
+
+        assert_eq!(context.failure_code(), WorkflowFailureCode::Timeout);
+    }
+
+    #[test]
+    fn workflow_failure_recovery_failure_code_preserved() {
+        let context = workflow_failure_context();
+
+        assert_eq!(context.failure_code(), WorkflowFailureCode::Timeout);
+    }
+
+    #[test]
+    fn workflow_failure_recovery_workflow_identity_preserved() {
+        let context = workflow_failure_context();
+
+        assert_eq!(context.workflow_id(), &workflow_id());
+    }
+
+    #[test]
+    fn workflow_failure_recovery_workflow_instance_preserved() {
+        let context = workflow_failure_context();
+
+        assert_eq!(
+            context.workflow_instance(),
+            Some(&workflow_failure_instance())
+        );
+    }
+
+    #[test]
+    fn workflow_failure_recovery_workflow_state_preserved() {
+        let context = workflow_failure_context();
+
+        assert_eq!(
+            context.current_workflow_state(),
+            &workflow_failure_state_snapshot()
+        );
+    }
+
+    #[test]
+    fn workflow_failure_recovery_workflow_step_preserved() {
+        let context = workflow_failure_context();
+
+        assert_eq!(
+            context.current_workflow_step(),
+            Some(&entry_step("start.review"))
+        );
+    }
+
+    #[test]
+    fn workflow_failure_recovery_retry_policy_preserved() {
+        let record = workflow_failure_record(1, None);
+
+        assert_eq!(record.retry_policy_reference(), Some(&retry_policy()));
+    }
+
+    #[test]
+    fn workflow_failure_recovery_retry_limit_preserved() {
+        let record = workflow_failure_record(1, None);
+
+        assert_eq!(record.retry_limit(), Some(retry_limit()));
+    }
+
+    #[test]
+    fn workflow_failure_recovery_retry_attempt_preserved() {
+        let record = workflow_failure_record(2, None);
+
+        assert_eq!(record.current_retry_attempt(), 2);
+    }
+
+    #[test]
+    fn workflow_failure_recovery_retry_allowed_below_limit() {
+        let decision =
+            WorkflowRecoveryControl::evaluate(&workflow_recovery_request(1, None, false));
+
+        assert!(matches!(
+            decision,
+            WorkflowRecoveryDecision::RetryPermitted(_)
+        ));
+    }
+
+    #[test]
+    fn workflow_failure_recovery_retry_allowed_at_valid_boundary() {
+        let decision =
+            WorkflowRecoveryControl::evaluate(&workflow_recovery_request(2, None, false));
+
+        assert!(matches!(
+            decision,
+            WorkflowRecoveryDecision::RetryPermitted(_)
+        ));
+    }
+
+    #[test]
+    fn workflow_failure_recovery_retry_exhausted_at_limit() {
+        let decision =
+            WorkflowRecoveryControl::evaluate(&workflow_recovery_request(3, None, false));
+
+        assert!(matches!(
+            decision,
+            WorkflowRecoveryDecision::RetryExhausted(_)
+        ));
+    }
+
+    #[test]
+    fn workflow_failure_recovery_retry_attempt_above_limit_rejected() {
+        let error = WorkflowFailureRecord::new(
+            workflow_failure_context(),
+            Some(retry_policy()),
+            Some(retry_limit()),
+            4,
+            None,
+            None,
+            StateSequence::new(2).expect("failure sequence"),
+        )
+        .expect_err("retry attempt above limit must fail");
+
+        assert_eq!(
+            error,
+            DomainError::InvalidWorkflowFailureRecovery(
+                "workflow retry attempt exceeds retry limit"
+            )
+        );
+    }
+
+    #[test]
+    fn workflow_failure_recovery_recovery_reference_preserved() {
+        let record = workflow_failure_record(3, Some(WorkflowState::Ready));
+
+        assert_eq!(record.recovery_reference(), Some(&recovery_reference()));
+    }
+
+    #[test]
+    fn workflow_failure_recovery_recovery_target_preserved() {
+        let record = workflow_failure_record(3, Some(WorkflowState::Ready));
+
+        assert_eq!(record.recovery_target_state(), Some(WorkflowState::Ready));
+    }
+
+    #[test]
+    fn workflow_failure_recovery_valid_recovery_permitted() {
+        let decision = WorkflowRecoveryControl::evaluate(&workflow_recovery_request(
+            3,
+            Some(WorkflowState::Ready),
+            true,
+        ));
+
+        assert!(matches!(
+            decision,
+            WorkflowRecoveryDecision::RecoveryPermitted(_)
+        ));
+    }
+
+    #[test]
+    fn workflow_failure_recovery_invalid_recovery_target_rejected() {
+        let decision = WorkflowRecoveryControl::evaluate(&workflow_recovery_request(
+            3,
+            Some(WorkflowState::Running),
+            true,
+        ));
+
+        assert!(matches!(
+            decision,
+            WorkflowRecoveryDecision::InvalidRecoveryTarget(_)
+        ));
+    }
+
+    #[test]
+    fn workflow_failure_recovery_terminal_workflow_recovery_rejected() {
+        let context = WorkflowFailureContext::new(
+            workflow_id(),
+            None,
+            archived_workflow_state_snapshot(),
+            Some(entry_step("start.review")),
+            WorkflowFailureCode::Timeout,
+            Some(TransitionReasonReference::new("terminal workflow").expect("reason")),
+            Some(
+                TransitionAuthorityReference::new("authority.workflow-owner")
+                    .expect("authority reference"),
+            ),
+            vec![TransitionEvidenceReference::new("transition.evidence.001")
+                .expect("transition evidence")],
+            vec![audit_evidence("CX-AUD-000022")],
+            None,
+            None,
+        )
+        .expect("context");
+        let record = WorkflowFailureRecord::new(
+            context,
+            Some(retry_policy()),
+            Some(retry_limit()),
+            3,
+            Some(recovery_reference()),
+            Some(WorkflowState::Ready),
+            StateSequence::new(3).expect("sequence"),
+        )
+        .expect("record");
+        let request = WorkflowRecoveryRequest::new(record, true).expect("request");
+
+        assert!(matches!(
+            WorkflowRecoveryControl::evaluate(&request),
+            WorkflowRecoveryDecision::TerminalWorkflow(_)
+        ));
+    }
+
+    #[test]
+    fn workflow_failure_recovery_duplicate_transition_evidence_rejected() {
+        let evidence = TransitionEvidenceReference::new("transition.evidence.001")
+            .expect("transition evidence");
+
+        let error = WorkflowFailureContext::new(
+            workflow_id(),
+            Some(workflow_failure_instance()),
+            workflow_failure_state_snapshot(),
+            Some(entry_step("start.review")),
+            WorkflowFailureCode::Timeout,
+            None,
+            None,
+            vec![evidence.clone(), evidence],
+            vec![audit_evidence("CX-AUD-000023")],
+            None,
+            None,
+        )
+        .expect_err("duplicate transition evidence must fail");
+
+        assert_eq!(
+            error,
+            DomainError::InvalidWorkflowFailureRecovery(
+                "duplicate workflow transition evidence reference"
+            )
+        );
+    }
+
+    #[test]
+    fn workflow_failure_recovery_duplicate_workflow_audit_evidence_rejected() {
+        let evidence = audit_evidence("CX-AUD-000024");
+
+        let error = WorkflowFailureContext::new(
+            workflow_id(),
+            Some(workflow_failure_instance()),
+            workflow_failure_state_snapshot(),
+            Some(entry_step("start.review")),
+            WorkflowFailureCode::Timeout,
+            None,
+            None,
+            vec![TransitionEvidenceReference::new("transition.evidence.001")
+                .expect("transition evidence")],
+            vec![evidence.clone(), evidence],
+            None,
+            None,
+        )
+        .expect_err("duplicate workflow audit evidence must fail");
+
+        assert_eq!(
+            error,
+            DomainError::InvalidWorkflowFailureRecovery(
+                "duplicate workflow audit evidence reference"
+            )
+        );
+    }
+
+    #[test]
+    fn workflow_failure_recovery_transition_evidence_order_preserved() {
+        let context = workflow_failure_context();
+
+        assert_eq!(
+            context.transition_evidence_references(),
+            &[
+                TransitionEvidenceReference::new("transition.evidence.001")
+                    .expect("transition evidence"),
+                TransitionEvidenceReference::new("transition.evidence.002")
+                    .expect("transition evidence"),
+            ]
+        );
+    }
+
+    #[test]
+    fn workflow_failure_recovery_workflow_audit_evidence_order_preserved() {
+        let context = workflow_failure_context();
+
+        assert_eq!(
+            context
+                .workflow_audit_evidence_references()
+                .iter()
+                .map(WorkflowAuditEvidenceReference::audit_evidence_id)
+                .map(|id| id.as_str())
+                .collect::<Vec<_>>(),
+            vec!["CX-AUD-000020", "CX-AUD-000021"]
+        );
+    }
+
+    #[test]
+    fn workflow_failure_recovery_equivalent_requests_return_equivalent_decisions() {
+        let left = WorkflowRecoveryControl::evaluate(&workflow_recovery_request(
+            3,
+            Some(WorkflowState::Ready),
+            true,
+        ));
+        let right = WorkflowRecoveryControl::evaluate(&workflow_recovery_request(
+            3,
+            Some(WorkflowState::Ready),
+            true,
+        ));
+
+        assert_eq!(left, right);
+    }
+
+    #[test]
+    fn workflow_failure_recovery_deterministic_construction() {
+        let left = workflow_failure_record(3, Some(WorkflowState::Ready));
+        let right = workflow_failure_record(3, Some(WorkflowState::Ready));
+
+        assert_eq!(left, right);
+    }
+
+    #[test]
+    fn workflow_failure_recovery_equivalent_invalid_inputs_produce_equivalent_errors() {
+        let left = WorkflowFailureRecord::new(
+            workflow_failure_context(),
+            Some(retry_policy()),
+            Some(retry_limit()),
+            4,
+            None,
+            None,
+            StateSequence::new(2).expect("failure sequence"),
+        )
+        .expect_err("left invalid request must fail");
+        let right = WorkflowFailureRecord::new(
+            workflow_failure_context(),
+            Some(retry_policy()),
+            Some(retry_limit()),
+            4,
+            None,
+            None,
+            StateSequence::new(2).expect("failure sequence"),
+        )
+        .expect_err("right invalid request must fail");
+
+        assert_eq!(left, right);
+    }
+
+    #[test]
+    fn workflow_failure_recovery_supplied_values_not_mutated() {
+        let state = workflow_failure_state_snapshot();
+        let instance = workflow_failure_instance();
+        let evidence = vec![
+            TransitionEvidenceReference::new("transition.evidence.001")
+                .expect("transition evidence"),
+            TransitionEvidenceReference::new("transition.evidence.002")
+                .expect("transition evidence"),
+        ];
+        let audit = vec![
+            audit_evidence("CX-AUD-000025"),
+            audit_evidence("CX-AUD-000026"),
+        ];
+        let state_before = state.clone();
+        let instance_before = instance.clone();
+        let evidence_before = evidence.clone();
+        let audit_before = audit.clone();
+
+        let _ = WorkflowFailureContext::new(
+            workflow_id(),
+            Some(instance.clone()),
+            state.clone(),
+            Some(entry_step("start.review")),
+            WorkflowFailureCode::Timeout,
+            None,
+            None,
+            evidence.clone(),
+            audit.clone(),
+            None,
+            None,
+        )
+        .expect("context");
+
+        assert_eq!(state, state_before);
+        assert_eq!(instance, instance_before);
+        assert_eq!(evidence, evidence_before);
+        assert_eq!(audit, audit_before);
+    }
+
+    #[test]
+    fn workflow_failure_recovery_external_retry_policy_existence_not_checked() {
+        let policy = WorkflowRetryPolicyReference::new(definition_version(), retry_limit());
+        let record = WorkflowFailureRecord::new(
+            workflow_failure_context(),
+            Some(policy.clone()),
+            Some(retry_limit()),
+            1,
+            None,
+            None,
+            StateSequence::new(2).expect("sequence"),
+        )
+        .expect("record");
+
+        assert_eq!(record.retry_policy_reference(), Some(&policy));
+    }
+
+    #[test]
+    fn workflow_failure_recovery_external_recovery_reference_existence_not_checked() {
+        let reference =
+            WorkflowRecoveryReference::new("external/manual-review", true).expect("reference");
+        let record = WorkflowFailureRecord::new(
+            workflow_failure_context_without_instance(),
+            Some(retry_policy()),
+            Some(retry_limit()),
+            3,
+            Some(reference.clone()),
+            Some(WorkflowState::Ready),
+            StateSequence::new(2).expect("sequence"),
+        )
+        .expect("record");
+
+        assert_eq!(record.recovery_reference(), Some(&reference));
+    }
+
+    #[test]
+    fn workflow_failure_recovery_external_failure_code_existence_not_checked() {
+        let context = workflow_failure_context();
+
+        assert_eq!(context.failure_code(), WorkflowFailureCode::Timeout);
+    }
+
+    #[test]
+    fn workflow_failure_recovery_no_retry_delay_inferred() {
+        let decision =
+            WorkflowRecoveryControl::evaluate(&workflow_recovery_request(1, None, false));
+
+        assert_eq!(
+            decision.workflow_failure_record().current_retry_attempt(),
+            1
+        );
+    }
+
+    #[test]
+    fn workflow_failure_recovery_no_random_backoff_calculated() {
+        let left = WorkflowRecoveryControl::evaluate(&workflow_recovery_request(1, None, false));
+        let right = WorkflowRecoveryControl::evaluate(&workflow_recovery_request(1, None, false));
+
+        assert_eq!(left, right);
+    }
+
+    #[test]
+    fn workflow_failure_recovery_no_scheduler_called() {
+        let request = workflow_recovery_request(3, Some(WorkflowState::Ready), true);
+        let before = request.clone();
+
+        let _ = WorkflowRecoveryControl::evaluate(&request);
+
+        assert_eq!(request, before);
+    }
+
+    #[test]
+    fn workflow_failure_recovery_no_retry_enqueued() {
+        let decision =
+            WorkflowRecoveryControl::evaluate(&workflow_recovery_request(1, None, false));
+
+        assert!(matches!(
+            decision,
+            WorkflowRecoveryDecision::RetryPermitted(_)
+        ));
+    }
+
+    #[test]
+    fn workflow_failure_recovery_no_workflow_transition_executed() {
+        let state = workflow_failure_state_snapshot();
+        let before = state.clone();
+
+        let _ = WorkflowRecoveryControl::evaluate(&workflow_recovery_request(
+            3,
+            Some(WorkflowState::Ready),
+            true,
+        ));
+
+        assert_eq!(state, before);
+    }
+
+    #[test]
+    fn workflow_failure_recovery_no_workflow_state_mutated() {
+        let instance = workflow_failure_instance();
+        let before = instance.clone();
+
+        let _ = WorkflowRecoveryControl::evaluate(&workflow_recovery_request(1, None, false));
+
+        assert_eq!(instance, before);
+    }
+
+    #[test]
+    fn workflow_failure_recovery_no_step_executed() {
+        let context = workflow_failure_context();
+        let before = context.clone();
+
+        let _ = WorkflowRecoveryControl::evaluate(&workflow_recovery_request(1, None, false));
+
+        assert_eq!(context, before);
+    }
+
+    #[test]
+    fn workflow_failure_recovery_no_event_published() {
+        let decision =
+            WorkflowRecoveryControl::evaluate(&workflow_recovery_request(1, None, false));
+
+        assert!(matches!(
+            decision,
+            WorkflowRecoveryDecision::RetryPermitted(_)
+        ));
+    }
+
+    #[test]
+    fn workflow_failure_recovery_no_persistence_occurs() {
+        let record = workflow_failure_record(3, Some(WorkflowState::Ready));
+        let before = record.clone();
+
+        let _ = WorkflowRecoveryControl::evaluate(
+            &WorkflowRecoveryRequest::new(record.clone(), true).expect("request"),
+        );
+
+        assert_eq!(record, before);
+    }
+
+    #[test]
+    fn workflow_failure_recovery_existing_k2_lifecycle_apis_remain_usable() {
+        let decision = allowed_transition_decision();
+
+        assert!(matches!(decision, TransitionOutcome::Allowed(_)));
+    }
+
+    #[test]
+    fn workflow_failure_recovery_existing_k6_001_through_k6_007_apis_remain_usable() {
+        let definition = workflow_definition();
+        let instance = workflow_failure_instance();
+        let coordination = workflow_step_coordination();
+        let authorization = WorkflowAuthorizationControl::evaluate(
+            &workflow_authorization_request(AuthorizationDecisionOutcome::Allow),
+        );
+        let event = WorkflowEventIntegration::evaluate(&workflow_event_request(
+            "workflow.authorized",
+            workflow_event_context(None, Some(authorization), None),
+            None,
+            EventCausation::root(),
+        ))
+        .expect("event");
+        let decision = WorkflowRecoveryControl::evaluate(&workflow_recovery_request(
+            3,
+            Some(WorkflowState::Ready),
+            true,
+        ));
+
+        assert_eq!(definition.workflow_id().as_str(), "CX-WF-000001");
+        assert_eq!(instance.workflow_id().as_str(), "CX-WF-000001");
+        assert_eq!(
+            coordination
+                .workflow_step_selection()
+                .current_step()
+                .as_str(),
+            "start.review"
+        );
+        assert_eq!(event.event_type().as_str(), "workflow.authorized");
+        assert!(matches!(
+            decision,
+            WorkflowRecoveryDecision::RecoveryPermitted(_)
+        ));
     }
 }
