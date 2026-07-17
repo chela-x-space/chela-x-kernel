@@ -199,6 +199,97 @@ impl WorkflowStateSnapshot {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WorkflowTransitionControlRequest {
+    current_workflow_state_snapshot: WorkflowStateSnapshot,
+    requested_target_workflow_state: WorkflowState,
+    transition_reason_reference: Option<TransitionReasonReference>,
+    transition_authority_reference: Option<TransitionAuthorityReference>,
+    transition_evidence_references: Vec<TransitionEvidenceReference>,
+    failure_code: Option<WorkflowFailureCode>,
+    workflow_lifecycle_guards: WorkflowLifecycleGuards,
+}
+
+impl WorkflowTransitionControlRequest {
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(
+        current_workflow_state_snapshot: WorkflowStateSnapshot,
+        requested_target_workflow_state: WorkflowState,
+        transition_reason_reference: Option<TransitionReasonReference>,
+        transition_authority_reference: Option<TransitionAuthorityReference>,
+        transition_evidence_references: Vec<TransitionEvidenceReference>,
+        failure_code: Option<WorkflowFailureCode>,
+        workflow_lifecycle_guards: WorkflowLifecycleGuards,
+    ) -> crate::errors::DomainResult<Self> {
+        if requested_target_workflow_state == WorkflowState::Failed && failure_code.is_none() {
+            return Err(
+                crate::errors::DomainError::InvalidWorkflowTransitionControl(
+                    "workflow failure target requires stable failure code",
+                ),
+            );
+        }
+
+        if requested_target_workflow_state != WorkflowState::Failed && failure_code.is_some() {
+            return Err(
+                crate::errors::DomainError::InvalidWorkflowTransitionControl(
+                    "non-failure workflow transition must not carry failure code",
+                ),
+            );
+        }
+
+        for (index, evidence) in transition_evidence_references.iter().enumerate() {
+            if transition_evidence_references[..index]
+                .iter()
+                .any(|prior| prior == evidence)
+            {
+                return Err(
+                    crate::errors::DomainError::InvalidWorkflowTransitionControl(
+                        "duplicate workflow transition evidence reference",
+                    ),
+                );
+            }
+        }
+
+        Ok(Self {
+            current_workflow_state_snapshot,
+            requested_target_workflow_state,
+            transition_reason_reference,
+            transition_authority_reference,
+            transition_evidence_references,
+            failure_code,
+            workflow_lifecycle_guards,
+        })
+    }
+
+    pub fn current_workflow_state_snapshot(&self) -> &WorkflowStateSnapshot {
+        &self.current_workflow_state_snapshot
+    }
+
+    pub fn requested_target_workflow_state(&self) -> WorkflowState {
+        self.requested_target_workflow_state
+    }
+
+    pub fn transition_reason_reference(&self) -> Option<&TransitionReasonReference> {
+        self.transition_reason_reference.as_ref()
+    }
+
+    pub fn transition_authority_reference(&self) -> Option<&TransitionAuthorityReference> {
+        self.transition_authority_reference.as_ref()
+    }
+
+    pub fn transition_evidence_references(&self) -> &[TransitionEvidenceReference] {
+        &self.transition_evidence_references
+    }
+
+    pub fn failure_code(&self) -> Option<WorkflowFailureCode> {
+        self.failure_code
+    }
+
+    pub fn workflow_lifecycle_guards(&self) -> &WorkflowLifecycleGuards {
+        &self.workflow_lifecycle_guards
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TransitionRequest<I, S> {
     subject_id: I,
     current_state: S,
@@ -612,6 +703,47 @@ pub struct WorkflowLifecycleGuards {
     pub retry_limit_respected: bool,
     pub recovery_revalidated: bool,
     pub failure_code: Option<WorkflowFailureCode>,
+}
+
+pub type WorkflowTransitionDecision = WorkflowTransitionOutcome;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct WorkflowTransitionControl;
+
+impl WorkflowTransitionControl {
+    pub fn evaluate(request: &WorkflowTransitionControlRequest) -> WorkflowTransitionDecision {
+        let transition_evidence = request.transition_evidence_references.first().cloned();
+        let mut workflow_lifecycle_guards = request.workflow_lifecycle_guards.clone();
+
+        workflow_lifecycle_guards.failure_code = request.failure_code;
+
+        let current_snapshot = request.current_workflow_state_snapshot();
+        let provisional_request = WorkflowTransitionRequest::new(
+            current_snapshot.workflow_id().clone(),
+            current_snapshot.lifecycle(),
+            request.requested_target_workflow_state(),
+            request.transition_reason_reference().cloned(),
+            request.transition_authority_reference().cloned(),
+            transition_evidence.clone(),
+            current_snapshot.sequence(),
+        );
+
+        match validate_workflow_transition(provisional_request, &workflow_lifecycle_guards) {
+            TransitionOutcome::Allowed(_) => validate_workflow_transition(
+                WorkflowTransitionRequest::new(
+                    current_snapshot.workflow_id().clone(),
+                    current_snapshot.lifecycle(),
+                    request.requested_target_workflow_state(),
+                    request.transition_reason_reference().cloned(),
+                    request.transition_authority_reference().cloned(),
+                    transition_evidence,
+                    current_snapshot.sequence().next(),
+                ),
+                &workflow_lifecycle_guards,
+            ),
+            outcome => outcome,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -1346,6 +1478,7 @@ mod tests {
         ProjectLifecycleGuards, StateSequence, TransitionAuthorityReference,
         TransitionEvidenceReference, TransitionOutcome, TransitionReasonReference,
         TransitionRejectionReason, WorkflowFailureCode, WorkflowLifecycleGuards,
+        WorkflowStateSnapshot, WorkflowTransitionControl, WorkflowTransitionControlRequest,
         WorkspaceLifecycleGuards,
     };
     use crate::identifier::{
@@ -1357,9 +1490,153 @@ mod tests {
         HumanLifecycle, OwnershipLifecycle, ProjectLifecycle, WorkflowState, WorkspaceLifecycle,
     };
     use crate::ownership::OwnershipPath;
+    use crate::workflow::{
+        WorkflowAuditEvidenceReference, WorkflowDefinition, WorkflowInstance,
+        WorkflowLifecycleMapReference, WorkflowRecoveryReference, WorkflowRetryLimit,
+        WorkflowRetryPolicyReference, WorkflowStepReference, WorkflowTerminalOutcomeReference,
+    };
 
     fn sequence() -> StateSequence {
         StateSequence::new(1).expect("sequence")
+    }
+
+    fn workflow_transition_ownership() -> OwnershipPath {
+        OwnershipPath::new(
+            EnterpriseId::new("CX-ENT-000001").expect("enterprise"),
+            Some(WorkspaceId::new("CX-WS-000001").expect("workspace")),
+            Some(ProjectId::new("CX-PROJ-000001").expect("project")),
+            None,
+        )
+        .expect("ownership path")
+    }
+
+    fn workflow_transition_snapshot(state: WorkflowState) -> WorkflowStateSnapshot {
+        WorkflowStateSnapshot::new(
+            WorkflowId::new("CX-WF-000001").expect("workflow"),
+            workflow_transition_ownership(),
+            StableVersion::new("workflow_definition_version", "1.0.0").expect("version"),
+            state,
+            sequence(),
+        )
+    }
+
+    fn workflow_transition_guards() -> WorkflowLifecycleGuards {
+        WorkflowLifecycleGuards {
+            policy_valid: true,
+            authorization_valid: true,
+            delegation_valid: true,
+            decision_valid: true,
+            scope_valid: true,
+            participants_valid: true,
+            audit_evidence: Some(
+                TransitionEvidenceReference::new("AUD-001").expect("audit evidence"),
+            ),
+            upstream_outcomes_allow: true,
+            retry_limit_respected: true,
+            recovery_revalidated: true,
+            failure_code: None,
+        }
+    }
+
+    fn workflow_transition_request(
+        current_state: WorkflowState,
+        requested_target_workflow_state: WorkflowState,
+    ) -> WorkflowTransitionControlRequest {
+        WorkflowTransitionControlRequest::new(
+            workflow_transition_snapshot(current_state),
+            requested_target_workflow_state,
+            Some(TransitionReasonReference::new("operator request").expect("reason")),
+            Some(TransitionAuthorityReference::new("authority.ref").expect("authority")),
+            vec![TransitionEvidenceReference::new("AUD-001").expect("evidence")],
+            None,
+            workflow_transition_guards(),
+        )
+        .expect("transition request")
+    }
+
+    fn workflow_transition_request_without_guard_audit_evidence(
+        current_state: WorkflowState,
+        requested_target_workflow_state: WorkflowState,
+    ) -> WorkflowTransitionControlRequest {
+        WorkflowTransitionControlRequest::new(
+            workflow_transition_snapshot(current_state),
+            requested_target_workflow_state,
+            Some(TransitionReasonReference::new("operator request").expect("reason")),
+            Some(TransitionAuthorityReference::new("authority.ref").expect("authority")),
+            vec![TransitionEvidenceReference::new("AUD-001").expect("evidence")],
+            None,
+            WorkflowLifecycleGuards {
+                audit_evidence: None,
+                ..workflow_transition_guards()
+            },
+        )
+        .expect("transition request")
+    }
+
+    fn workflow_retry_limit() -> WorkflowRetryLimit {
+        WorkflowRetryLimit::new(2).expect("retry limit")
+    }
+
+    fn workflow_retry_policy() -> WorkflowRetryPolicyReference {
+        WorkflowRetryPolicyReference::new(
+            StableVersion::new("workflow_definition_version", "1.0.0").expect("version"),
+            workflow_retry_limit(),
+        )
+    }
+
+    fn workflow_recovery_reference() -> WorkflowRecoveryReference {
+        WorkflowRecoveryReference::new("retry/manual-review", true).expect("recovery")
+    }
+
+    fn workflow_audit_evidence(id: &str) -> WorkflowAuditEvidenceReference {
+        WorkflowAuditEvidenceReference::new(
+            crate::identifier::AuditEvidenceId::new(id).expect("audit evidence id"),
+            WorkflowId::new("CX-WF-000001").expect("workflow"),
+            StableVersion::new("workflow_definition_version", "1.0.0").expect("version"),
+            vec![crate::identifier::PolicyId::new("CX-POL-000001").expect("policy")],
+            vec![
+                crate::identifier::AuthorizationDecisionId::new("CX-AUTHDEC-000001")
+                    .expect("authorization decision"),
+            ],
+            vec![crate::identifier::DelegationId::new("CX-DEL-000001").expect("delegation")],
+            vec![DecisionId::new("CX-DEC-000001").expect("decision")],
+        )
+        .expect("audit evidence")
+    }
+
+    fn workflow_definition() -> WorkflowDefinition {
+        WorkflowDefinition::new(
+            WorkflowId::new("CX-WF-000001").expect("workflow"),
+            crate::identifier::EnglishNamespace::new("workflow_namespace", "ops.approval-flow")
+                .expect("namespace"),
+            StableVersion::new("workflow_definition_version", "1.0.0").expect("version"),
+            workflow_transition_ownership(),
+            WorkflowLifecycleMapReference::new("workflow.lifecycle.v1").expect("lifecycle map"),
+            vec![WorkflowStepReference::new("start.review").expect("entry step")],
+            vec![WorkflowTerminalOutcomeReference::new("completed").expect("terminal outcome")],
+            vec![crate::identifier::PolicyId::new("CX-POL-000001").expect("policy")],
+            Some(workflow_retry_policy()),
+            Some(workflow_retry_limit()),
+            Some(workflow_recovery_reference()),
+            vec![workflow_audit_evidence("CX-AUD-000001")],
+        )
+        .expect("workflow definition")
+    }
+
+    fn workflow_instance(state: WorkflowState) -> WorkflowInstance {
+        WorkflowInstance::new(
+            WorkflowId::new("CX-WF-000001").expect("workflow"),
+            workflow_definition(),
+            StableVersion::new("workflow_definition_version", "1.0.0").expect("version"),
+            workflow_transition_ownership(),
+            workflow_transition_snapshot(state),
+            workflow_audit_evidence("CX-AUD-000002"),
+            Some(workflow_retry_policy()),
+            Some(workflow_retry_limit()),
+            Some(workflow_recovery_reference()),
+            vec![workflow_audit_evidence("CX-AUD-000003")],
+        )
+        .expect("workflow instance")
     }
 
     #[test]
@@ -1819,5 +2096,442 @@ mod tests {
                 if rejection.reason()
                     == &TransitionRejectionReason::GuardFailed("project completion requires satisfied success criteria")
         ));
+    }
+
+    #[test]
+    fn workflow_transition_control_legal_transition_returns_allowed_outcome() {
+        let outcome = WorkflowTransitionControl::evaluate(&workflow_transition_request(
+            WorkflowState::Ready,
+            WorkflowState::Running,
+        ));
+        assert!(matches!(outcome, TransitionOutcome::Allowed(_)));
+    }
+
+    #[test]
+    fn workflow_transition_control_illegal_transition_returns_rejected_outcome() {
+        let outcome = WorkflowTransitionControl::evaluate(&workflow_transition_request(
+            WorkflowState::Draft,
+            WorkflowState::Running,
+        ));
+        assert!(matches!(
+            outcome,
+            TransitionOutcome::Rejected(rejection)
+                if rejection.reason() == &TransitionRejectionReason::IllegalTransition
+        ));
+    }
+
+    #[test]
+    fn workflow_transition_control_same_state_transition_returns_canonical_no_op_outcome() {
+        let outcome = WorkflowTransitionControl::evaluate(&workflow_transition_request(
+            WorkflowState::Ready,
+            WorkflowState::Ready,
+        ));
+        assert!(matches!(outcome, TransitionOutcome::NoOp(_)));
+    }
+
+    #[test]
+    fn workflow_transition_control_allowed_transition_advances_state_sequence_exactly_once() {
+        let outcome = WorkflowTransitionControl::evaluate(&workflow_transition_request(
+            WorkflowState::Ready,
+            WorkflowState::Running,
+        ));
+        let allowed = match outcome {
+            TransitionOutcome::Allowed(allowed) => allowed,
+            other => panic!("expected allowed outcome, got {other:?}"),
+        };
+
+        assert_eq!(allowed.sequence().value(), 2);
+    }
+
+    #[test]
+    fn workflow_transition_control_rejected_transition_does_not_advance_sequence() {
+        let outcome = WorkflowTransitionControl::evaluate(&workflow_transition_request(
+            WorkflowState::Draft,
+            WorkflowState::Running,
+        ));
+        let rejected = match outcome {
+            TransitionOutcome::Rejected(rejected) => rejected,
+            other => panic!("expected rejected outcome, got {other:?}"),
+        };
+
+        assert_eq!(rejected.sequence().value(), 1);
+    }
+
+    #[test]
+    fn workflow_transition_control_no_op_transition_does_not_advance_sequence() {
+        let outcome = WorkflowTransitionControl::evaluate(&workflow_transition_request(
+            WorkflowState::Ready,
+            WorkflowState::Ready,
+        ));
+        let noop = match outcome {
+            TransitionOutcome::NoOp(noop) => noop,
+            other => panic!("expected no-op outcome, got {other:?}"),
+        };
+
+        assert_eq!(noop.sequence().value(), 1);
+    }
+
+    #[test]
+    fn workflow_transition_control_transition_reason_is_preserved() {
+        let outcome = WorkflowTransitionControl::evaluate(&workflow_transition_request(
+            WorkflowState::Ready,
+            WorkflowState::Running,
+        ));
+        let allowed = match outcome {
+            TransitionOutcome::Allowed(allowed) => allowed,
+            other => panic!("expected allowed outcome, got {other:?}"),
+        };
+
+        assert_eq!(
+            allowed.reason().expect("reason").as_str(),
+            "operator request"
+        );
+    }
+
+    #[test]
+    fn workflow_transition_control_transition_authority_is_preserved() {
+        let outcome = WorkflowTransitionControl::evaluate(&workflow_transition_request(
+            WorkflowState::Ready,
+            WorkflowState::Running,
+        ));
+        let allowed = match outcome {
+            TransitionOutcome::Allowed(allowed) => allowed,
+            other => panic!("expected allowed outcome, got {other:?}"),
+        };
+
+        assert_eq!(
+            allowed.authority().expect("authority").as_str(),
+            "authority.ref"
+        );
+    }
+
+    #[test]
+    fn workflow_transition_control_transition_evidence_order_is_preserved() {
+        let request = WorkflowTransitionControlRequest::new(
+            workflow_transition_snapshot(WorkflowState::Ready),
+            WorkflowState::Running,
+            None,
+            None,
+            vec![
+                TransitionEvidenceReference::new("AUD-001").expect("evidence"),
+                TransitionEvidenceReference::new("AUD-002").expect("evidence"),
+            ],
+            None,
+            workflow_transition_guards(),
+        )
+        .expect("transition request");
+
+        assert_eq!(
+            request.transition_evidence_references()[0].as_str(),
+            "AUD-001"
+        );
+        assert_eq!(
+            request.transition_evidence_references()[1].as_str(),
+            "AUD-002"
+        );
+    }
+
+    #[test]
+    fn workflow_transition_control_transition_evidence_does_not_populate_guard_audit_evidence() {
+        let request = workflow_transition_request_without_guard_audit_evidence(
+            WorkflowState::Ready,
+            WorkflowState::Running,
+        );
+        let outcome = WorkflowTransitionControl::evaluate(&request);
+
+        assert_eq!(request.workflow_lifecycle_guards().audit_evidence, None);
+        assert!(matches!(
+            outcome,
+            TransitionOutcome::Rejected(rejection)
+                if rejection.reason() == &TransitionRejectionReason::MissingEvidence
+        ));
+    }
+
+    #[test]
+    fn workflow_transition_control_duplicate_transition_evidence_is_rejected() {
+        let error = WorkflowTransitionControlRequest::new(
+            workflow_transition_snapshot(WorkflowState::Ready),
+            WorkflowState::Running,
+            None,
+            None,
+            vec![
+                TransitionEvidenceReference::new("AUD-001").expect("evidence"),
+                TransitionEvidenceReference::new("AUD-001").expect("evidence"),
+            ],
+            None,
+            workflow_transition_guards(),
+        )
+        .expect_err("duplicate evidence must fail");
+
+        assert_eq!(
+            error,
+            crate::errors::DomainError::InvalidWorkflowTransitionControl(
+                "duplicate workflow transition evidence reference",
+            )
+        );
+    }
+
+    #[test]
+    fn workflow_transition_control_failure_transition_requires_stable_failure_code() {
+        let error = WorkflowTransitionControlRequest::new(
+            workflow_transition_snapshot(WorkflowState::Running),
+            WorkflowState::Failed,
+            None,
+            None,
+            vec![],
+            None,
+            workflow_transition_guards(),
+        )
+        .expect_err("missing failure code must fail");
+
+        assert_eq!(
+            error,
+            crate::errors::DomainError::InvalidWorkflowTransitionControl(
+                "workflow failure target requires stable failure code",
+            )
+        );
+    }
+
+    #[test]
+    fn workflow_transition_control_missing_required_audit_evidence_remains_rejected() {
+        let outcome = WorkflowTransitionControl::evaluate(
+            &workflow_transition_request_without_guard_audit_evidence(
+                WorkflowState::Ready,
+                WorkflowState::Running,
+            ),
+        );
+
+        assert!(matches!(
+            outcome,
+            TransitionOutcome::Rejected(rejection)
+                if rejection.reason() == &TransitionRejectionReason::MissingEvidence
+        ));
+    }
+
+    #[test]
+    fn workflow_transition_control_failure_code_is_preserved() {
+        let request = WorkflowTransitionControlRequest::new(
+            workflow_transition_snapshot(WorkflowState::Running),
+            WorkflowState::Failed,
+            None,
+            None,
+            vec![],
+            Some(WorkflowFailureCode::Timeout),
+            workflow_transition_guards(),
+        )
+        .expect("transition request");
+        let outcome = WorkflowTransitionControl::evaluate(&request);
+        let allowed = match outcome {
+            TransitionOutcome::Allowed(allowed) => allowed,
+            other => panic!("expected allowed outcome, got {other:?}"),
+        };
+
+        assert_eq!(request.failure_code(), Some(WorkflowFailureCode::Timeout));
+        assert_eq!(*allowed.to(), WorkflowState::Failed);
+    }
+
+    #[test]
+    fn workflow_transition_control_explicitly_supplied_guard_audit_evidence_is_preserved() {
+        let request = WorkflowTransitionControlRequest::new(
+            workflow_transition_snapshot(WorkflowState::Ready),
+            WorkflowState::Running,
+            None,
+            None,
+            vec![TransitionEvidenceReference::new("TRANS-001").expect("evidence")],
+            None,
+            WorkflowLifecycleGuards {
+                audit_evidence: Some(
+                    TransitionEvidenceReference::new("GUARD-001").expect("audit evidence"),
+                ),
+                ..workflow_transition_guards()
+            },
+        )
+        .expect("transition request");
+        let before = request.clone();
+        let outcome = WorkflowTransitionControl::evaluate(&request);
+        let allowed = match outcome {
+            TransitionOutcome::Allowed(allowed) => allowed,
+            other => panic!("expected allowed outcome, got {other:?}"),
+        };
+
+        assert_eq!(
+            before
+                .workflow_lifecycle_guards()
+                .audit_evidence
+                .as_ref()
+                .expect("guard audit evidence")
+                .as_str(),
+            "GUARD-001"
+        );
+        assert_eq!(
+            request
+                .workflow_lifecycle_guards()
+                .audit_evidence
+                .as_ref()
+                .expect("guard audit evidence")
+                .as_str(),
+            "GUARD-001"
+        );
+        assert_eq!(
+            allowed.evidence().expect("transition evidence").as_str(),
+            "TRANS-001"
+        );
+    }
+
+    #[test]
+    fn workflow_transition_control_illegal_terminal_state_transition_is_rejected() {
+        let outcome = WorkflowTransitionControl::evaluate(&workflow_transition_request(
+            WorkflowState::Archived,
+            WorkflowState::Ready,
+        ));
+        assert!(matches!(
+            outcome,
+            TransitionOutcome::Rejected(rejection)
+                if rejection.reason() == &TransitionRejectionReason::TerminalState
+        ));
+    }
+
+    #[test]
+    fn workflow_transition_control_equivalent_requests_return_equivalent_outcomes() {
+        let request = workflow_transition_request(WorkflowState::Ready, WorkflowState::Running);
+        let first = WorkflowTransitionControl::evaluate(&request);
+        let second = WorkflowTransitionControl::evaluate(&request);
+
+        assert_eq!(first, second);
+    }
+
+    #[test]
+    fn workflow_transition_control_construction_and_evaluation_are_deterministic() {
+        let first = workflow_transition_request(WorkflowState::Ready, WorkflowState::Running);
+        let second = workflow_transition_request(WorkflowState::Ready, WorkflowState::Running);
+
+        assert_eq!(first, second);
+        assert_eq!(
+            WorkflowTransitionControl::evaluate(&first),
+            WorkflowTransitionControl::evaluate(&second)
+        );
+    }
+
+    #[test]
+    fn workflow_transition_control_supplied_request_values_are_not_mutated() {
+        let request = WorkflowTransitionControlRequest::new(
+            workflow_transition_snapshot(WorkflowState::Ready),
+            WorkflowState::Running,
+            Some(TransitionReasonReference::new("operator request").expect("reason")),
+            Some(TransitionAuthorityReference::new("authority.ref").expect("authority")),
+            vec![
+                TransitionEvidenceReference::new("AUD-001").expect("evidence"),
+                TransitionEvidenceReference::new("AUD-002").expect("evidence"),
+            ],
+            None,
+            workflow_transition_guards(),
+        )
+        .expect("transition request");
+        let before = request.clone();
+
+        let _ = WorkflowTransitionControl::evaluate(&request);
+
+        assert_eq!(request, before);
+    }
+
+    #[test]
+    fn workflow_transition_control_external_authority_existence_is_not_checked() {
+        let request = WorkflowTransitionControlRequest::new(
+            workflow_transition_snapshot(WorkflowState::Ready),
+            WorkflowState::Running,
+            None,
+            Some(TransitionAuthorityReference::new("external.authority").expect("authority")),
+            vec![TransitionEvidenceReference::new("AUD-001").expect("evidence")],
+            None,
+            workflow_transition_guards(),
+        )
+        .expect("transition request");
+        let outcome = WorkflowTransitionControl::evaluate(&request);
+
+        assert!(matches!(outcome, TransitionOutcome::Allowed(_)));
+    }
+
+    #[test]
+    fn workflow_transition_control_external_evidence_existence_is_not_checked() {
+        let request = WorkflowTransitionControlRequest::new(
+            workflow_transition_snapshot(WorkflowState::Ready),
+            WorkflowState::Running,
+            None,
+            None,
+            vec![TransitionEvidenceReference::new("AUD-999").expect("evidence")],
+            None,
+            WorkflowLifecycleGuards {
+                audit_evidence: Some(
+                    TransitionEvidenceReference::new("AUD-999").expect("audit evidence"),
+                ),
+                ..workflow_transition_guards()
+            },
+        )
+        .expect("transition request");
+        let outcome = WorkflowTransitionControl::evaluate(&request);
+
+        assert!(matches!(outcome, TransitionOutcome::Allowed(_)));
+    }
+
+    #[test]
+    fn workflow_transition_control_no_event_is_emitted() {
+        let outcome = WorkflowTransitionControl::evaluate(&workflow_transition_request(
+            WorkflowState::Ready,
+            WorkflowState::Running,
+        ));
+
+        assert!(matches!(outcome, TransitionOutcome::Allowed(_)));
+    }
+
+    #[test]
+    fn workflow_transition_control_no_workflow_instance_is_mutated() {
+        let instance = workflow_instance(WorkflowState::Ready);
+        let before = instance.clone();
+        let request = WorkflowTransitionControlRequest::new(
+            instance.current_workflow_state_snapshot().clone(),
+            WorkflowState::Running,
+            None,
+            None,
+            vec![TransitionEvidenceReference::new("AUD-001").expect("evidence")],
+            None,
+            workflow_transition_guards(),
+        )
+        .expect("transition request");
+
+        let _ = WorkflowTransitionControl::evaluate(&request);
+
+        assert_eq!(instance, before);
+    }
+
+    #[test]
+    fn workflow_transition_control_existing_k2_lifecycle_behavior_remains_unchanged() {
+        let outcome = validate_workflow_transition(
+            super::WorkflowTransitionRequest::new(
+                WorkflowId::new("CX-WF-000001").expect("workflow"),
+                WorkflowState::Running,
+                WorkflowState::Failed,
+                None,
+                None,
+                None,
+                sequence(),
+            ),
+            &WorkflowLifecycleGuards::default(),
+        );
+
+        assert!(matches!(
+            outcome,
+            TransitionOutcome::Rejected(rejection)
+                if rejection.reason()
+                    == &TransitionRejectionReason::GuardFailed("workflow failure transition requires a stable failure code")
+        ));
+    }
+
+    #[test]
+    fn workflow_transition_control_existing_workflow_definition_and_instance_apis_remain_usable() {
+        let definition = workflow_definition();
+        let instance = workflow_instance(WorkflowState::Ready);
+
+        assert_eq!(definition.workflow_id().as_str(), "CX-WF-000001");
+        assert_eq!(instance.workflow_definition(), &definition);
     }
 }

@@ -115,7 +115,8 @@ pub use state::{
     ProjectTransitionOutcome, ProjectTransitionRequest, RejectedTransition, StateSequence,
     StateSnapshot, TransitionAuthorityReference, TransitionEvidenceReference, TransitionOutcome,
     TransitionReasonReference, TransitionRejectionReason, WorkflowFailureCode,
-    WorkflowLifecycleGuards, WorkflowStateSnapshot, WorkflowTransitionOutcome,
+    WorkflowLifecycleGuards, WorkflowStateSnapshot, WorkflowTransitionControl,
+    WorkflowTransitionControlRequest, WorkflowTransitionDecision, WorkflowTransitionOutcome,
     WorkflowTransitionRequest, WorkflowTransitionStateSnapshot, WorkspaceLifecycleGuards,
     WorkspaceStateSnapshot, WorkspaceTransitionOutcome, WorkspaceTransitionRequest,
 };
