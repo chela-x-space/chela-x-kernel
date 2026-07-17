@@ -70,6 +70,27 @@ This breakdown is an implementation tracking document only. It does not create a
 
 `K7 Task Engine`
 
+## K7 Current Milestone State
+
+- K7 Milestone: `PLANNING`
+- Specification Package: `ARCHITECTURE APPROVED`
+- Architecture Review: `PASS`
+- Implementation: `NOT STARTED`
+- API: `NOT ESTABLISHED`
+- K7-001: `READY FOR IMPLEMENTATION`
+
+Before `K7-001` Rust implementation begins, the K7 specification package MUST receive an architecture review confirming:
+
+- K7 remains `Task Engine`
+- task semantics align with `docs/kernel-architecture/08-task-architecture.md`
+- dependency direction remains `Workflow → Task → Execution`
+- K6 workflow API remains unchanged
+- K7 does not execute tasks
+- K7 does not introduce infrastructure
+- K7 can reuse frozen K1-K6 domain primitives
+- no ADR is required for the planned additive domain work
+- missing CES IDs are tracked without fabrication
+
 ## References
 
 - [TRACEABILITY.md](./TRACEABILITY.md)
@@ -77,4 +98,6 @@ This breakdown is an implementation tracking document only. It does not create a
 - [API.md](./API.md)
 - [API-FREEZE.md](./API-FREEZE.md)
 - [plans/K6-IMPLEMENTATION-PLAN.md](./plans/K6-IMPLEMENTATION-PLAN.md)
+- [plans/K7-IMPLEMENTATION-PLAN.md](./plans/K7-IMPLEMENTATION-PLAN.md)
 - [backlog/K6-BACKLOG.md](./backlog/K6-BACKLOG.md)
+- [backlog/K7-BACKLOG.md](./backlog/K7-BACKLOG.md)
