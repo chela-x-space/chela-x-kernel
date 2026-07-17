@@ -237,6 +237,33 @@ impl FromStr for WorkflowTerminalOutcomeReference {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct WorkflowStepOutcomeReference(String);
+
+impl WorkflowStepOutcomeReference {
+    pub fn new(value: impl Into<String>) -> DomainResult<Self> {
+        validate_workflow_definition_reference("WorkflowStepOutcomeReference", value).map(Self)
+    }
+
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+
+impl fmt::Display for WorkflowStepOutcomeReference {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str(self.as_str())
+    }
+}
+
+impl FromStr for WorkflowStepOutcomeReference {
+    type Err = DomainError;
+
+    fn from_str(value: &str) -> DomainResult<Self> {
+        Self::new(value.to_owned())
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct WorkflowEngineFoundation {
     workflow_id: WorkflowId,
@@ -565,13 +592,194 @@ impl WorkflowInstance {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WorkflowStepSelection {
+    current_step: WorkflowStepReference,
+    next_candidate_steps: Vec<WorkflowStepReference>,
+}
+
+impl WorkflowStepSelection {
+    pub fn new(
+        current_step: WorkflowStepReference,
+        next_candidate_steps: Vec<WorkflowStepReference>,
+    ) -> Self {
+        Self {
+            current_step,
+            next_candidate_steps,
+        }
+    }
+
+    pub fn current_step(&self) -> &WorkflowStepReference {
+        &self.current_step
+    }
+
+    pub fn next_candidate_steps(&self) -> &[WorkflowStepReference] {
+        &self.next_candidate_steps
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WorkflowStepExecutionPlan {
+    completed_step_references: Vec<WorkflowStepReference>,
+    blocked_step_references: Vec<WorkflowStepReference>,
+    skipped_step_references: Vec<WorkflowStepReference>,
+    terminal_step_references: Vec<WorkflowStepOutcomeReference>,
+}
+
+impl WorkflowStepExecutionPlan {
+    pub fn new(
+        completed_step_references: Vec<WorkflowStepReference>,
+        blocked_step_references: Vec<WorkflowStepReference>,
+        skipped_step_references: Vec<WorkflowStepReference>,
+        terminal_step_references: Vec<WorkflowStepOutcomeReference>,
+    ) -> DomainResult<Self> {
+        for (index, step_reference) in completed_step_references.iter().enumerate() {
+            if completed_step_references[..index]
+                .iter()
+                .any(|prior| prior == step_reference)
+            {
+                return Err(DomainError::InvalidWorkflowStepCoordination(
+                    "duplicate completed workflow step reference",
+                ));
+            }
+        }
+
+        for (index, step_reference) in blocked_step_references.iter().enumerate() {
+            if blocked_step_references[..index]
+                .iter()
+                .any(|prior| prior == step_reference)
+            {
+                return Err(DomainError::InvalidWorkflowStepCoordination(
+                    "duplicate blocked workflow step reference",
+                ));
+            }
+        }
+
+        for (index, step_reference) in skipped_step_references.iter().enumerate() {
+            if skipped_step_references[..index]
+                .iter()
+                .any(|prior| prior == step_reference)
+            {
+                return Err(DomainError::InvalidWorkflowStepCoordination(
+                    "duplicate skipped workflow step reference",
+                ));
+            }
+        }
+
+        for (index, step_reference) in terminal_step_references.iter().enumerate() {
+            if terminal_step_references[..index]
+                .iter()
+                .any(|prior| prior == step_reference)
+            {
+                return Err(DomainError::InvalidWorkflowStepCoordination(
+                    "duplicate terminal workflow step reference",
+                ));
+            }
+        }
+
+        Ok(Self {
+            completed_step_references,
+            blocked_step_references,
+            skipped_step_references,
+            terminal_step_references,
+        })
+    }
+
+    pub fn completed_step_references(&self) -> &[WorkflowStepReference] {
+        &self.completed_step_references
+    }
+
+    pub fn blocked_step_references(&self) -> &[WorkflowStepReference] {
+        &self.blocked_step_references
+    }
+
+    pub fn skipped_step_references(&self) -> &[WorkflowStepReference] {
+        &self.skipped_step_references
+    }
+
+    pub fn terminal_step_references(&self) -> &[WorkflowStepOutcomeReference] {
+        &self.terminal_step_references
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WorkflowStepCoordination {
+    workflow_definition: WorkflowDefinition,
+    workflow_instance: WorkflowInstance,
+    workflow_step_selection: WorkflowStepSelection,
+    workflow_step_execution_plan: WorkflowStepExecutionPlan,
+}
+
+impl WorkflowStepCoordination {
+    pub fn new(
+        workflow_definition: WorkflowDefinition,
+        workflow_instance: WorkflowInstance,
+        workflow_step_selection: WorkflowStepSelection,
+        workflow_step_execution_plan: WorkflowStepExecutionPlan,
+    ) -> DomainResult<Self> {
+        if workflow_step_execution_plan
+            .completed_step_references()
+            .iter()
+            .any(|step_reference| step_reference == workflow_step_selection.current_step())
+        {
+            return Err(DomainError::InvalidWorkflowStepCoordination(
+                "current workflow step cannot be completed",
+            ));
+        }
+
+        if workflow_step_execution_plan
+            .blocked_step_references()
+            .iter()
+            .any(|step_reference| step_reference == workflow_step_selection.current_step())
+        {
+            return Err(DomainError::InvalidWorkflowStepCoordination(
+                "current workflow step cannot be blocked",
+            ));
+        }
+
+        if workflow_step_execution_plan
+            .skipped_step_references()
+            .iter()
+            .any(|step_reference| step_reference == workflow_step_selection.current_step())
+        {
+            return Err(DomainError::InvalidWorkflowStepCoordination(
+                "current workflow step cannot be skipped",
+            ));
+        }
+
+        Ok(Self {
+            workflow_definition,
+            workflow_instance,
+            workflow_step_selection,
+            workflow_step_execution_plan,
+        })
+    }
+
+    pub fn workflow_definition(&self) -> &WorkflowDefinition {
+        &self.workflow_definition
+    }
+
+    pub fn workflow_instance(&self) -> &WorkflowInstance {
+        &self.workflow_instance
+    }
+
+    pub fn workflow_step_selection(&self) -> &WorkflowStepSelection {
+        &self.workflow_step_selection
+    }
+
+    pub fn workflow_step_execution_plan(&self) -> &WorkflowStepExecutionPlan {
+        &self.workflow_step_execution_plan
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::{
         WorkflowAuditEvidenceReference, WorkflowDefinition, WorkflowEngineFoundation,
         WorkflowInstance, WorkflowLifecycleMapReference, WorkflowRecoveryReference,
-        WorkflowRetryLimit, WorkflowRetryPolicyReference, WorkflowStepReference,
-        WorkflowTerminalOutcomeReference,
+        WorkflowRetryLimit, WorkflowRetryPolicyReference, WorkflowStepCoordination,
+        WorkflowStepExecutionPlan, WorkflowStepOutcomeReference, WorkflowStepReference,
+        WorkflowStepSelection, WorkflowTerminalOutcomeReference,
     };
     use crate::errors::DomainError;
     use crate::identifier::EnglishNamespace;
@@ -670,6 +878,10 @@ mod tests {
         WorkflowStepReference::new(value).expect("entry step")
     }
 
+    fn step_outcome(value: &str) -> WorkflowStepOutcomeReference {
+        WorkflowStepOutcomeReference::new(value).expect("step outcome")
+    }
+
     fn terminal_outcome(value: &str) -> WorkflowTerminalOutcomeReference {
         WorkflowTerminalOutcomeReference::new(value).expect("terminal outcome")
     }
@@ -719,6 +931,45 @@ mod tests {
             vec![audit_evidence("CX-AUD-000001"), second_audit_evidence()],
         )
         .expect("workflow instance")
+    }
+
+    fn workflow_step_selection() -> WorkflowStepSelection {
+        WorkflowStepSelection::new(
+            entry_step("start.review"),
+            vec![entry_step("collect-input"), entry_step("approve-review")],
+        )
+    }
+
+    fn workflow_step_execution_plan() -> WorkflowStepExecutionPlan {
+        WorkflowStepExecutionPlan::new(
+            vec![
+                entry_step("intake.completed"),
+                entry_step("validation.completed"),
+            ],
+            vec![
+                entry_step("blocked.compliance"),
+                entry_step("blocked.escalation"),
+            ],
+            vec![
+                entry_step("skipped.fast-track"),
+                entry_step("skipped.manual-check"),
+            ],
+            vec![
+                step_outcome("terminal.completed"),
+                step_outcome("terminal.cancelled"),
+            ],
+        )
+        .expect("workflow step execution plan")
+    }
+
+    fn workflow_step_coordination() -> WorkflowStepCoordination {
+        WorkflowStepCoordination::new(
+            workflow_definition(),
+            workflow_instance(),
+            workflow_step_selection(),
+            workflow_step_execution_plan(),
+        )
+        .expect("workflow step coordination")
     }
 
     #[test]
@@ -1899,6 +2150,477 @@ mod tests {
         assert_eq!(
             instance.creation_evidence().audit_evidence_id().as_str(),
             "CX-AUD-999999"
+        );
+    }
+
+    #[test]
+    fn workflow_step_coordination_valid_construction() {
+        let coordination = workflow_step_coordination();
+        assert_eq!(
+            coordination
+                .workflow_step_selection()
+                .current_step()
+                .as_str(),
+            "start.review"
+        );
+    }
+
+    #[test]
+    fn workflow_step_coordination_current_step_preserved() {
+        let selection = workflow_step_selection();
+        let coordination = WorkflowStepCoordination::new(
+            workflow_definition(),
+            workflow_instance(),
+            selection.clone(),
+            workflow_step_execution_plan(),
+        )
+        .expect("workflow step coordination");
+
+        assert_eq!(
+            coordination.workflow_step_selection().current_step(),
+            selection.current_step()
+        );
+    }
+
+    #[test]
+    fn workflow_step_coordination_next_candidates_preserved() {
+        let selection = workflow_step_selection();
+        let coordination = WorkflowStepCoordination::new(
+            workflow_definition(),
+            workflow_instance(),
+            selection.clone(),
+            workflow_step_execution_plan(),
+        )
+        .expect("workflow step coordination");
+
+        assert_eq!(
+            coordination
+                .workflow_step_selection()
+                .next_candidate_steps(),
+            selection.next_candidate_steps()
+        );
+    }
+
+    #[test]
+    fn workflow_step_coordination_completed_preserved() {
+        let plan = workflow_step_execution_plan();
+        let coordination = WorkflowStepCoordination::new(
+            workflow_definition(),
+            workflow_instance(),
+            workflow_step_selection(),
+            plan.clone(),
+        )
+        .expect("workflow step coordination");
+
+        assert_eq!(
+            coordination
+                .workflow_step_execution_plan()
+                .completed_step_references(),
+            plan.completed_step_references()
+        );
+    }
+
+    #[test]
+    fn workflow_step_coordination_blocked_preserved() {
+        let plan = workflow_step_execution_plan();
+        let coordination = WorkflowStepCoordination::new(
+            workflow_definition(),
+            workflow_instance(),
+            workflow_step_selection(),
+            plan.clone(),
+        )
+        .expect("workflow step coordination");
+
+        assert_eq!(
+            coordination
+                .workflow_step_execution_plan()
+                .blocked_step_references(),
+            plan.blocked_step_references()
+        );
+    }
+
+    #[test]
+    fn workflow_step_coordination_skipped_preserved() {
+        let plan = workflow_step_execution_plan();
+        let coordination = WorkflowStepCoordination::new(
+            workflow_definition(),
+            workflow_instance(),
+            workflow_step_selection(),
+            plan.clone(),
+        )
+        .expect("workflow step coordination");
+
+        assert_eq!(
+            coordination
+                .workflow_step_execution_plan()
+                .skipped_step_references(),
+            plan.skipped_step_references()
+        );
+    }
+
+    #[test]
+    fn workflow_step_coordination_terminal_preserved() {
+        let plan = workflow_step_execution_plan();
+        let coordination = WorkflowStepCoordination::new(
+            workflow_definition(),
+            workflow_instance(),
+            workflow_step_selection(),
+            plan.clone(),
+        )
+        .expect("workflow step coordination");
+
+        assert_eq!(
+            coordination
+                .workflow_step_execution_plan()
+                .terminal_step_references(),
+            plan.terminal_step_references()
+        );
+    }
+
+    #[test]
+    fn workflow_step_coordination_duplicate_completed_rejected() {
+        let error = WorkflowStepExecutionPlan::new(
+            vec![entry_step("done.review"), entry_step("done.review")],
+            vec![],
+            vec![],
+            vec![],
+        )
+        .expect_err("duplicate completed step must fail");
+
+        assert_eq!(
+            error,
+            DomainError::InvalidWorkflowStepCoordination(
+                "duplicate completed workflow step reference",
+            )
+        );
+    }
+
+    #[test]
+    fn workflow_step_coordination_duplicate_blocked_rejected() {
+        let error = WorkflowStepExecutionPlan::new(
+            vec![],
+            vec![entry_step("blocked.review"), entry_step("blocked.review")],
+            vec![],
+            vec![],
+        )
+        .expect_err("duplicate blocked step must fail");
+
+        assert_eq!(
+            error,
+            DomainError::InvalidWorkflowStepCoordination(
+                "duplicate blocked workflow step reference",
+            )
+        );
+    }
+
+    #[test]
+    fn workflow_step_coordination_duplicate_skipped_rejected() {
+        let error = WorkflowStepExecutionPlan::new(
+            vec![],
+            vec![],
+            vec![entry_step("skipped.review"), entry_step("skipped.review")],
+            vec![],
+        )
+        .expect_err("duplicate skipped step must fail");
+
+        assert_eq!(
+            error,
+            DomainError::InvalidWorkflowStepCoordination(
+                "duplicate skipped workflow step reference",
+            )
+        );
+    }
+
+    #[test]
+    fn workflow_step_coordination_duplicate_terminal_rejected() {
+        let error = WorkflowStepExecutionPlan::new(
+            vec![],
+            vec![],
+            vec![],
+            vec![
+                step_outcome("terminal.review"),
+                step_outcome("terminal.review"),
+            ],
+        )
+        .expect_err("duplicate terminal step must fail");
+
+        assert_eq!(
+            error,
+            DomainError::InvalidWorkflowStepCoordination(
+                "duplicate terminal workflow step reference",
+            )
+        );
+    }
+
+    #[test]
+    fn workflow_step_coordination_current_step_not_allowed_inside_completed() {
+        let error = WorkflowStepCoordination::new(
+            workflow_definition(),
+            workflow_instance(),
+            workflow_step_selection(),
+            WorkflowStepExecutionPlan::new(
+                vec![entry_step("start.review")],
+                vec![],
+                vec![],
+                vec![],
+            )
+            .expect("workflow step execution plan"),
+        )
+        .expect_err("current step in completed must fail");
+
+        assert_eq!(
+            error,
+            DomainError::InvalidWorkflowStepCoordination(
+                "current workflow step cannot be completed",
+            )
+        );
+    }
+
+    #[test]
+    fn workflow_step_coordination_current_step_not_allowed_inside_blocked() {
+        let error = WorkflowStepCoordination::new(
+            workflow_definition(),
+            workflow_instance(),
+            workflow_step_selection(),
+            WorkflowStepExecutionPlan::new(
+                vec![],
+                vec![entry_step("start.review")],
+                vec![],
+                vec![],
+            )
+            .expect("workflow step execution plan"),
+        )
+        .expect_err("current step in blocked must fail");
+
+        assert_eq!(
+            error,
+            DomainError::InvalidWorkflowStepCoordination("current workflow step cannot be blocked",)
+        );
+    }
+
+    #[test]
+    fn workflow_step_coordination_current_step_not_allowed_inside_skipped() {
+        let error = WorkflowStepCoordination::new(
+            workflow_definition(),
+            workflow_instance(),
+            workflow_step_selection(),
+            WorkflowStepExecutionPlan::new(
+                vec![],
+                vec![],
+                vec![entry_step("start.review")],
+                vec![],
+            )
+            .expect("workflow step execution plan"),
+        )
+        .expect_err("current step in skipped must fail");
+
+        assert_eq!(
+            error,
+            DomainError::InvalidWorkflowStepCoordination("current workflow step cannot be skipped",)
+        );
+    }
+
+    #[test]
+    fn workflow_step_coordination_caller_ordering_preserved() {
+        let selection = WorkflowStepSelection::new(
+            entry_step("start.review"),
+            vec![
+                entry_step("candidate.second"),
+                entry_step("candidate.third"),
+            ],
+        );
+        let plan = WorkflowStepExecutionPlan::new(
+            vec![
+                entry_step("completed.second"),
+                entry_step("completed.third"),
+            ],
+            vec![entry_step("blocked.second"), entry_step("blocked.third")],
+            vec![entry_step("skipped.second"), entry_step("skipped.third")],
+            vec![
+                step_outcome("terminal.second"),
+                step_outcome("terminal.third"),
+            ],
+        )
+        .expect("workflow step execution plan");
+        let coordination = WorkflowStepCoordination::new(
+            workflow_definition(),
+            workflow_instance(),
+            selection,
+            plan,
+        )
+        .expect("workflow step coordination");
+
+        assert_eq!(
+            coordination
+                .workflow_step_selection()
+                .next_candidate_steps()[0]
+                .as_str(),
+            "candidate.second"
+        );
+        assert_eq!(
+            coordination
+                .workflow_step_execution_plan()
+                .completed_step_references()[0]
+                .as_str(),
+            "completed.second"
+        );
+        assert_eq!(
+            coordination
+                .workflow_step_execution_plan()
+                .blocked_step_references()[0]
+                .as_str(),
+            "blocked.second"
+        );
+        assert_eq!(
+            coordination
+                .workflow_step_execution_plan()
+                .skipped_step_references()[0]
+                .as_str(),
+            "skipped.second"
+        );
+        assert_eq!(
+            coordination
+                .workflow_step_execution_plan()
+                .terminal_step_references()[0]
+                .as_str(),
+            "terminal.second"
+        );
+    }
+
+    #[test]
+    fn workflow_step_coordination_deterministic_construction() {
+        let first = WorkflowStepCoordination::new(
+            workflow_definition(),
+            workflow_instance(),
+            workflow_step_selection(),
+            workflow_step_execution_plan(),
+        );
+        let second = WorkflowStepCoordination::new(
+            workflow_definition(),
+            workflow_instance(),
+            workflow_step_selection(),
+            workflow_step_execution_plan(),
+        );
+
+        assert_eq!(first, second);
+    }
+
+    #[test]
+    fn workflow_step_coordination_supplied_values_not_mutated() {
+        let workflow_definition = workflow_definition();
+        let workflow_instance = workflow_instance();
+        let workflow_step_selection = workflow_step_selection();
+        let workflow_step_execution_plan = workflow_step_execution_plan();
+
+        let definition_before = workflow_definition.clone();
+        let instance_before = workflow_instance.clone();
+        let selection_before = workflow_step_selection.clone();
+        let plan_before = workflow_step_execution_plan.clone();
+
+        let coordination = WorkflowStepCoordination::new(
+            workflow_definition.clone(),
+            workflow_instance.clone(),
+            workflow_step_selection.clone(),
+            workflow_step_execution_plan.clone(),
+        )
+        .expect("workflow step coordination");
+
+        assert_eq!(workflow_definition, definition_before);
+        assert_eq!(workflow_instance, instance_before);
+        assert_eq!(workflow_step_selection, selection_before);
+        assert_eq!(workflow_step_execution_plan, plan_before);
+        assert_eq!(coordination.workflow_instance(), &instance_before);
+    }
+
+    #[test]
+    fn workflow_step_coordination_equivalent_invalid_inputs() {
+        let first = WorkflowStepExecutionPlan::new(
+            vec![entry_step("dup.step"), entry_step("dup.step")],
+            vec![],
+            vec![],
+            vec![],
+        )
+        .expect_err("invalid");
+        let second = WorkflowStepExecutionPlan::new(
+            vec![entry_step("dup.step"), entry_step("dup.step")],
+            vec![],
+            vec![],
+            vec![],
+        )
+        .expect_err("invalid");
+
+        assert_eq!(first, second);
+    }
+
+    #[test]
+    fn workflow_step_coordination_external_references_not_validated() {
+        let selection = WorkflowStepSelection::new(
+            entry_step("external.current-step"),
+            vec![entry_step("external.next-step")],
+        );
+        let plan = WorkflowStepExecutionPlan::new(
+            vec![entry_step("external.completed-step")],
+            vec![entry_step("external.blocked-step")],
+            vec![entry_step("external.skipped-step")],
+            vec![step_outcome("external.terminal-step")],
+        )
+        .expect("workflow step execution plan");
+        let coordination = WorkflowStepCoordination::new(
+            workflow_definition(),
+            workflow_instance(),
+            selection,
+            plan,
+        )
+        .expect("workflow step coordination");
+
+        assert_eq!(
+            coordination
+                .workflow_step_selection()
+                .current_step()
+                .as_str(),
+            "external.current-step"
+        );
+    }
+
+    #[test]
+    fn workflow_step_coordination_value_semantics_preserved() {
+        let coordination = workflow_step_coordination();
+        assert_eq!(coordination.clone(), coordination);
+    }
+
+    #[test]
+    fn workflow_step_coordination_no_execution_occurs() {
+        let coordination = workflow_step_coordination();
+        assert_eq!(
+            coordination
+                .workflow_step_selection()
+                .current_step()
+                .as_str(),
+            "start.review"
+        );
+    }
+
+    #[test]
+    fn workflow_step_coordination_no_task_created() {
+        let coordination = workflow_step_coordination();
+        assert_eq!(
+            coordination
+                .workflow_step_execution_plan()
+                .blocked_step_references()
+                .len(),
+            2
+        );
+    }
+
+    #[test]
+    fn workflow_step_coordination_no_event_emitted() {
+        let coordination = workflow_step_coordination();
+        assert_eq!(
+            coordination
+                .workflow_step_execution_plan()
+                .terminal_step_references()
+                .len(),
+            2
         );
     }
 }
