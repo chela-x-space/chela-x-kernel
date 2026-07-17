@@ -29,7 +29,7 @@ INTERNAL
 
 ## Purpose And Scope
 
-This document records the current public K6 workflow API and the additive K7.1 and K7.2 task-domain APIs exposed from `crates/kernel-domain/src/lib.rs`. K6 remains frozen. K7-001 and K7-002 are implemented and not frozen.
+This document records the current public K6 workflow API and the additive K7.1 through K7.3 task-domain APIs exposed from `crates/kernel-domain/src/lib.rs`. K6 remains frozen. K7-001 through K7-003 are implemented and not frozen.
 
 ## K6 Public API Surface
 
@@ -466,6 +466,75 @@ Important non-goals:
 - No lifecycle state
 - No dependency execution
 - No scheduler, executor, persistence, or network integration
+
+### Task Instance Types
+
+API status:
+
+- `IMPLEMENTED — REVIEW PASSED`
+- `NOT FROZEN`
+
+Types:
+
+- `TaskInstance`
+- `TaskDefinitionSnapshotReference`
+- `TaskCreationContext`
+- `TaskInputBinding`
+- `TaskOutputBinding`
+- `TaskWorkflowBinding`
+- `TaskStepBinding`
+- `TaskState`
+
+Construction entry points:
+
+- `TaskInstance::new(...) -> DomainResult<Self>`
+- `TaskDefinitionSnapshotReference::new(task_definition_reference: TaskDefinitionReference, task_definition_version: TaskDefinitionVersion) -> Self`
+- `TaskCreationContext::new(task_input_bindings: Vec<TaskInputBinding>, task_creation_authority: Option<TransitionAuthorityReference>) -> DomainResult<Self>`
+- `TaskInputBinding::new(task_input_contract: TaskInputContract) -> Self`
+- `TaskOutputBinding::new(task_output_contract: TaskOutputContract) -> Self`
+- `TaskWorkflowBinding::from_workflow_definition(workflow_definition: WorkflowDefinition) -> Self`
+- `TaskWorkflowBinding::from_workflow_instance(workflow_instance: WorkflowInstance) -> Self`
+- `TaskStepBinding::new(task_step_reference: TaskStepReference) -> Self`
+
+Principal accessors:
+
+- `TaskInstance::{task_instance_id, task_definition, task_definition_snapshot_reference, task_creation_context, task_output_bindings, task_workflow_binding, task_step_binding, task_state}`
+- `TaskDefinitionSnapshotReference::{task_definition_reference, task_definition_version}`
+- `TaskCreationContext::{task_input_bindings, task_creation_authority}`
+- `TaskInputBinding::task_input_contract(&self) -> &TaskInputContract`
+- `TaskOutputBinding::task_output_contract(&self) -> &TaskOutputContract`
+- `TaskWorkflowBinding::{workflow_definition, workflow_instance, workflow_id}`
+- `TaskStepBinding::task_step_reference(&self) -> &TaskStepReference`
+- `TaskState::as_str(self) -> &'static str`
+
+Deterministic behavior:
+
+- Task-instance creation is explicit and immutable
+- Definition identity and version are snapshot-bound at construction
+- Caller-supplied input and output ordering is preserved
+- Initial lifecycle representation is explicit and restricted to `Pending`
+- No lookup, execution, persistence, event publication, scheduler interaction, clock access, or random generation occurs
+
+Validation boundaries:
+
+- Task instance requires a valid `TaskDefinition`
+- Initial state must be `Pending`
+- Step binding requires workflow binding
+- Missing required task input bindings are rejected
+- Input bindings not declared by the task definition are rejected
+- Output bindings not declared by the task definition are rejected
+- Duplicate input bindings are rejected
+- Duplicate output bindings are rejected
+- Workflow and step bindings must match task-definition workflow and step bindings where the definition declares them
+
+Important non-goals:
+
+- No transition engine
+- No readiness evaluation
+- No assignment or ownership behavior
+- No dependency execution
+- No completion or failure outcomes
+- No executor, scheduler, persistence, or network integration
 
 ### Failure-And-Recovery Types
 

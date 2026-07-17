@@ -86,7 +86,7 @@ The architecture review MUST verify:
 - Traceability requirement: architecture traceability plus pending CES mapping
 - Completion criteria: deterministic instance creation and immutable snapshot binding
 - Commit boundary: `feat(task): add task instance model`
-- Current status: `READY FOR IMPLEMENTATION`
+- Current status: `IMPLEMENTED — REVIEW PASSED`
 
 ### K7-004 Task Ownership And Assignment
 - Objective: define accountable ownership and future-execution assignment model
@@ -100,7 +100,7 @@ The architecture review MUST verify:
 - Traceability requirement: architecture traceability plus pending CES mapping
 - Completion criteria: explicit owner and assignee semantics with eligibility validation, with `Assigned` used only as assignment status
 - Commit boundary: `feat(task): add ownership and assignment model`
-- Current status: `BLOCKED BY K7-003`
+- Current status: `READY FOR IMPLEMENTATION`
 
 ### K7-005 Task Priority And Readiness
 - Objective: define deterministic priority and readiness evaluation
@@ -188,4 +188,4 @@ The architecture review MUST verify:
 
 ## Final Determination
 
-K7 planning is complete at the documentation-package level. The architecture review is recorded, K7-001 and K7-002 are implemented, and K7-003 is authorized to begin implementation without architectural redesign.
+K7 planning is complete at the documentation-package level. The architecture review is recorded, K7-001 through K7-003 are implemented, and K7-004 is authorized to begin implementation without architectural redesign.

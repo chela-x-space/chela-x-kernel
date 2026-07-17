@@ -34,8 +34,10 @@ INTERNAL
 - Additive K7-001 task-foundation identities for task definitions, task instances, task dependencies, and task evidence
 - Additive K7-001 task reference vocabulary for definitions, instances, dependencies, evidence, workflow, and step bindings
 - Immutable K7-002 task-definition model covering version, name, description, kind, input contracts, output contracts, requirements, evidence requirements, completion requirements, optional failure-policy reference, and optional workflow or step bindings
+- Immutable K7-003 task-instance model covering definition snapshot binding, explicit creation context, validated input and output bindings, optional workflow and step bindings, and explicit initial `Pending` state representation
 - Deterministic K7-001 unit coverage for immutable value semantics, identity separation, and reference preservation
 - Deterministic K7-002 unit coverage for definition construction, duplicate rejection, workflow-binding validation, field preservation, and immutable ordering
+- Deterministic K7-003 unit coverage for definition snapshot preservation, input validation, workflow and step binding validation, explicit initial state, and immutable instance creation
 
 ### Boundaries
 

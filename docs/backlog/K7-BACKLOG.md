@@ -57,7 +57,7 @@ NOT ESTABLISHED
   - workflow compatibility preserved
 
 ### K7-003 Task Instance
-- Status: `READY FOR IMPLEMENTATION`
+- Status: `DONE — REVIEW PASSED`
 - Purpose: define immutable task-instance model
 - Source specification: `docs/specifications/K7.3-task-instance.md`
 - Dependencies: K7-002
@@ -76,7 +76,7 @@ NOT ESTABLISHED
   - workflow binding additive only
 
 ### K7-004 Task Ownership And Assignment
-- Status: `BLOCKED BY K7-003`
+- Status: `READY FOR IMPLEMENTATION`
 - Purpose: separate accountable ownership from future-execution assignment
 - Source specification: `docs/specifications/K7.4-task-ownership-and-assignment.md`
 - Dependencies: K7-003
@@ -218,4 +218,5 @@ NOT ESTABLISHED
 
 K7-001 is implemented, API-reviewed, and pending native validation in a linker-capable environment.
 K7-002 is implemented, review-passed, and pending native validation in a linker-capable environment.
-K7-003 is the next authorized implementation slice.
+K7-003 is implemented, review-passed, and pending native validation in a linker-capable environment.
+K7-004 is the next authorized implementation slice.

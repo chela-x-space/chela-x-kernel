@@ -2,6 +2,10 @@ mod definition;
 mod definition_validation;
 mod definition_value;
 mod identity;
+mod instance;
+mod instance_binding;
+mod instance_validation;
+mod instance_value;
 mod reference;
 
 pub use definition::TaskDefinition;
@@ -11,6 +15,12 @@ pub use definition_value::{
     TaskInputContract, TaskKind, TaskOutputContract, TaskRequirement,
 };
 pub use identity::{TaskDefinitionId, TaskDependencyId, TaskEvidenceId, TaskInstanceId};
+pub use instance::TaskInstance;
+pub use instance_binding::{TaskCreationContext, TaskWorkflowBinding};
+pub use instance_value::{
+    TaskDefinitionSnapshotReference, TaskInputBinding, TaskOutputBinding, TaskState,
+    TaskStepBinding,
+};
 pub use reference::{
     TaskDefinitionReference, TaskDependencyReference, TaskEvidenceReference, TaskInstanceReference,
     TaskStepReference, TaskWorkflowReference,
@@ -18,5 +28,7 @@ pub use reference::{
 
 #[cfg(test)]
 mod definition_tests;
+#[cfg(test)]
+mod instance_tests;
 #[cfg(test)]
 mod tests;

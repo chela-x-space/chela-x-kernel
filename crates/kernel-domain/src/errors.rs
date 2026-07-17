@@ -32,6 +32,7 @@ pub enum DomainError {
     InvalidPolicyReference(&'static str),
     InvalidWorkflowReference(&'static str),
     InvalidTaskDefinition(&'static str),
+    InvalidTaskInstance(&'static str),
     InvalidWorkflowDefinition(&'static str),
     InvalidWorkflowInstance(&'static str),
     InvalidWorkflowTransitionControl(&'static str),
@@ -116,6 +117,9 @@ impl fmt::Display for DomainError {
             }
             Self::InvalidTaskDefinition(message) => {
                 write!(formatter, "invalid task definition: {message}")
+            }
+            Self::InvalidTaskInstance(message) => {
+                write!(formatter, "invalid task instance: {message}")
             }
             Self::InvalidWorkflowDefinition(message) => {
                 write!(formatter, "invalid workflow definition: {message}")
