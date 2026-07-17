@@ -123,9 +123,10 @@ pub use state::{
 pub use workflow::{
     WorkflowAuditEvidenceReference, WorkflowAuthorizationContext, WorkflowAuthorizationControl,
     WorkflowAuthorizationDecision, WorkflowAuthorizationRequest, WorkflowDefinition,
-    WorkflowEngineFoundation, WorkflowInstance, WorkflowLifecycleMapReference,
-    WorkflowOperationReference, WorkflowRecoveryReference, WorkflowRetryLimit,
-    WorkflowRetryPolicyReference, WorkflowStepCoordination, WorkflowStepExecutionPlan,
-    WorkflowStepOutcomeReference, WorkflowStepReference, WorkflowStepSelection,
-    WorkflowTerminalOutcomeReference,
+    WorkflowEngineFoundation, WorkflowEventContext, WorkflowEventDecision,
+    WorkflowEventIntegration, WorkflowEventIntegrationRequest, WorkflowEventTypeReference,
+    WorkflowInstance, WorkflowLifecycleMapReference, WorkflowOperationReference,
+    WorkflowRecoveryReference, WorkflowRetryLimit, WorkflowRetryPolicyReference,
+    WorkflowStepCoordination, WorkflowStepExecutionPlan, WorkflowStepOutcomeReference,
+    WorkflowStepReference, WorkflowStepSelection, WorkflowTerminalOutcomeReference,
 };

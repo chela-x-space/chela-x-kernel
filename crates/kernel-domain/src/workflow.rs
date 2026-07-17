@@ -6,14 +6,24 @@ use crate::authorization::{
     AuthorizationDecisionReference,
 };
 use crate::errors::{DomainError, DomainResult};
+use crate::event::{
+    validate_event_identity, validate_event_timestamps, validate_event_version, EventCausation,
+    EventClassification, EventEnvelope, EventEnvelopeCandidate, EventSource, EventSubject,
+    EventTrace, EventType, EventVersion,
+};
 use crate::identifier::{
-    AuditEvidenceId, AuthorizationDecisionId, DecisionId, DelegationId, EnglishNamespace, PolicyId,
-    StableVersion, WorkflowId,
+    AuditEvidenceId, AuthorizationDecisionId, CorrelationId, DecisionId, DelegationId,
+    EnglishNamespace, EventId, PolicyId, StableVersion, WorkflowId,
 };
 use crate::ownership::OwnershipPath;
 use crate::request::AuthorizationRequestRecord;
-use crate::state::WorkflowStateSnapshot;
-use crate::{TransitionAuthorityReference, TransitionEvidenceReference};
+use crate::state::{
+    WorkflowStateSnapshot, WorkflowTransitionControlRequest, WorkflowTransitionDecision,
+};
+use crate::{
+    TransitionAuthorityReference, TransitionEvidenceReference, TransitionReasonReference,
+    WorkflowFailureCode,
+};
 
 const WORKFLOW_DEFINITION_REFERENCE_EXPECTATION: &str =
     "ASCII letters, digits, dot, underscore, or hyphen";
@@ -1012,15 +1022,441 @@ impl WorkflowAuthorizationControl {
     }
 }
 
+pub type WorkflowEventTypeReference = EventType;
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WorkflowEventContext {
+    workflow_definition: Option<WorkflowDefinition>,
+    workflow_instance: Option<WorkflowInstance>,
+    workflow_state_snapshot: Option<WorkflowStateSnapshot>,
+    workflow_step_coordination: Option<WorkflowStepCoordination>,
+    workflow_step_reference: Option<WorkflowStepReference>,
+    workflow_transition_control_request: Option<WorkflowTransitionControlRequest>,
+    workflow_transition_decision: Option<WorkflowTransitionDecision>,
+    workflow_authorization_request: Option<WorkflowAuthorizationRequest>,
+    workflow_authorization_decision: Option<WorkflowAuthorizationDecision>,
+    workflow_operation: Option<WorkflowOperationReference>,
+    transition_reason_reference: Option<TransitionReasonReference>,
+    transition_authority_reference: Option<TransitionAuthorityReference>,
+    transition_evidence_references: Vec<TransitionEvidenceReference>,
+    workflow_audit_evidence_references: Vec<WorkflowAuditEvidenceReference>,
+    failure_code: Option<WorkflowFailureCode>,
+}
+
+impl WorkflowEventContext {
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(
+        workflow_definition: Option<WorkflowDefinition>,
+        workflow_instance: Option<WorkflowInstance>,
+        workflow_state_snapshot: Option<WorkflowStateSnapshot>,
+        workflow_step_coordination: Option<WorkflowStepCoordination>,
+        workflow_step_reference: Option<WorkflowStepReference>,
+        workflow_transition_control_request: Option<WorkflowTransitionControlRequest>,
+        workflow_transition_decision: Option<WorkflowTransitionDecision>,
+        workflow_authorization_request: Option<WorkflowAuthorizationRequest>,
+        workflow_authorization_decision: Option<WorkflowAuthorizationDecision>,
+        workflow_operation: Option<WorkflowOperationReference>,
+        transition_reason_reference: Option<TransitionReasonReference>,
+        transition_authority_reference: Option<TransitionAuthorityReference>,
+        transition_evidence_references: Vec<TransitionEvidenceReference>,
+        workflow_audit_evidence_references: Vec<WorkflowAuditEvidenceReference>,
+        failure_code: Option<WorkflowFailureCode>,
+    ) -> DomainResult<Self> {
+        for (index, evidence) in transition_evidence_references.iter().enumerate() {
+            if transition_evidence_references[..index]
+                .iter()
+                .any(|prior| prior == evidence)
+            {
+                return Err(DomainError::InvalidWorkflowEventIntegration(
+                    "duplicate workflow transition evidence reference",
+                ));
+            }
+        }
+
+        for (index, evidence) in workflow_audit_evidence_references.iter().enumerate() {
+            if workflow_audit_evidence_references[..index]
+                .iter()
+                .any(|prior| prior.audit_evidence_id() == evidence.audit_evidence_id())
+            {
+                return Err(DomainError::InvalidWorkflowEventIntegration(
+                    "duplicate workflow event audit evidence reference",
+                ));
+            }
+        }
+
+        let mut observed_workflow_id: Option<&WorkflowId> = None;
+
+        for workflow_id in [
+            workflow_definition
+                .as_ref()
+                .map(WorkflowDefinition::workflow_id),
+            workflow_instance
+                .as_ref()
+                .map(WorkflowInstance::workflow_id),
+            workflow_state_snapshot
+                .as_ref()
+                .map(WorkflowStateSnapshot::workflow_id),
+            workflow_step_coordination
+                .as_ref()
+                .map(|coordination| coordination.workflow_instance().workflow_id()),
+        ]
+        .into_iter()
+        .flatten()
+        {
+            if let Some(expected) = observed_workflow_id {
+                if expected != workflow_id {
+                    return Err(DomainError::InvalidWorkflowEventIntegration(
+                        "workflow event context must preserve one workflow identity",
+                    ));
+                }
+            } else {
+                observed_workflow_id = Some(workflow_id);
+            }
+        }
+
+        if observed_workflow_id.is_none() {
+            return Err(DomainError::InvalidWorkflowEventIntegration(
+                "workflow event context requires workflow binding",
+            ));
+        }
+
+        Ok(Self {
+            workflow_definition,
+            workflow_instance,
+            workflow_state_snapshot,
+            workflow_step_coordination,
+            workflow_step_reference,
+            workflow_transition_control_request,
+            workflow_transition_decision,
+            workflow_authorization_request,
+            workflow_authorization_decision,
+            workflow_operation,
+            transition_reason_reference,
+            transition_authority_reference,
+            transition_evidence_references,
+            workflow_audit_evidence_references,
+            failure_code,
+        })
+    }
+
+    pub fn workflow_definition(&self) -> Option<&WorkflowDefinition> {
+        self.workflow_definition.as_ref()
+    }
+
+    pub fn workflow_instance(&self) -> Option<&WorkflowInstance> {
+        self.workflow_instance.as_ref()
+    }
+
+    pub fn workflow_state_snapshot(&self) -> Option<&WorkflowStateSnapshot> {
+        self.workflow_state_snapshot.as_ref()
+    }
+
+    pub fn workflow_step_coordination(&self) -> Option<&WorkflowStepCoordination> {
+        self.workflow_step_coordination.as_ref()
+    }
+
+    pub fn workflow_step_reference(&self) -> Option<&WorkflowStepReference> {
+        self.workflow_step_reference.as_ref()
+    }
+
+    pub fn workflow_transition_control_request(&self) -> Option<&WorkflowTransitionControlRequest> {
+        self.workflow_transition_control_request.as_ref()
+    }
+
+    pub fn workflow_transition_decision(&self) -> Option<&WorkflowTransitionDecision> {
+        self.workflow_transition_decision.as_ref()
+    }
+
+    pub fn workflow_authorization_request(&self) -> Option<&WorkflowAuthorizationRequest> {
+        self.workflow_authorization_request.as_ref()
+    }
+
+    pub fn workflow_authorization_decision(&self) -> Option<&WorkflowAuthorizationDecision> {
+        self.workflow_authorization_decision.as_ref()
+    }
+
+    pub fn workflow_operation(&self) -> Option<&WorkflowOperationReference> {
+        self.workflow_operation.as_ref()
+    }
+
+    pub fn transition_reason_reference(&self) -> Option<&TransitionReasonReference> {
+        self.transition_reason_reference.as_ref()
+    }
+
+    pub fn transition_authority_reference(&self) -> Option<&TransitionAuthorityReference> {
+        self.transition_authority_reference.as_ref()
+    }
+
+    pub fn transition_evidence_references(&self) -> &[TransitionEvidenceReference] {
+        &self.transition_evidence_references
+    }
+
+    pub fn workflow_audit_evidence_references(&self) -> &[WorkflowAuditEvidenceReference] {
+        &self.workflow_audit_evidence_references
+    }
+
+    pub fn failure_code(&self) -> Option<WorkflowFailureCode> {
+        self.failure_code
+    }
+
+    fn workflow_id(&self) -> &WorkflowId {
+        self.workflow_instance()
+            .map(WorkflowInstance::workflow_id)
+            .or_else(|| {
+                self.workflow_definition()
+                    .map(WorkflowDefinition::workflow_id)
+            })
+            .or_else(|| {
+                self.workflow_state_snapshot()
+                    .map(WorkflowStateSnapshot::workflow_id)
+            })
+            .or_else(|| {
+                self.workflow_step_coordination()
+                    .map(|coordination| coordination.workflow_instance().workflow_id())
+            })
+            .expect("workflow event context constructor enforces workflow binding")
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WorkflowEventIntegrationRequest {
+    workflow_event_type: WorkflowEventTypeReference,
+    event_id: EventId,
+    event_version: EventVersion,
+    occurred_at: crate::request::TimeReference,
+    recorded_at: crate::request::TimeReference,
+    event_source: EventSource,
+    event_subject: EventSubject,
+    event_classification: EventClassification,
+    correlation_id: Option<CorrelationId>,
+    causation: EventCausation,
+    workflow_event_context: WorkflowEventContext,
+}
+
+impl WorkflowEventIntegrationRequest {
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(
+        workflow_event_type: WorkflowEventTypeReference,
+        event_id: EventId,
+        event_version: EventVersion,
+        occurred_at: crate::request::TimeReference,
+        recorded_at: crate::request::TimeReference,
+        event_source: EventSource,
+        event_subject: EventSubject,
+        event_classification: EventClassification,
+        correlation_id: Option<CorrelationId>,
+        causation: EventCausation,
+        workflow_event_context: WorkflowEventContext,
+    ) -> DomainResult<Self> {
+        if event_source.component().as_str() != "workflow-engine" {
+            return Err(DomainError::InvalidWorkflowEventIntegration(
+                "workflow event source must be workflow-engine",
+            ));
+        }
+
+        if event_subject.subject_type().as_str() != "workflow" {
+            return Err(DomainError::InvalidWorkflowEventIntegration(
+                "workflow event subject type must be workflow",
+            ));
+        }
+
+        if event_subject.subject_id().as_str() != workflow_event_context.workflow_id().as_str() {
+            return Err(DomainError::InvalidWorkflowEventIntegration(
+                "workflow event subject must match workflow identity",
+            ));
+        }
+
+        validate_workflow_event_category(&workflow_event_type, &workflow_event_context)?;
+
+        Ok(Self {
+            workflow_event_type,
+            event_id,
+            event_version,
+            occurred_at,
+            recorded_at,
+            event_source,
+            event_subject,
+            event_classification,
+            correlation_id,
+            causation,
+            workflow_event_context,
+        })
+    }
+
+    pub fn workflow_event_type(&self) -> &WorkflowEventTypeReference {
+        &self.workflow_event_type
+    }
+
+    pub fn event_id(&self) -> &EventId {
+        &self.event_id
+    }
+
+    pub fn event_version(&self) -> &EventVersion {
+        &self.event_version
+    }
+
+    pub fn occurred_at(&self) -> &crate::request::TimeReference {
+        &self.occurred_at
+    }
+
+    pub fn recorded_at(&self) -> &crate::request::TimeReference {
+        &self.recorded_at
+    }
+
+    pub fn event_source(&self) -> &EventSource {
+        &self.event_source
+    }
+
+    pub fn event_subject(&self) -> &EventSubject {
+        &self.event_subject
+    }
+
+    pub fn event_classification(&self) -> &EventClassification {
+        &self.event_classification
+    }
+
+    pub fn correlation_id(&self) -> Option<&CorrelationId> {
+        self.correlation_id.as_ref()
+    }
+
+    pub fn causation(&self) -> &EventCausation {
+        &self.causation
+    }
+
+    pub fn workflow_event_context(&self) -> &WorkflowEventContext {
+        &self.workflow_event_context
+    }
+}
+
+pub type WorkflowEventDecision = EventEnvelope<WorkflowEventContext>;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct WorkflowEventIntegration;
+
+impl WorkflowEventIntegration {
+    pub fn evaluate(
+        request: &WorkflowEventIntegrationRequest,
+    ) -> DomainResult<WorkflowEventDecision> {
+        let trace = EventTrace::new(
+            None,
+            Some(request.workflow_event_context().workflow_id().clone()),
+            None,
+            None,
+            request
+                .workflow_event_context()
+                .workflow_audit_evidence_references()
+                .iter()
+                .map(|reference| reference.audit_evidence_id().clone())
+                .collect(),
+        )?;
+
+        let envelope = crate::event::validate_event_envelope(EventEnvelopeCandidate {
+            event_id: Some(request.event_id().clone()),
+            event_type: Some(request.workflow_event_type().clone()),
+            event_version: Some(request.event_version().clone()),
+            occurred_at: Some(request.occurred_at().clone()),
+            recorded_at: Some(request.recorded_at().clone()),
+            source: Some(request.event_source().clone()),
+            subject: Some(request.event_subject().clone()),
+            payload: Some(request.workflow_event_context().clone()),
+            classification: Some(*request.event_classification()),
+            trace: Some(trace),
+            correlation_id: request.correlation_id().cloned(),
+            causation: request.causation().clone(),
+        })?;
+
+        validate_event_identity(&envelope)?;
+        validate_event_version(&envelope)?;
+        validate_event_timestamps(&envelope)?;
+
+        Ok(envelope)
+    }
+}
+
+fn validate_workflow_event_category(
+    workflow_event_type: &WorkflowEventTypeReference,
+    workflow_event_context: &WorkflowEventContext,
+) -> DomainResult<()> {
+    match workflow_event_type.as_str() {
+        "workflow.created"
+        | "workflow.activated"
+        | "workflow.step.selected"
+        | "workflow.step.completed"
+        | "workflow.step.blocked"
+        | "workflow.step.skipped"
+        | "workflow.completed"
+        | "workflow.cancelled"
+        | "workflow.archived" => {
+            if workflow_event_context.failure_code().is_some()
+                && workflow_event_type.as_str() != "workflow.failed"
+            {
+                return Err(DomainError::InvalidWorkflowEventIntegration(
+                    "non-failure workflow event must not carry failure code",
+                ));
+            }
+            Ok(())
+        }
+        "workflow.transition.allowed" => {
+            match workflow_event_context.workflow_transition_decision() {
+                Some(WorkflowTransitionDecision::Allowed(_)) => Ok(()),
+                _ => Err(DomainError::InvalidWorkflowEventIntegration(
+                    "workflow transition allowed event requires allowed transition outcome",
+                )),
+            }
+        }
+        "workflow.transition.rejected" => {
+            match workflow_event_context.workflow_transition_decision() {
+                Some(WorkflowTransitionDecision::Rejected(_)) => Ok(()),
+                _ => Err(DomainError::InvalidWorkflowEventIntegration(
+                    "workflow transition rejected event requires rejected transition outcome",
+                )),
+            }
+        }
+        "workflow.transition.noop" => match workflow_event_context.workflow_transition_decision() {
+            Some(WorkflowTransitionDecision::NoOp(_)) => Ok(()),
+            _ => Err(DomainError::InvalidWorkflowEventIntegration(
+                "workflow transition no-op event requires no-op transition outcome",
+            )),
+        },
+        "workflow.authorized" => match workflow_event_context.workflow_authorization_decision() {
+            Some(WorkflowAuthorizationDecision::Allow) => Ok(()),
+            _ => Err(DomainError::InvalidWorkflowEventIntegration(
+                "workflow authorized event requires allow authorization outcome",
+            )),
+        },
+        "workflow.authorization.denied" => {
+            match workflow_event_context.workflow_authorization_decision() {
+                Some(outcome) if outcome.is_denied() => Ok(()),
+                _ => Err(DomainError::InvalidWorkflowEventIntegration(
+                    "workflow authorization denied event requires deny-class authorization outcome",
+                )),
+            }
+        }
+        "workflow.failed" => {
+            if workflow_event_context.failure_code().is_none() {
+                return Err(DomainError::InvalidWorkflowEventIntegration(
+                    "workflow failed event requires stable failure code",
+                ));
+            }
+            Ok(())
+        }
+        _ => Err(DomainError::InvalidWorkflowEventIntegration(
+            "unsupported workflow event type",
+        )),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::{
         WorkflowAuditEvidenceReference, WorkflowAuthorizationContext, WorkflowAuthorizationControl,
-        WorkflowAuthorizationRequest, WorkflowDefinition, WorkflowEngineFoundation,
-        WorkflowInstance, WorkflowLifecycleMapReference, WorkflowOperationReference,
-        WorkflowRecoveryReference, WorkflowRetryLimit, WorkflowRetryPolicyReference,
-        WorkflowStepCoordination, WorkflowStepExecutionPlan, WorkflowStepOutcomeReference,
-        WorkflowStepReference, WorkflowStepSelection, WorkflowTerminalOutcomeReference,
+        WorkflowAuthorizationDecision, WorkflowAuthorizationRequest, WorkflowDefinition,
+        WorkflowEngineFoundation, WorkflowEventContext, WorkflowEventIntegration,
+        WorkflowEventIntegrationRequest, WorkflowInstance, WorkflowLifecycleMapReference,
+        WorkflowOperationReference, WorkflowRecoveryReference, WorkflowRetryLimit,
+        WorkflowRetryPolicyReference, WorkflowStepCoordination, WorkflowStepExecutionPlan,
+        WorkflowStepOutcomeReference, WorkflowStepReference, WorkflowStepSelection,
+        WorkflowTerminalOutcomeReference,
     };
     use crate::authorization::{
         ActionVerb, AuthorizationAuditEvidenceReference, AuthorizationDecisionOutcome,
@@ -1031,18 +1467,23 @@ mod tests {
         ScopeReference,
     };
     use crate::errors::DomainError;
+    use crate::event::{
+        EventCausation, EventClassification, EventComponent, EventEnvelope, EventSource,
+        EventSubject, EventSubjectId, EventSubjectType, EventType, EventVersion,
+    };
     use crate::identifier::EnglishNamespace;
     use crate::identifier::{
-        AuditEvidenceId, AuthorizationDecisionId, AuthorizationRequestId, DecisionId, DelegationId,
-        EnterpriseId, HumanId, OrganizationUnitId, PermissionId, PolicyId, PrincipalId, ProjectId,
-        ScopeId, StableVersion, WorkflowId, WorkspaceId,
+        AuditEvidenceId, AuthorizationDecisionId, AuthorizationRequestId, CorrelationId,
+        DecisionId, DelegationId, EnterpriseId, EventId, HumanId, OrganizationUnitId, PermissionId,
+        PolicyId, PrincipalId, ProjectId, ScopeId, StableVersion, WorkflowId, WorkspaceId,
     };
     use crate::lifecycle::WorkflowState;
     use crate::ownership::{OwnerReference, OwnershipPath};
     use crate::request::{AuthorizationRequestRecord, TimeReference};
     use crate::state::{
         StateSequence, TransitionAuthorityReference, TransitionEvidenceReference,
-        WorkflowStateSnapshot, WorkflowTransitionControl, WorkflowTransitionControlRequest,
+        TransitionOutcome, TransitionReasonReference, WorkflowFailureCode, WorkflowStateSnapshot,
+        WorkflowTransitionControl, WorkflowTransitionControlRequest, WorkflowTransitionDecision,
     };
 
     #[test]
@@ -1351,6 +1792,152 @@ mod tests {
             ],
         )
         .expect("workflow authorization request")
+    }
+
+    fn workflow_transition_control_request(
+        current_state: WorkflowState,
+        requested_state: WorkflowState,
+        evidence: Vec<TransitionEvidenceReference>,
+    ) -> WorkflowTransitionControlRequest {
+        WorkflowTransitionControlRequest::new(
+            WorkflowStateSnapshot::new(
+                workflow_id(),
+                ownership(),
+                definition_version(),
+                current_state,
+                StateSequence::new(1).expect("sequence"),
+            ),
+            requested_state,
+            Some(TransitionReasonReference::new("operator request").expect("reason")),
+            Some(TransitionAuthorityReference::new("authority.workflow-owner").expect("authority")),
+            evidence,
+            None,
+            crate::state::WorkflowLifecycleGuards {
+                policy_valid: true,
+                authorization_valid: true,
+                delegation_valid: true,
+                decision_valid: true,
+                scope_valid: true,
+                participants_valid: true,
+                audit_evidence: Some(
+                    TransitionEvidenceReference::new("transition.evidence.001")
+                        .expect("audit evidence"),
+                ),
+                upstream_outcomes_allow: true,
+                retry_limit_respected: true,
+                recovery_revalidated: true,
+                failure_code: None,
+            },
+        )
+        .expect("workflow transition control request")
+    }
+
+    fn allowed_transition_decision() -> WorkflowTransitionDecision {
+        WorkflowTransitionControl::evaluate(&workflow_transition_control_request(
+            WorkflowState::Ready,
+            WorkflowState::Running,
+            vec![TransitionEvidenceReference::new("transition.evidence.001")
+                .expect("transition evidence")],
+        ))
+    }
+
+    fn rejected_transition_decision() -> WorkflowTransitionDecision {
+        WorkflowTransitionControl::evaluate(&workflow_transition_control_request(
+            WorkflowState::Draft,
+            WorkflowState::Running,
+            vec![TransitionEvidenceReference::new("transition.evidence.001")
+                .expect("transition evidence")],
+        ))
+    }
+
+    fn noop_transition_decision() -> WorkflowTransitionDecision {
+        WorkflowTransitionControl::evaluate(&workflow_transition_control_request(
+            WorkflowState::Ready,
+            WorkflowState::Ready,
+            vec![TransitionEvidenceReference::new("transition.evidence.001")
+                .expect("transition evidence")],
+        ))
+    }
+
+    fn workflow_event_source() -> EventSource {
+        EventSource::new(
+            EventComponent::new("workflow-engine").expect("component"),
+            None,
+        )
+    }
+
+    fn workflow_event_subject() -> EventSubject {
+        EventSubject::new(
+            EventSubjectType::new("workflow").expect("subject type"),
+            EventSubjectId::new("CX-WF-000001").expect("subject id"),
+        )
+    }
+
+    fn workflow_event_context(
+        transition_decision: Option<WorkflowTransitionDecision>,
+        authorization_decision: Option<WorkflowAuthorizationDecision>,
+        failure_code: Option<WorkflowFailureCode>,
+    ) -> WorkflowEventContext {
+        WorkflowEventContext::new(
+            Some(workflow_definition()),
+            Some(workflow_instance()),
+            Some(workflow_state_snapshot()),
+            Some(workflow_step_coordination()),
+            Some(entry_step("start.review")),
+            Some(workflow_transition_control_request(
+                WorkflowState::Ready,
+                WorkflowState::Running,
+                vec![TransitionEvidenceReference::new("transition.evidence.001")
+                    .expect("transition evidence")],
+            )),
+            transition_decision,
+            Some(workflow_authorization_request(
+                authorization_decision.unwrap_or(AuthorizationDecisionOutcome::Allow),
+            )),
+            authorization_decision,
+            Some(
+                WorkflowOperationReference::new("workflow.transition.approve").expect("operation"),
+            ),
+            Some(TransitionReasonReference::new("operator request").expect("reason")),
+            Some(
+                TransitionAuthorityReference::new("authority.workflow-owner")
+                    .expect("authority reference"),
+            ),
+            vec![
+                TransitionEvidenceReference::new("transition.evidence.001")
+                    .expect("transition evidence"),
+                TransitionEvidenceReference::new("transition.evidence.002")
+                    .expect("transition evidence"),
+            ],
+            vec![
+                audit_evidence("CX-AUD-000010"),
+                audit_evidence("CX-AUD-000011"),
+            ],
+            failure_code,
+        )
+        .expect("workflow event context")
+    }
+
+    fn workflow_event_request(
+        event_type: &str,
+        context: WorkflowEventContext,
+        correlation_id: Option<CorrelationId>,
+        causation: EventCausation,
+    ) -> WorkflowEventIntegrationRequest {
+        WorkflowEventIntegrationRequest::new(
+            EventType::new(event_type).expect("event type"),
+            EventId::new("CX-EVT-000001").expect("event id"),
+            EventVersion::new("1.0.0").expect("event version"),
+            TimeReference::new("2026-07-17T00:00:00Z").expect("occurred"),
+            TimeReference::new("2026-07-17T00:00:01Z").expect("recorded"),
+            workflow_event_source(),
+            workflow_event_subject(),
+            EventClassification::Internal,
+            correlation_id,
+            causation,
+            context,
+        )
+        .expect("workflow event integration request")
     }
 
     #[test]
@@ -3605,7 +4192,7 @@ mod tests {
         let coordination = workflow_step_coordination();
         let transition_request = WorkflowTransitionControlRequest::new(
             workflow_state_snapshot(),
-            WorkflowState::Approved,
+            WorkflowState::Validated,
             None,
             None,
             vec![],
@@ -3623,9 +4210,842 @@ mod tests {
                 .as_str(),
             "start.review"
         );
+        let transition_decision = WorkflowTransitionControl::evaluate(&transition_request);
+        assert!(
+            matches!(
+                transition_decision,
+                crate::state::WorkflowTransitionDecision::NoOp(_)
+            ),
+            "expected canonical no-op transition decision for identical workflow state request, got {transition_decision:?}"
+        );
+    }
+
+    #[test]
+    fn workflow_event_integration_valid_construction() {
+        let request = workflow_event_request(
+            "workflow.transition.allowed",
+            workflow_event_context(
+                Some(allowed_transition_decision()),
+                Some(AuthorizationDecisionOutcome::Allow),
+                None,
+            ),
+            Some(CorrelationId::new("CX-COR-000001").expect("correlation")),
+            EventCausation::root(),
+        );
+
+        assert_eq!(
+            request.workflow_event_type().as_str(),
+            "workflow.transition.allowed"
+        );
+    }
+
+    #[test]
+    fn workflow_event_integration_workflow_event_type_preserved() {
+        let request = workflow_event_request(
+            "workflow.authorized",
+            workflow_event_context(None, Some(AuthorizationDecisionOutcome::Allow), None),
+            None,
+            EventCausation::root(),
+        );
+        assert_eq!(
+            request.workflow_event_type().as_str(),
+            "workflow.authorized"
+        );
+    }
+
+    #[test]
+    fn workflow_event_integration_canonical_event_id_preserved() {
+        let request = workflow_event_request(
+            "workflow.authorized",
+            workflow_event_context(None, Some(AuthorizationDecisionOutcome::Allow), None),
+            None,
+            EventCausation::root(),
+        );
+        let decision = WorkflowEventIntegration::evaluate(&request).expect("event");
+
+        assert_eq!(decision.event_id().as_str(), "CX-EVT-000001");
+    }
+
+    #[test]
+    fn workflow_event_integration_explicit_timestamp_preserved() {
+        let request = workflow_event_request(
+            "workflow.authorized",
+            workflow_event_context(None, Some(AuthorizationDecisionOutcome::Allow), None),
+            None,
+            EventCausation::root(),
+        );
+        let decision = WorkflowEventIntegration::evaluate(&request).expect("event");
+
+        assert_eq!(decision.occurred_at().as_str(), "2026-07-17T00:00:00Z");
+        assert_eq!(decision.recorded_at().as_str(), "2026-07-17T00:00:01Z");
+    }
+
+    #[test]
+    fn workflow_event_integration_workflow_definition_preserved() {
+        let decision = WorkflowEventIntegration::evaluate(&workflow_event_request(
+            "workflow.authorized",
+            workflow_event_context(None, Some(AuthorizationDecisionOutcome::Allow), None),
+            None,
+            EventCausation::root(),
+        ))
+        .expect("event");
+
+        assert_eq!(
+            decision
+                .payload()
+                .workflow_definition()
+                .expect("definition")
+                .workflow_id()
+                .as_str(),
+            "CX-WF-000001"
+        );
+    }
+
+    #[test]
+    fn workflow_event_integration_workflow_instance_preserved() {
+        let decision = WorkflowEventIntegration::evaluate(&workflow_event_request(
+            "workflow.authorized",
+            workflow_event_context(None, Some(AuthorizationDecisionOutcome::Allow), None),
+            None,
+            EventCausation::root(),
+        ))
+        .expect("event");
+
+        assert_eq!(
+            decision
+                .payload()
+                .workflow_instance()
+                .expect("instance")
+                .workflow_id()
+                .as_str(),
+            "CX-WF-000001"
+        );
+    }
+
+    #[test]
+    fn workflow_event_integration_workflow_state_preserved() {
+        let decision = WorkflowEventIntegration::evaluate(&workflow_event_request(
+            "workflow.authorized",
+            workflow_event_context(None, Some(AuthorizationDecisionOutcome::Allow), None),
+            None,
+            EventCausation::root(),
+        ))
+        .expect("event");
+
+        assert_eq!(
+            decision
+                .payload()
+                .workflow_state_snapshot()
+                .expect("state")
+                .lifecycle(),
+            WorkflowState::Validated
+        );
+    }
+
+    #[test]
+    fn workflow_event_integration_workflow_step_preserved() {
+        let decision = WorkflowEventIntegration::evaluate(&workflow_event_request(
+            "workflow.step.selected",
+            workflow_event_context(None, Some(AuthorizationDecisionOutcome::Allow), None),
+            None,
+            EventCausation::root(),
+        ))
+        .expect("event");
+
+        assert_eq!(
+            decision
+                .payload()
+                .workflow_step_reference()
+                .expect("step")
+                .as_str(),
+            "start.review"
+        );
+    }
+
+    #[test]
+    fn workflow_event_integration_transition_allowed_maps_to_allowed_event() {
+        let decision = WorkflowEventIntegration::evaluate(&workflow_event_request(
+            "workflow.transition.allowed",
+            workflow_event_context(
+                Some(allowed_transition_decision()),
+                Some(AuthorizationDecisionOutcome::Allow),
+                None,
+            ),
+            None,
+            EventCausation::root(),
+        ))
+        .expect("event");
+
+        assert_eq!(
+            decision.event_type().as_str(),
+            "workflow.transition.allowed"
+        );
+    }
+
+    #[test]
+    fn workflow_event_integration_transition_rejected_maps_to_rejected_event() {
+        let decision = WorkflowEventIntegration::evaluate(&workflow_event_request(
+            "workflow.transition.rejected",
+            workflow_event_context(
+                Some(rejected_transition_decision()),
+                Some(AuthorizationDecisionOutcome::Allow),
+                None,
+            ),
+            None,
+            EventCausation::root(),
+        ))
+        .expect("event");
+
+        assert_eq!(
+            decision.event_type().as_str(),
+            "workflow.transition.rejected"
+        );
+    }
+
+    #[test]
+    fn workflow_event_integration_transition_no_op_maps_to_no_op_event() {
+        let decision = WorkflowEventIntegration::evaluate(&workflow_event_request(
+            "workflow.transition.noop",
+            workflow_event_context(
+                Some(noop_transition_decision()),
+                Some(AuthorizationDecisionOutcome::Allow),
+                None,
+            ),
+            None,
+            EventCausation::root(),
+        ))
+        .expect("event");
+
+        assert_eq!(decision.event_type().as_str(), "workflow.transition.noop");
+    }
+
+    #[test]
+    fn workflow_event_integration_mismatched_transition_event_category_rejected() {
+        let error = WorkflowEventIntegrationRequest::new(
+            EventType::new("workflow.transition.allowed").expect("event type"),
+            EventId::new("CX-EVT-000001").expect("event id"),
+            EventVersion::new("1.0.0").expect("event version"),
+            TimeReference::new("2026-07-17T00:00:00Z").expect("occurred"),
+            TimeReference::new("2026-07-17T00:00:01Z").expect("recorded"),
+            workflow_event_source(),
+            workflow_event_subject(),
+            EventClassification::Internal,
+            None,
+            EventCausation::root(),
+            workflow_event_context(
+                Some(rejected_transition_decision()),
+                Some(AuthorizationDecisionOutcome::Allow),
+                None,
+            ),
+        )
+        .expect_err("mismatched transition event category must fail");
+
+        assert_eq!(
+            error,
+            DomainError::InvalidWorkflowEventIntegration(
+                "workflow transition allowed event requires allowed transition outcome",
+            )
+        );
+    }
+
+    #[test]
+    fn workflow_event_integration_authorization_allow_maps_to_authorized_event() {
+        let decision = WorkflowEventIntegration::evaluate(&workflow_event_request(
+            "workflow.authorized",
+            workflow_event_context(None, Some(AuthorizationDecisionOutcome::Allow), None),
+            None,
+            EventCausation::root(),
+        ))
+        .expect("event");
+
+        assert_eq!(decision.event_type().as_str(), "workflow.authorized");
+    }
+
+    #[test]
+    fn workflow_event_integration_authorization_denial_maps_to_denied_event() {
+        let decision = WorkflowEventIntegration::evaluate(&workflow_event_request(
+            "workflow.authorization.denied",
+            workflow_event_context(None, Some(AuthorizationDecisionOutcome::DenyExplicit), None),
+            None,
+            EventCausation::root(),
+        ))
+        .expect("event");
+
+        assert_eq!(
+            decision.event_type().as_str(),
+            "workflow.authorization.denied"
+        );
+    }
+
+    #[test]
+    fn workflow_event_integration_mismatched_authorization_event_category_rejected() {
+        let error = WorkflowEventIntegrationRequest::new(
+            EventType::new("workflow.authorized").expect("event type"),
+            EventId::new("CX-EVT-000001").expect("event id"),
+            EventVersion::new("1.0.0").expect("event version"),
+            TimeReference::new("2026-07-17T00:00:00Z").expect("occurred"),
+            TimeReference::new("2026-07-17T00:00:01Z").expect("recorded"),
+            workflow_event_source(),
+            workflow_event_subject(),
+            EventClassification::Internal,
+            None,
+            EventCausation::root(),
+            workflow_event_context(None, Some(AuthorizationDecisionOutcome::Deny), None),
+        )
+        .expect_err("mismatched authorization event category must fail");
+
+        assert_eq!(
+            error,
+            DomainError::InvalidWorkflowEventIntegration(
+                "workflow authorized event requires allow authorization outcome",
+            )
+        );
+    }
+
+    #[test]
+    fn workflow_event_integration_failure_event_requires_failure_code() {
+        let error = WorkflowEventIntegrationRequest::new(
+            EventType::new("workflow.failed").expect("event type"),
+            EventId::new("CX-EVT-000001").expect("event id"),
+            EventVersion::new("1.0.0").expect("event version"),
+            TimeReference::new("2026-07-17T00:00:00Z").expect("occurred"),
+            TimeReference::new("2026-07-17T00:00:01Z").expect("recorded"),
+            workflow_event_source(),
+            workflow_event_subject(),
+            EventClassification::Internal,
+            None,
+            EventCausation::root(),
+            workflow_event_context(None, Some(AuthorizationDecisionOutcome::Allow), None),
+        )
+        .expect_err("failure event without failure code must fail");
+
+        assert_eq!(
+            error,
+            DomainError::InvalidWorkflowEventIntegration(
+                "workflow failed event requires stable failure code",
+            )
+        );
+    }
+
+    #[test]
+    fn workflow_event_integration_failure_code_preserved() {
+        let decision = WorkflowEventIntegration::evaluate(&workflow_event_request(
+            "workflow.failed",
+            workflow_event_context(
+                Some(rejected_transition_decision()),
+                Some(AuthorizationDecisionOutcome::Allow),
+                Some(WorkflowFailureCode::Timeout),
+            ),
+            None,
+            EventCausation::root(),
+        ))
+        .expect("event");
+
+        assert_eq!(
+            decision.payload().failure_code(),
+            Some(WorkflowFailureCode::Timeout)
+        );
+    }
+
+    #[test]
+    fn workflow_event_integration_non_failure_event_does_not_infer_failure() {
+        let error = WorkflowEventIntegrationRequest::new(
+            EventType::new("workflow.completed").expect("event type"),
+            EventId::new("CX-EVT-000001").expect("event id"),
+            EventVersion::new("1.0.0").expect("event version"),
+            TimeReference::new("2026-07-17T00:00:00Z").expect("occurred"),
+            TimeReference::new("2026-07-17T00:00:01Z").expect("recorded"),
+            workflow_event_source(),
+            workflow_event_subject(),
+            EventClassification::Internal,
+            None,
+            EventCausation::root(),
+            workflow_event_context(
+                None,
+                Some(AuthorizationDecisionOutcome::Allow),
+                Some(WorkflowFailureCode::Timeout),
+            ),
+        )
+        .expect_err("non-failure event with failure code must fail");
+
+        assert_eq!(
+            error,
+            DomainError::InvalidWorkflowEventIntegration(
+                "non-failure workflow event must not carry failure code",
+            )
+        );
+    }
+
+    #[test]
+    fn workflow_event_integration_correlation_reference_preserved() {
+        let correlation = CorrelationId::new("CX-COR-000001").expect("correlation");
+        let decision = WorkflowEventIntegration::evaluate(&workflow_event_request(
+            "workflow.authorized",
+            workflow_event_context(None, Some(AuthorizationDecisionOutcome::Allow), None),
+            Some(correlation.clone()),
+            EventCausation::root(),
+        ))
+        .expect("event");
+
+        assert_eq!(decision.correlation_id(), Some(&correlation));
+    }
+
+    #[test]
+    fn workflow_event_integration_causation_reference_preserved() {
+        let current_event_id = EventId::new("CX-EVT-000001").expect("event id");
+        let parent_event_id = EventId::new("CX-EVT-000099").expect("parent event id");
+        let causation =
+            EventCausation::caused_by(&current_event_id, parent_event_id.clone()).expect("cause");
+        let request = WorkflowEventIntegrationRequest::new(
+            EventType::new("workflow.authorized").expect("event type"),
+            current_event_id,
+            EventVersion::new("1.0.0").expect("event version"),
+            TimeReference::new("2026-07-17T00:00:00Z").expect("occurred"),
+            TimeReference::new("2026-07-17T00:00:01Z").expect("recorded"),
+            workflow_event_source(),
+            workflow_event_subject(),
+            EventClassification::Internal,
+            None,
+            causation.clone(),
+            workflow_event_context(None, Some(AuthorizationDecisionOutcome::Allow), None),
+        )
+        .expect("request");
+        let decision = WorkflowEventIntegration::evaluate(&request).expect("event");
+
+        assert_eq!(decision.causation(), &causation);
+    }
+
+    #[test]
+    fn workflow_event_integration_evidence_order_preserved() {
+        let decision = WorkflowEventIntegration::evaluate(&workflow_event_request(
+            "workflow.authorized",
+            workflow_event_context(None, Some(AuthorizationDecisionOutcome::Allow), None),
+            None,
+            EventCausation::root(),
+        ))
+        .expect("event");
+
+        assert_eq!(
+            decision.payload().transition_evidence_references()[0].as_str(),
+            "transition.evidence.001"
+        );
+        assert_eq!(decision.trace().evidence_ids()[0].as_str(), "CX-AUD-000010");
+    }
+
+    #[test]
+    fn workflow_event_integration_duplicate_evidence_rejected() {
+        let error = WorkflowEventContext::new(
+            Some(workflow_definition()),
+            Some(workflow_instance()),
+            Some(workflow_state_snapshot()),
+            Some(workflow_step_coordination()),
+            Some(entry_step("start.review")),
+            None,
+            None,
+            None,
+            None,
+            Some(WorkflowOperationReference::new("workflow.transition.approve").expect("op")),
+            None,
+            None,
+            vec![
+                TransitionEvidenceReference::new("transition.evidence.001")
+                    .expect("transition evidence"),
+                TransitionEvidenceReference::new("transition.evidence.001")
+                    .expect("transition evidence"),
+            ],
+            vec![audit_evidence("CX-AUD-000010")],
+            None,
+        )
+        .expect_err("duplicate evidence must fail");
+
+        assert_eq!(
+            error,
+            DomainError::InvalidWorkflowEventIntegration(
+                "duplicate workflow transition evidence reference",
+            )
+        );
+    }
+
+    #[test]
+    fn workflow_event_integration_equivalent_requests_produce_equivalent_decisions() {
+        let request = workflow_event_request(
+            "workflow.authorized",
+            workflow_event_context(None, Some(AuthorizationDecisionOutcome::Allow), None),
+            Some(CorrelationId::new("CX-COR-000001").expect("correlation")),
+            EventCausation::root(),
+        );
+        let first = WorkflowEventIntegration::evaluate(&request).expect("event");
+        let second = WorkflowEventIntegration::evaluate(&request).expect("event");
+
+        assert_eq!(first, second);
+    }
+
+    #[test]
+    fn workflow_event_integration_deterministic_construction() {
+        let first = workflow_event_request(
+            "workflow.authorized",
+            workflow_event_context(None, Some(AuthorizationDecisionOutcome::Allow), None),
+            None,
+            EventCausation::root(),
+        );
+        let second = workflow_event_request(
+            "workflow.authorized",
+            workflow_event_context(None, Some(AuthorizationDecisionOutcome::Allow), None),
+            None,
+            EventCausation::root(),
+        );
+
+        assert_eq!(first, second);
+    }
+
+    #[test]
+    fn workflow_event_integration_equivalent_invalid_inputs_produce_equivalent_errors() {
+        let first = WorkflowEventContext::new(
+            Some(workflow_definition()),
+            Some(workflow_instance()),
+            Some(workflow_state_snapshot()),
+            Some(workflow_step_coordination()),
+            Some(entry_step("start.review")),
+            None,
+            None,
+            None,
+            None,
+            Some(WorkflowOperationReference::new("workflow.transition.approve").expect("op")),
+            None,
+            None,
+            vec![
+                TransitionEvidenceReference::new("transition.evidence.001")
+                    .expect("transition evidence"),
+                TransitionEvidenceReference::new("transition.evidence.001")
+                    .expect("transition evidence"),
+            ],
+            vec![audit_evidence("CX-AUD-000010")],
+            None,
+        )
+        .expect_err("invalid");
+        let second = WorkflowEventContext::new(
+            Some(workflow_definition()),
+            Some(workflow_instance()),
+            Some(workflow_state_snapshot()),
+            Some(workflow_step_coordination()),
+            Some(entry_step("start.review")),
+            None,
+            None,
+            None,
+            None,
+            Some(WorkflowOperationReference::new("workflow.transition.approve").expect("op")),
+            None,
+            None,
+            vec![
+                TransitionEvidenceReference::new("transition.evidence.001")
+                    .expect("transition evidence"),
+                TransitionEvidenceReference::new("transition.evidence.001")
+                    .expect("transition evidence"),
+            ],
+            vec![audit_evidence("CX-AUD-000010")],
+            None,
+        )
+        .expect_err("invalid");
+
+        assert_eq!(first, second);
+    }
+
+    #[test]
+    fn workflow_event_integration_supplied_workflow_values_not_mutated() {
+        let context = workflow_event_context(None, Some(AuthorizationDecisionOutcome::Allow), None);
+        let context_before = context.clone();
+        let request = workflow_event_request(
+            "workflow.authorized",
+            context.clone(),
+            None,
+            EventCausation::root(),
+        );
+
+        let _ = WorkflowEventIntegration::evaluate(&request).expect("event");
+
+        assert_eq!(context, context_before);
+    }
+
+    #[test]
+    fn workflow_event_integration_external_event_id_existence_not_checked() {
+        let request = WorkflowEventIntegrationRequest::new(
+            EventType::new("workflow.authorized").expect("type"),
+            EventId::new("CX-EVT-999999").expect("event id"),
+            EventVersion::new("1.0.0").expect("event version"),
+            TimeReference::new("2026-07-17T00:00:00Z").expect("occurred"),
+            TimeReference::new("2026-07-17T00:00:01Z").expect("recorded"),
+            workflow_event_source(),
+            workflow_event_subject(),
+            EventClassification::Internal,
+            None,
+            EventCausation::root(),
+            workflow_event_context(None, Some(AuthorizationDecisionOutcome::Allow), None),
+        )
+        .expect("request");
+
+        assert_eq!(
+            WorkflowEventIntegration::evaluate(&request)
+                .expect("event")
+                .event_id()
+                .as_str(),
+            "CX-EVT-999999"
+        );
+    }
+
+    #[test]
+    fn workflow_event_integration_external_correlation_existence_not_checked() {
+        let correlation = CorrelationId::new("CX-COR-999999").expect("correlation");
+        let decision = WorkflowEventIntegration::evaluate(&workflow_event_request(
+            "workflow.authorized",
+            workflow_event_context(None, Some(AuthorizationDecisionOutcome::Allow), None),
+            Some(correlation.clone()),
+            EventCausation::root(),
+        ))
+        .expect("event");
+
+        assert_eq!(decision.correlation_id(), Some(&correlation));
+    }
+
+    #[test]
+    fn workflow_event_integration_external_causation_existence_not_checked() {
+        let current_event_id = EventId::new("CX-EVT-000001").expect("event id");
+        let parent_event_id = EventId::new("CX-EVT-999999").expect("parent");
+        let causation =
+            EventCausation::caused_by(&current_event_id, parent_event_id.clone()).expect("cause");
+        let request = WorkflowEventIntegrationRequest::new(
+            EventType::new("workflow.authorized").expect("type"),
+            current_event_id,
+            EventVersion::new("1.0.0").expect("event version"),
+            TimeReference::new("2026-07-17T00:00:00Z").expect("occurred"),
+            TimeReference::new("2026-07-17T00:00:01Z").expect("recorded"),
+            workflow_event_source(),
+            workflow_event_subject(),
+            EventClassification::Internal,
+            None,
+            causation.clone(),
+            workflow_event_context(None, Some(AuthorizationDecisionOutcome::Allow), None),
+        )
+        .expect("request");
+
+        assert_eq!(
+            WorkflowEventIntegration::evaluate(&request)
+                .expect("event")
+                .causation(),
+            &causation
+        );
+    }
+
+    #[test]
+    fn workflow_event_integration_external_evidence_existence_not_checked() {
+        let context = WorkflowEventContext::new(
+            Some(workflow_definition()),
+            Some(workflow_instance()),
+            Some(workflow_state_snapshot()),
+            Some(workflow_step_coordination()),
+            Some(entry_step("start.review")),
+            None,
+            None,
+            None,
+            None,
+            Some(WorkflowOperationReference::new("workflow.transition.approve").expect("op")),
+            None,
+            None,
+            vec![
+                TransitionEvidenceReference::new("transition.evidence.external")
+                    .expect("transition evidence"),
+            ],
+            vec![audit_evidence("CX-AUD-999999")],
+            None,
+        )
+        .expect("context");
+        let decision = WorkflowEventIntegration::evaluate(&workflow_event_request(
+            "workflow.created",
+            context,
+            None,
+            EventCausation::root(),
+        ))
+        .expect("event");
+
+        assert_eq!(decision.trace().evidence_ids()[0].as_str(), "CX-AUD-999999");
+    }
+
+    #[test]
+    fn workflow_event_integration_no_system_clock_accessed() {
+        let decision = WorkflowEventIntegration::evaluate(&workflow_event_request(
+            "workflow.created",
+            workflow_event_context(None, Some(AuthorizationDecisionOutcome::Allow), None),
+            None,
+            EventCausation::root(),
+        ))
+        .expect("event");
+
+        assert_eq!(decision.occurred_at().as_str(), "2026-07-17T00:00:00Z");
+    }
+
+    #[test]
+    fn workflow_event_integration_no_identifier_generated() {
+        let decision = WorkflowEventIntegration::evaluate(&workflow_event_request(
+            "workflow.created",
+            workflow_event_context(None, Some(AuthorizationDecisionOutcome::Allow), None),
+            None,
+            EventCausation::root(),
+        ))
+        .expect("event");
+
+        assert_eq!(decision.event_id().as_str(), "CX-EVT-000001");
+    }
+
+    #[test]
+    fn workflow_event_integration_no_event_published() {
+        let decision = WorkflowEventIntegration::evaluate(&workflow_event_request(
+            "workflow.created",
+            workflow_event_context(None, Some(AuthorizationDecisionOutcome::Allow), None),
+            None,
+            EventCausation::root(),
+        ))
+        .expect("event");
+
+        assert_eq!(decision.event_type().as_str(), "workflow.created");
+    }
+
+    #[test]
+    fn workflow_event_integration_no_event_bus_called() {
+        let decision = WorkflowEventIntegration::evaluate(&workflow_event_request(
+            "workflow.created",
+            workflow_event_context(None, Some(AuthorizationDecisionOutcome::Allow), None),
+            None,
+            EventCausation::root(),
+        ))
+        .expect("event");
+
+        assert_eq!(decision.source().component().as_str(), "workflow-engine");
+    }
+
+    #[test]
+    fn workflow_event_integration_no_persistence_occurs() {
+        let decision = WorkflowEventIntegration::evaluate(&workflow_event_request(
+            "workflow.created",
+            workflow_event_context(None, Some(AuthorizationDecisionOutcome::Allow), None),
+            None,
+            EventCausation::root(),
+        ))
+        .expect("event");
+
+        assert_eq!(decision.subject().subject_id().as_str(), "CX-WF-000001");
+    }
+
+    #[test]
+    fn workflow_event_integration_no_workflow_transition_executed() {
+        let request = workflow_transition_control_request(
+            WorkflowState::Ready,
+            WorkflowState::Running,
+            vec![TransitionEvidenceReference::new("transition.evidence.001")
+                .expect("transition evidence")],
+        );
+        let before = request.clone();
+
+        let _ = WorkflowEventIntegration::evaluate(&workflow_event_request(
+            "workflow.created",
+            workflow_event_context(None, Some(AuthorizationDecisionOutcome::Allow), None),
+            None,
+            EventCausation::root(),
+        ))
+        .expect("event");
+
+        assert_eq!(request, before);
+    }
+
+    #[test]
+    fn workflow_event_integration_no_step_executed() {
+        let coordination = workflow_step_coordination();
+        let before = coordination.clone();
+
+        let _ = WorkflowEventIntegration::evaluate(&workflow_event_request(
+            "workflow.step.selected",
+            workflow_event_context(None, Some(AuthorizationDecisionOutcome::Allow), None),
+            None,
+            EventCausation::root(),
+        ))
+        .expect("event");
+
+        assert_eq!(coordination, before);
+    }
+
+    #[test]
+    fn workflow_event_integration_no_task_created() {
+        let decision = WorkflowEventIntegration::evaluate(&workflow_event_request(
+            "workflow.step.blocked",
+            workflow_event_context(None, Some(AuthorizationDecisionOutcome::Allow), None),
+            None,
+            EventCausation::root(),
+        ))
+        .expect("event");
+
+        assert_eq!(
+            decision
+                .payload()
+                .workflow_step_coordination()
+                .expect("coordination")
+                .workflow_step_execution_plan()
+                .blocked_step_references()
+                .len(),
+            2
+        );
+    }
+
+    #[test]
+    fn workflow_event_integration_existing_k5_event_apis_remain_usable() {
+        let envelope = EventEnvelope::new(
+            EventId::new("CX-EVT-000500").expect("event id"),
+            EventType::new("workflow.created").expect("event type"),
+            EventVersion::new("1.0.0").expect("version"),
+            TimeReference::new("2026-07-17T00:00:00Z").expect("occurred"),
+            TimeReference::new("2026-07-17T00:00:01Z").expect("recorded"),
+            workflow_event_source(),
+            workflow_event_subject(),
+            workflow_event_context(None, Some(AuthorizationDecisionOutcome::Allow), None),
+            EventClassification::Internal,
+            crate::event::EventTrace::new(None, Some(workflow_id()), None, None, vec![])
+                .expect("trace"),
+            None,
+            EventCausation::root(),
+        );
+
+        assert_eq!(envelope.event_type().as_str(), "workflow.created");
+    }
+
+    #[test]
+    fn workflow_event_integration_existing_k6_001_through_k6_006_apis_remain_usable() {
+        let transition_decision = allowed_transition_decision();
+        let authorization_decision = WorkflowAuthorizationControl::evaluate(
+            &workflow_authorization_request(AuthorizationDecisionOutcome::Allow),
+        );
+        let request = workflow_event_request(
+            "workflow.transition.allowed",
+            workflow_event_context(
+                Some(transition_decision.clone()),
+                Some(authorization_decision),
+                None,
+            ),
+            None,
+            EventCausation::root(),
+        );
+
+        let decision = WorkflowEventIntegration::evaluate(&request).expect("event");
+
         assert!(matches!(
-            WorkflowTransitionControl::evaluate(&transition_request),
-            crate::state::WorkflowTransitionDecision::NoOp(_)
+            decision
+                .payload()
+                .workflow_transition_decision()
+                .expect("transition decision"),
+            TransitionOutcome::Allowed(_)
         ));
+        assert_eq!(
+            decision
+                .payload()
+                .workflow_authorization_decision()
+                .expect("authorization decision"),
+            &AuthorizationDecisionOutcome::Allow
+        );
     }
 }
