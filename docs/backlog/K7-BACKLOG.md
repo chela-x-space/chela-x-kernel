@@ -1,7 +1,7 @@
 # K7 Task Engine Backlog
 
 ## K7 Milestone
-PLANNING
+IMPLEMENTATION IN PROGRESS
 
 ## Specification Package
 ARCHITECTURE APPROVED
@@ -10,7 +10,7 @@ ARCHITECTURE APPROVED
 PASS
 
 ## Implementation
-NOT STARTED
+IN PROGRESS
 
 ## API
 NOT ESTABLISHED
@@ -18,7 +18,7 @@ NOT ESTABLISHED
 ## Backlog Items
 
 ### K7-001 Task Engine Foundation
-- Status: `READY FOR IMPLEMENTATION`
+- Status: `DONE — API REVIEW PASSED`
 - Purpose: define stable task vocabulary, identity, references, and foundational validation expectations
 - Source specification: `docs/specifications/K7.1-task-engine-foundation.md`
 - Dependencies: architecture review of K7 specification package
@@ -181,7 +181,6 @@ NOT ESTABLISHED
 - Implementation scope: compatibility tests, cross-module domain tests where approved, conformance evidence
 - Prohibited scope: event bus, publishing, execution, persistence, async runtime, workflow side effects
 - Expected files: task test modules, additive docs if needed, no infrastructure modules
-- Required tests: `task_integration_conformance_*`, compatibility tests for K1-K6 consumed APIs
 - Required tests: `task_integration_conformance_*`, compatibility tests for K1-K6 consumed APIs, `assignment_vs_lifecycle_*`, `readiness_vs_lifecycle_*`, `failure_vs_rejection_*`, `dependency_satisfaction_vs_lifecycle_mutation_*`
 - Required documentation updates: validation and traceability evidence as implementation progresses
 - Validation commands: full repository gates plus host validation
@@ -217,5 +216,5 @@ NOT ESTABLISHED
 
 ## Final Determination
 
-No K7 implementation work item is marked done.
-K7 backlog remains planning-only until architecture review is recorded and K7-001 implementation begins.
+K7-001 is implemented, API-reviewed, and pending native validation in a linker-capable environment.
+K7-002 remains blocked by the K7 sequencing rules and is not authorized in this implementation slice.

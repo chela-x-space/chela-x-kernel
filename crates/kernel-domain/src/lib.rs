@@ -15,6 +15,7 @@ pub mod policy;
 pub mod request;
 pub mod runtime;
 pub mod state;
+pub mod task;
 pub mod workflow;
 
 pub use agent::{
@@ -119,6 +120,11 @@ pub use state::{
     WorkflowTransitionControlRequest, WorkflowTransitionDecision, WorkflowTransitionOutcome,
     WorkflowTransitionRequest, WorkflowTransitionStateSnapshot, WorkspaceLifecycleGuards,
     WorkspaceStateSnapshot, WorkspaceTransitionOutcome, WorkspaceTransitionRequest,
+};
+pub use task::{
+    TaskDefinitionId, TaskDefinitionReference, TaskDependencyId, TaskDependencyReference,
+    TaskEvidenceId, TaskEvidenceReference, TaskInstanceId, TaskInstanceReference,
+    TaskStepReference, TaskWorkflowReference,
 };
 pub use workflow::{
     WorkflowAuditEvidenceReference, WorkflowAuthorizationContext, WorkflowAuthorizationControl,

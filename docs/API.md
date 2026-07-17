@@ -29,7 +29,7 @@ INTERNAL
 
 ## Purpose And Scope
 
-This document records the current public K6 workflow API exposed from `crates/kernel-domain/src/lib.rs`. K6 is additive over K1, K2, K3, and K5. All K6 types remain deterministic, side-effect free, and infrastructure-free.
+This document records the current public K6 workflow API and the additive K7.1 task-foundation API exposed from `crates/kernel-domain/src/lib.rs`. K6 remains frozen. K7-001 is implemented, deterministic, and pending API acceptance.
 
 ## K6 Public API Surface
 
@@ -318,6 +318,80 @@ Important non-goals:
 - No outbox
 - No system clock
 - No UUID generation
+
+## K7 Public API Surface
+
+### Task Engine Foundation Types
+
+API status:
+
+- `IMPLEMENTED — PENDING API ACCEPTANCE`
+- `NOT FROZEN`
+
+Types:
+
+- `TaskDefinitionId`
+- `TaskInstanceId`
+- `TaskDependencyId`
+- `TaskEvidenceId`
+- `TaskDefinitionReference`
+- `TaskInstanceReference`
+- `TaskDependencyReference`
+- `TaskEvidenceReference`
+- `TaskWorkflowReference`
+- `TaskStepReference`
+
+Construction entry points:
+
+- `TaskDefinitionId::new(value: impl Into<String>) -> DomainResult<Self>`
+- `TaskInstanceId::new(value: impl Into<String>) -> DomainResult<Self>`
+- `TaskDependencyId::new(value: impl Into<String>) -> DomainResult<Self>`
+- `TaskEvidenceId::new(value: impl Into<String>) -> DomainResult<Self>`
+- `TaskDefinitionReference::new(task_definition_id: TaskDefinitionId) -> Self`
+- `TaskInstanceReference::new(task_instance_id: TaskInstanceId) -> Self`
+- `TaskDependencyReference::new(task_dependency_id: TaskDependencyId) -> Self`
+- `TaskEvidenceReference::new(task_evidence_id: TaskEvidenceId) -> Self`
+- `TaskWorkflowReference::new(workflow_id: WorkflowId) -> Self`
+- `TaskStepReference::new(workflow_step_reference: WorkflowStepReference) -> Self`
+
+Principal accessors:
+
+- `TaskDefinitionId::as_str(&self) -> &str`
+- `TaskInstanceId::as_str(&self) -> &str`
+- `TaskDependencyId::as_str(&self) -> &str`
+- `TaskEvidenceId::as_str(&self) -> &str`
+- `TaskDefinitionReference::task_definition_id(&self) -> &TaskDefinitionId`
+- `TaskInstanceReference::task_instance_id(&self) -> &TaskInstanceId`
+- `TaskDependencyReference::task_dependency_id(&self) -> &TaskDependencyId`
+- `TaskEvidenceReference::task_evidence_id(&self) -> &TaskEvidenceId`
+- `TaskWorkflowReference::workflow_id(&self) -> &WorkflowId`
+- `TaskStepReference::workflow_step_reference(&self) -> &WorkflowStepReference`
+
+Deterministic behavior:
+
+- Constructor-only validation for string-backed task vocabulary
+- Immutable value semantics after construction
+- Deterministic equality, ordering, hashing, and debug output through K1 conventions
+- No hidden clock, randomness, persistence, scheduling, or event publication
+
+Validation boundaries:
+
+- Canonical task identities reject empty values and unsafe identifier characters
+- References preserve the exact canonical identifier type they wrap
+- Workflow and step task references reuse the upstream `WorkflowId` and `WorkflowStepReference` types directly
+- No public `TaskId`
+- No generic public `TaskReference`
+- No cross-type conversions between definition and instance identities
+
+Important non-goals:
+
+- No task definition model
+- No task instance lifecycle
+- No ownership rules
+- No readiness or transition evaluation
+- No dependency validation
+- No completion or failure semantics beyond vocabulary
+- No scheduler, executor, persistence, async runtime, or network integration
 
 ### Failure-And-Recovery Types
 

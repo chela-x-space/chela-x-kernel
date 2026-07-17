@@ -27,6 +27,23 @@ Kernel Platform Team
 ## Classification
 INTERNAL
 
+## K7 Task Engine
+
+### Added
+
+- Additive K7-001 task-foundation identities for task definitions, task instances, task dependencies, and task evidence
+- Additive K7-001 task reference vocabulary for definitions, instances, dependencies, evidence, workflow, and step bindings
+- Deterministic K7-001 unit coverage for immutable value semantics, identity separation, and reference preservation
+
+### Boundaries
+
+- No task execution
+- No scheduler
+- No persistence
+- No async runtime
+- No network
+- No implicit event publication
+
 ## K6 Workflow Engine
 
 ### Added

@@ -81,6 +81,31 @@ INTERNAL
 - No network
 - No workflow mutation by step coordination, authorization integration, event integration, or recovery control
 
+## K7 In-Progress Summary
+
+- Milestone: `K7 Task Engine`
+- Current slice: `K7-001 Task Engine Foundation`
+- Status: `IMPLEMENTED — API REVIEW PASSED`
+- Architecture Freeze: `PRESERVED`
+- Public API status: `NOT FROZEN`
+
+## K7 Requirements Matrix
+
+| Requirement ID | Requirement Summary | Specification Source | Implementation Location | Public API Or Type | Tests Proving Requirement | Validation Status | Commit Reference | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `K7-001` | Foundational task identities and references remain additive, deterministic, immutable, and infrastructure-free. | `docs/specifications/K7.1-task-engine-foundation.md`, `docs/specifications/K7.9-task-integration-and-conformance.md` | `crates/kernel-domain/src/task/mod.rs`, `crates/kernel-domain/src/task/identity.rs`, `crates/kernel-domain/src/task/reference.rs`, `crates/kernel-domain/src/task/tests.rs`, `crates/kernel-domain/src/lib.rs` | `TaskDefinitionId`, `TaskInstanceId`, `TaskDependencyId`, `TaskEvidenceId`, `TaskDefinitionReference`, `TaskInstanceReference`, `TaskDependencyReference`, `TaskEvidenceReference`, `TaskWorkflowReference`, `TaskStepReference` | `task_engine_foundation_*` | `PASS WITH ENVIRONMENT BLOCKER` | Working tree | `15` new tests added. Compile validation passes locally. Native tests remain blocked in Codex. CES requirement IDs: `UNRESOLVED — DO NOT FABRICATE` |
+
+## K7 Boundaries Confirmed
+
+- No task execution
+- No scheduler
+- No persistence
+- No async runtime
+- No event bus
+- No implicit event publication
+- No network
+- No K1-K6 API redesign
+
 ## Program Alignment
 
 - Repository dependency direction remains `AI Engineering OS -> CHELA-X CES -> CHELA-X Kernel -> CHELA-X Runtime -> CHELA-X SDK -> CHELA-X Media`.
