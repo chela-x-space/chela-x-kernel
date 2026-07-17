@@ -121,8 +121,10 @@ pub use state::{
     WorkspaceStateSnapshot, WorkspaceTransitionOutcome, WorkspaceTransitionRequest,
 };
 pub use workflow::{
-    WorkflowAuditEvidenceReference, WorkflowDefinition, WorkflowEngineFoundation, WorkflowInstance,
-    WorkflowLifecycleMapReference, WorkflowRecoveryReference, WorkflowRetryLimit,
+    WorkflowAuditEvidenceReference, WorkflowAuthorizationContext, WorkflowAuthorizationControl,
+    WorkflowAuthorizationDecision, WorkflowAuthorizationRequest, WorkflowDefinition,
+    WorkflowEngineFoundation, WorkflowInstance, WorkflowLifecycleMapReference,
+    WorkflowOperationReference, WorkflowRecoveryReference, WorkflowRetryLimit,
     WorkflowRetryPolicyReference, WorkflowStepCoordination, WorkflowStepExecutionPlan,
     WorkflowStepOutcomeReference, WorkflowStepReference, WorkflowStepSelection,
     WorkflowTerminalOutcomeReference,

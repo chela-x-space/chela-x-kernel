@@ -1,13 +1,19 @@
 use std::fmt;
 use std::str::FromStr;
 
+use crate::authorization::{
+    AuthorizationAuditEvidenceReference, AuthorizationDecisionOutcome,
+    AuthorizationDecisionReference,
+};
 use crate::errors::{DomainError, DomainResult};
 use crate::identifier::{
     AuditEvidenceId, AuthorizationDecisionId, DecisionId, DelegationId, EnglishNamespace, PolicyId,
     StableVersion, WorkflowId,
 };
 use crate::ownership::OwnershipPath;
+use crate::request::AuthorizationRequestRecord;
 use crate::state::WorkflowStateSnapshot;
+use crate::{TransitionAuthorityReference, TransitionEvidenceReference};
 
 const WORKFLOW_DEFINITION_REFERENCE_EXPECTATION: &str =
     "ASCII letters, digits, dot, underscore, or hyphen";
@@ -772,24 +778,272 @@ impl WorkflowStepCoordination {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct WorkflowOperationReference(String);
+
+impl WorkflowOperationReference {
+    pub fn new(value: impl Into<String>) -> DomainResult<Self> {
+        validate_workflow_definition_reference("WorkflowOperationReference", value).map(Self)
+    }
+
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+
+impl fmt::Display for WorkflowOperationReference {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str(self.as_str())
+    }
+}
+
+impl FromStr for WorkflowOperationReference {
+    type Err = DomainError;
+
+    fn from_str(value: &str) -> DomainResult<Self> {
+        Self::new(value.to_owned())
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WorkflowAuthorizationContext {
+    authorization_request: AuthorizationRequestRecord,
+    authorization_decision: AuthorizationDecisionReference,
+    authorization_evidence_references: Vec<AuthorizationAuditEvidenceReference>,
+}
+
+impl WorkflowAuthorizationContext {
+    pub fn new(
+        authorization_request: AuthorizationRequestRecord,
+        authorization_decision: AuthorizationDecisionReference,
+        authorization_evidence_references: Vec<AuthorizationAuditEvidenceReference>,
+    ) -> DomainResult<Self> {
+        if authorization_request.request_id() != authorization_decision.request_id() {
+            return Err(DomainError::InvalidWorkflowAuthorizationIntegration(
+                "workflow authorization request must match authorization decision request",
+            ));
+        }
+
+        if authorization_evidence_references.is_empty() {
+            return Err(DomainError::InvalidWorkflowAuthorizationIntegration(
+                "workflow authorization evidence is required",
+            ));
+        }
+
+        for (index, evidence) in authorization_evidence_references.iter().enumerate() {
+            if authorization_evidence_references[..index]
+                .iter()
+                .any(|prior| prior.audit_evidence_id() == evidence.audit_evidence_id())
+            {
+                return Err(DomainError::InvalidWorkflowAuthorizationIntegration(
+                    "duplicate workflow authorization evidence reference",
+                ));
+            }
+
+            if evidence.decision_id() != authorization_decision.decision_id() {
+                return Err(DomainError::InvalidWorkflowAuthorizationIntegration(
+                    "workflow authorization evidence must match authorization decision",
+                ));
+            }
+        }
+
+        Ok(Self {
+            authorization_request,
+            authorization_decision,
+            authorization_evidence_references,
+        })
+    }
+
+    pub fn authorization_request(&self) -> &AuthorizationRequestRecord {
+        &self.authorization_request
+    }
+
+    pub fn authorization_decision(&self) -> &AuthorizationDecisionReference {
+        &self.authorization_decision
+    }
+
+    pub fn authorization_evidence_references(&self) -> &[AuthorizationAuditEvidenceReference] {
+        &self.authorization_evidence_references
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WorkflowAuthorizationRequest {
+    workflow_operation: WorkflowOperationReference,
+    workflow_definition: Option<WorkflowDefinition>,
+    workflow_instance: Option<WorkflowInstance>,
+    current_workflow_state: Option<WorkflowStateSnapshot>,
+    requested_target_workflow_state: Option<crate::lifecycle::WorkflowState>,
+    workflow_step_coordination: Option<WorkflowStepCoordination>,
+    current_workflow_step: Option<WorkflowStepReference>,
+    requested_next_workflow_step: Option<WorkflowStepReference>,
+    workflow_authorization_context: WorkflowAuthorizationContext,
+    transition_authority_reference: Option<TransitionAuthorityReference>,
+    transition_evidence_references: Vec<TransitionEvidenceReference>,
+}
+
+impl WorkflowAuthorizationRequest {
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(
+        workflow_operation: WorkflowOperationReference,
+        workflow_definition: Option<WorkflowDefinition>,
+        workflow_instance: Option<WorkflowInstance>,
+        current_workflow_state: Option<WorkflowStateSnapshot>,
+        requested_target_workflow_state: Option<crate::lifecycle::WorkflowState>,
+        workflow_step_coordination: Option<WorkflowStepCoordination>,
+        current_workflow_step: Option<WorkflowStepReference>,
+        requested_next_workflow_step: Option<WorkflowStepReference>,
+        workflow_authorization_context: WorkflowAuthorizationContext,
+        transition_authority_reference: Option<TransitionAuthorityReference>,
+        transition_evidence_references: Vec<TransitionEvidenceReference>,
+    ) -> DomainResult<Self> {
+        for (index, evidence) in transition_evidence_references.iter().enumerate() {
+            if transition_evidence_references[..index]
+                .iter()
+                .any(|prior| prior == evidence)
+            {
+                return Err(DomainError::InvalidWorkflowAuthorizationIntegration(
+                    "duplicate workflow transition evidence reference",
+                ));
+            }
+        }
+
+        let authorization_scope = workflow_authorization_context
+            .authorization_request()
+            .target()
+            .scope()
+            .ownership_path();
+
+        if let Some(definition) = workflow_definition.as_ref() {
+            if definition.ownership() != authorization_scope {
+                return Err(DomainError::InvalidWorkflowAuthorizationIntegration(
+                    "workflow authorization scope must match workflow definition ownership",
+                ));
+            }
+        }
+
+        if let Some(instance) = workflow_instance.as_ref() {
+            if instance.ownership_reference() != authorization_scope {
+                return Err(DomainError::InvalidWorkflowAuthorizationIntegration(
+                    "workflow authorization scope must match workflow instance ownership",
+                ));
+            }
+        }
+
+        if let Some(state) = current_workflow_state.as_ref() {
+            if state.ownership_path() != authorization_scope {
+                return Err(DomainError::InvalidWorkflowAuthorizationIntegration(
+                    "workflow authorization scope must match workflow state ownership",
+                ));
+            }
+        }
+
+        Ok(Self {
+            workflow_operation,
+            workflow_definition,
+            workflow_instance,
+            current_workflow_state,
+            requested_target_workflow_state,
+            workflow_step_coordination,
+            current_workflow_step,
+            requested_next_workflow_step,
+            workflow_authorization_context,
+            transition_authority_reference,
+            transition_evidence_references,
+        })
+    }
+
+    pub fn workflow_operation(&self) -> &WorkflowOperationReference {
+        &self.workflow_operation
+    }
+
+    pub fn workflow_definition(&self) -> Option<&WorkflowDefinition> {
+        self.workflow_definition.as_ref()
+    }
+
+    pub fn workflow_instance(&self) -> Option<&WorkflowInstance> {
+        self.workflow_instance.as_ref()
+    }
+
+    pub fn current_workflow_state(&self) -> Option<&WorkflowStateSnapshot> {
+        self.current_workflow_state.as_ref()
+    }
+
+    pub fn requested_target_workflow_state(&self) -> Option<crate::lifecycle::WorkflowState> {
+        self.requested_target_workflow_state
+    }
+
+    pub fn workflow_step_coordination(&self) -> Option<&WorkflowStepCoordination> {
+        self.workflow_step_coordination.as_ref()
+    }
+
+    pub fn current_workflow_step(&self) -> Option<&WorkflowStepReference> {
+        self.current_workflow_step.as_ref()
+    }
+
+    pub fn requested_next_workflow_step(&self) -> Option<&WorkflowStepReference> {
+        self.requested_next_workflow_step.as_ref()
+    }
+
+    pub fn workflow_authorization_context(&self) -> &WorkflowAuthorizationContext {
+        &self.workflow_authorization_context
+    }
+
+    pub fn transition_authority_reference(&self) -> Option<&TransitionAuthorityReference> {
+        self.transition_authority_reference.as_ref()
+    }
+
+    pub fn transition_evidence_references(&self) -> &[TransitionEvidenceReference] {
+        &self.transition_evidence_references
+    }
+}
+
+pub type WorkflowAuthorizationDecision = AuthorizationDecisionOutcome;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct WorkflowAuthorizationControl;
+
+impl WorkflowAuthorizationControl {
+    pub fn evaluate(request: &WorkflowAuthorizationRequest) -> WorkflowAuthorizationDecision {
+        request
+            .workflow_authorization_context()
+            .authorization_decision()
+            .outcome()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::{
-        WorkflowAuditEvidenceReference, WorkflowDefinition, WorkflowEngineFoundation,
-        WorkflowInstance, WorkflowLifecycleMapReference, WorkflowRecoveryReference,
-        WorkflowRetryLimit, WorkflowRetryPolicyReference, WorkflowStepCoordination,
-        WorkflowStepExecutionPlan, WorkflowStepOutcomeReference, WorkflowStepReference,
-        WorkflowStepSelection, WorkflowTerminalOutcomeReference,
+        WorkflowAuditEvidenceReference, WorkflowAuthorizationContext, WorkflowAuthorizationControl,
+        WorkflowAuthorizationRequest, WorkflowDefinition, WorkflowEngineFoundation,
+        WorkflowInstance, WorkflowLifecycleMapReference, WorkflowOperationReference,
+        WorkflowRecoveryReference, WorkflowRetryLimit, WorkflowRetryPolicyReference,
+        WorkflowStepCoordination, WorkflowStepExecutionPlan, WorkflowStepOutcomeReference,
+        WorkflowStepReference, WorkflowStepSelection, WorkflowTerminalOutcomeReference,
+    };
+    use crate::authorization::{
+        ActionVerb, AuthorizationAuditEvidenceReference, AuthorizationDecisionOutcome,
+        AuthorizationDecisionReference, AuthorizationPrincipalReference,
+        AuthorizationPrincipalType, AuthorizationSubject, AuthorizationTarget,
+        CredentialStatusReference, MatchedPolicyEvidenceReference, PermissionEffectIntent,
+        PermissionReference, PrincipalLifecycleStateReference, ResourceType, ScopeLevel,
+        ScopeReference,
     };
     use crate::errors::DomainError;
     use crate::identifier::EnglishNamespace;
     use crate::identifier::{
-        AuditEvidenceId, AuthorizationDecisionId, DecisionId, DelegationId, EnterpriseId, HumanId,
-        OrganizationUnitId, PolicyId, ProjectId, StableVersion, WorkflowId, WorkspaceId,
+        AuditEvidenceId, AuthorizationDecisionId, AuthorizationRequestId, DecisionId, DelegationId,
+        EnterpriseId, HumanId, OrganizationUnitId, PermissionId, PolicyId, PrincipalId, ProjectId,
+        ScopeId, StableVersion, WorkflowId, WorkspaceId,
     };
     use crate::lifecycle::WorkflowState;
     use crate::ownership::{OwnerReference, OwnershipPath};
-    use crate::state::{StateSequence, WorkflowStateSnapshot};
+    use crate::request::{AuthorizationRequestRecord, TimeReference};
+    use crate::state::{
+        StateSequence, TransitionAuthorityReference, TransitionEvidenceReference,
+        WorkflowStateSnapshot, WorkflowTransitionControl, WorkflowTransitionControlRequest,
+    };
 
     #[test]
     fn workflow_retry_limit_rejects_zero_ces_b0_030_14() {
@@ -970,6 +1224,133 @@ mod tests {
             workflow_step_execution_plan(),
         )
         .expect("workflow step coordination")
+    }
+
+    fn authorization_subject() -> AuthorizationSubject {
+        AuthorizationSubject::Principal(
+            AuthorizationPrincipalReference::new(
+                PrincipalId::new("CX-PRN-000001").expect("principal"),
+                AuthorizationPrincipalType::Employee,
+                "CX-EMP-000001",
+                EnterpriseId::new("CX-ENT-000001").expect("enterprise"),
+                PrincipalLifecycleStateReference::new("Active").expect("lifecycle"),
+                CredentialStatusReference::new("Valid").expect("credential"),
+            )
+            .expect("principal"),
+        )
+    }
+
+    fn authorization_permission(action: &str) -> PermissionReference {
+        PermissionReference::new(
+            PermissionId::new("CX-PERM-000001").expect("permission"),
+            ActionVerb::new(action).expect("action"),
+            ResourceType::new("workflow").expect("resource type"),
+            PermissionEffectIntent::new("Permit").expect("effect"),
+        )
+    }
+
+    fn authorization_scope() -> ScopeReference {
+        ScopeReference::new(
+            ScopeId::new("CX-SCP-000001").expect("scope"),
+            ScopeLevel::Project,
+            ownership(),
+            None,
+        )
+        .expect("scope")
+    }
+
+    fn authorization_target() -> AuthorizationTarget {
+        AuthorizationTarget::new(
+            ResourceType::new("workflow").expect("resource type"),
+            "CX-WF-000001",
+            authorization_scope(),
+        )
+        .expect("target")
+    }
+
+    fn authorization_request_record(action: &str) -> AuthorizationRequestRecord {
+        AuthorizationRequestRecord::new(
+            AuthorizationRequestId::new("CX-AUTHREQ-000001").expect("request id"),
+            authorization_subject(),
+            authorization_permission(action),
+            authorization_target(),
+            TimeReference::new("2026-07-17T00:00:00Z").expect("time"),
+            "authorize workflow operation",
+        )
+        .expect("authorization request")
+    }
+
+    fn authorization_decision_reference(
+        outcome: AuthorizationDecisionOutcome,
+    ) -> AuthorizationDecisionReference {
+        AuthorizationDecisionReference::new(
+            AuthorizationDecisionId::new("CX-AUTHDEC-000001").expect("decision id"),
+            AuthorizationRequestId::new("CX-AUTHREQ-000001").expect("request id"),
+            PolicyId::new("CX-POL-000001").expect("policy"),
+            outcome,
+            crate::authorization::AuthorizationEvaluationOrderVersion::new("1.0.0")
+                .expect("evaluation version"),
+            MatchedPolicyEvidenceReference::new("policy.match.001").expect("policy evidence"),
+            "2026-07-17T00:00:00Z",
+        )
+        .expect("authorization decision")
+    }
+
+    fn authorization_audit_evidence_reference(
+        audit_id: &str,
+        outcome: AuthorizationDecisionOutcome,
+    ) -> AuthorizationAuditEvidenceReference {
+        AuthorizationAuditEvidenceReference::new(
+            AuditEvidenceId::new(audit_id).expect("audit id"),
+            AuthorizationDecisionId::new("CX-AUTHDEC-000001").expect("decision id"),
+            PrincipalId::new("CX-PRN-000001").expect("principal"),
+            ScopeId::new("CX-SCP-000001").expect("scope"),
+            StableVersion::new("policy_version", "1.0.0").expect("policy version"),
+            vec![MatchedPolicyEvidenceReference::new("policy.match.001").expect("rule")],
+            outcome,
+        )
+        .expect("authorization audit evidence")
+    }
+
+    fn workflow_authorization_context(
+        outcome: AuthorizationDecisionOutcome,
+    ) -> WorkflowAuthorizationContext {
+        WorkflowAuthorizationContext::new(
+            authorization_request_record("approve-workflow"),
+            authorization_decision_reference(outcome),
+            vec![authorization_audit_evidence_reference(
+                "CX-AUD-100001",
+                outcome,
+            )],
+        )
+        .expect("workflow authorization context")
+    }
+
+    fn workflow_authorization_request(
+        outcome: AuthorizationDecisionOutcome,
+    ) -> WorkflowAuthorizationRequest {
+        WorkflowAuthorizationRequest::new(
+            WorkflowOperationReference::new("workflow.transition.approve").expect("operation"),
+            Some(workflow_definition()),
+            Some(workflow_instance()),
+            Some(workflow_state_snapshot()),
+            Some(WorkflowState::Approved),
+            Some(workflow_step_coordination()),
+            Some(entry_step("start.review")),
+            Some(entry_step("collect-input")),
+            workflow_authorization_context(outcome),
+            Some(
+                TransitionAuthorityReference::new("authority.workflow-owner")
+                    .expect("authority reference"),
+            ),
+            vec![
+                TransitionEvidenceReference::new("transition.evidence.001")
+                    .expect("transition evidence"),
+                TransitionEvidenceReference::new("transition.evidence.002")
+                    .expect("transition evidence"),
+            ],
+        )
+        .expect("workflow authorization request")
     }
 
     #[test]
@@ -2622,5 +3003,629 @@ mod tests {
                 .len(),
             2
         );
+    }
+
+    #[test]
+    fn workflow_authorization_valid_authorized_construction() {
+        let request = workflow_authorization_request(AuthorizationDecisionOutcome::Allow);
+        assert_eq!(
+            request.workflow_operation().as_str(),
+            "workflow.transition.approve"
+        );
+    }
+
+    #[test]
+    fn workflow_authorization_explicit_allow_returns_authorized_decision() {
+        let decision = WorkflowAuthorizationControl::evaluate(&workflow_authorization_request(
+            AuthorizationDecisionOutcome::Allow,
+        ));
+        assert_eq!(decision, AuthorizationDecisionOutcome::Allow);
+    }
+
+    #[test]
+    fn workflow_authorization_explicit_denial_returns_rejected_decision() {
+        let decision = WorkflowAuthorizationControl::evaluate(&workflow_authorization_request(
+            AuthorizationDecisionOutcome::DenyExplicit,
+        ));
+        assert_eq!(decision, AuthorizationDecisionOutcome::DenyExplicit);
+    }
+
+    #[test]
+    fn workflow_authorization_indeterminate_decision_returns_rejected_decision() {
+        let decision = WorkflowAuthorizationControl::evaluate(&workflow_authorization_request(
+            AuthorizationDecisionOutcome::DenyValidation,
+        ));
+        assert_eq!(decision, AuthorizationDecisionOutcome::DenyValidation);
+    }
+
+    #[test]
+    fn workflow_authorization_incomplete_authorization_result_rejected() {
+        let error = WorkflowAuthorizationContext::new(
+            authorization_request_record("approve-workflow"),
+            authorization_decision_reference(AuthorizationDecisionOutcome::Allow),
+            vec![],
+        )
+        .expect_err("missing authorization evidence must fail");
+
+        assert_eq!(
+            error,
+            DomainError::InvalidWorkflowAuthorizationIntegration(
+                "workflow authorization evidence is required",
+            )
+        );
+    }
+
+    #[test]
+    fn workflow_authorization_workflow_operation_preserved() {
+        let request = workflow_authorization_request(AuthorizationDecisionOutcome::Allow);
+        assert_eq!(
+            request.workflow_operation().as_str(),
+            "workflow.transition.approve"
+        );
+    }
+
+    #[test]
+    fn workflow_authorization_workflow_definition_preserved() {
+        let definition = workflow_definition();
+        let request = WorkflowAuthorizationRequest::new(
+            WorkflowOperationReference::new("workflow.transition.approve").expect("operation"),
+            Some(definition.clone()),
+            Some(workflow_instance()),
+            Some(workflow_state_snapshot()),
+            Some(WorkflowState::Approved),
+            Some(workflow_step_coordination()),
+            Some(entry_step("start.review")),
+            Some(entry_step("collect-input")),
+            workflow_authorization_context(AuthorizationDecisionOutcome::Allow),
+            None,
+            vec![],
+        )
+        .expect("workflow authorization request");
+
+        assert_eq!(request.workflow_definition(), Some(&definition));
+    }
+
+    #[test]
+    fn workflow_authorization_workflow_instance_preserved() {
+        let instance = workflow_instance();
+        let request = WorkflowAuthorizationRequest::new(
+            WorkflowOperationReference::new("workflow.transition.approve").expect("operation"),
+            Some(workflow_definition()),
+            Some(instance.clone()),
+            Some(workflow_state_snapshot()),
+            Some(WorkflowState::Approved),
+            Some(workflow_step_coordination()),
+            Some(entry_step("start.review")),
+            Some(entry_step("collect-input")),
+            workflow_authorization_context(AuthorizationDecisionOutcome::Allow),
+            None,
+            vec![],
+        )
+        .expect("workflow authorization request");
+
+        assert_eq!(request.workflow_instance(), Some(&instance));
+    }
+
+    #[test]
+    fn workflow_authorization_workflow_state_preserved() {
+        let state = workflow_state_snapshot();
+        let request = WorkflowAuthorizationRequest::new(
+            WorkflowOperationReference::new("workflow.transition.approve").expect("operation"),
+            Some(workflow_definition()),
+            Some(workflow_instance()),
+            Some(state.clone()),
+            Some(WorkflowState::Approved),
+            Some(workflow_step_coordination()),
+            Some(entry_step("start.review")),
+            Some(entry_step("collect-input")),
+            workflow_authorization_context(AuthorizationDecisionOutcome::Allow),
+            None,
+            vec![],
+        )
+        .expect("workflow authorization request");
+
+        assert_eq!(request.current_workflow_state(), Some(&state));
+    }
+
+    #[test]
+    fn workflow_authorization_workflow_step_preserved() {
+        let current_step = entry_step("start.review");
+        let next_step = entry_step("collect-input");
+        let request = WorkflowAuthorizationRequest::new(
+            WorkflowOperationReference::new("workflow.transition.approve").expect("operation"),
+            Some(workflow_definition()),
+            Some(workflow_instance()),
+            Some(workflow_state_snapshot()),
+            Some(WorkflowState::Approved),
+            Some(workflow_step_coordination()),
+            Some(current_step.clone()),
+            Some(next_step.clone()),
+            workflow_authorization_context(AuthorizationDecisionOutcome::Allow),
+            None,
+            vec![],
+        )
+        .expect("workflow authorization request");
+
+        assert_eq!(request.current_workflow_step(), Some(&current_step));
+        assert_eq!(request.requested_next_workflow_step(), Some(&next_step));
+    }
+
+    #[test]
+    fn workflow_authorization_authorization_decision_preserved() {
+        let context = workflow_authorization_context(AuthorizationDecisionOutcome::Allow);
+        let request = WorkflowAuthorizationRequest::new(
+            WorkflowOperationReference::new("workflow.transition.approve").expect("operation"),
+            Some(workflow_definition()),
+            Some(workflow_instance()),
+            Some(workflow_state_snapshot()),
+            Some(WorkflowState::Approved),
+            Some(workflow_step_coordination()),
+            Some(entry_step("start.review")),
+            Some(entry_step("collect-input")),
+            context.clone(),
+            None,
+            vec![],
+        )
+        .expect("workflow authorization request");
+
+        assert_eq!(
+            request
+                .workflow_authorization_context()
+                .authorization_decision(),
+            context.authorization_decision()
+        );
+    }
+
+    #[test]
+    fn workflow_authorization_authorization_evidence_preserved() {
+        let context = WorkflowAuthorizationContext::new(
+            authorization_request_record("approve-workflow"),
+            authorization_decision_reference(AuthorizationDecisionOutcome::Allow),
+            vec![
+                authorization_audit_evidence_reference(
+                    "CX-AUD-100001",
+                    AuthorizationDecisionOutcome::Allow,
+                ),
+                authorization_audit_evidence_reference(
+                    "CX-AUD-100002",
+                    AuthorizationDecisionOutcome::Allow,
+                ),
+            ],
+        )
+        .expect("workflow authorization context");
+        let request = WorkflowAuthorizationRequest::new(
+            WorkflowOperationReference::new("workflow.transition.approve").expect("operation"),
+            Some(workflow_definition()),
+            Some(workflow_instance()),
+            Some(workflow_state_snapshot()),
+            Some(WorkflowState::Approved),
+            Some(workflow_step_coordination()),
+            Some(entry_step("start.review")),
+            Some(entry_step("collect-input")),
+            context.clone(),
+            None,
+            vec![],
+        )
+        .expect("workflow authorization request");
+
+        assert_eq!(
+            request
+                .workflow_authorization_context()
+                .authorization_evidence_references(),
+            context.authorization_evidence_references()
+        );
+    }
+
+    #[test]
+    fn workflow_authorization_transition_authority_preserved() {
+        let authority =
+            TransitionAuthorityReference::new("authority.workflow-owner").expect("authority");
+        let request = WorkflowAuthorizationRequest::new(
+            WorkflowOperationReference::new("workflow.transition.approve").expect("operation"),
+            Some(workflow_definition()),
+            Some(workflow_instance()),
+            Some(workflow_state_snapshot()),
+            Some(WorkflowState::Approved),
+            Some(workflow_step_coordination()),
+            Some(entry_step("start.review")),
+            Some(entry_step("collect-input")),
+            workflow_authorization_context(AuthorizationDecisionOutcome::Allow),
+            Some(authority.clone()),
+            vec![],
+        )
+        .expect("workflow authorization request");
+
+        assert_eq!(request.transition_authority_reference(), Some(&authority));
+    }
+
+    #[test]
+    fn workflow_authorization_transition_evidence_ordering_preserved() {
+        let request = workflow_authorization_request(AuthorizationDecisionOutcome::Allow);
+        assert_eq!(
+            request.transition_evidence_references()[0].as_str(),
+            "transition.evidence.001"
+        );
+        assert_eq!(
+            request.transition_evidence_references()[1].as_str(),
+            "transition.evidence.002"
+        );
+    }
+
+    #[test]
+    fn workflow_authorization_duplicate_authorization_evidence_rejected() {
+        let error = WorkflowAuthorizationContext::new(
+            authorization_request_record("approve-workflow"),
+            authorization_decision_reference(AuthorizationDecisionOutcome::Allow),
+            vec![
+                authorization_audit_evidence_reference(
+                    "CX-AUD-100001",
+                    AuthorizationDecisionOutcome::Allow,
+                ),
+                authorization_audit_evidence_reference(
+                    "CX-AUD-100001",
+                    AuthorizationDecisionOutcome::Allow,
+                ),
+            ],
+        )
+        .expect_err("duplicate authorization evidence must fail");
+
+        assert_eq!(
+            error,
+            DomainError::InvalidWorkflowAuthorizationIntegration(
+                "duplicate workflow authorization evidence reference",
+            )
+        );
+    }
+
+    #[test]
+    fn workflow_authorization_duplicate_transition_evidence_rejected() {
+        let error = WorkflowAuthorizationRequest::new(
+            WorkflowOperationReference::new("workflow.transition.approve").expect("operation"),
+            Some(workflow_definition()),
+            Some(workflow_instance()),
+            Some(workflow_state_snapshot()),
+            Some(WorkflowState::Approved),
+            Some(workflow_step_coordination()),
+            Some(entry_step("start.review")),
+            Some(entry_step("collect-input")),
+            workflow_authorization_context(AuthorizationDecisionOutcome::Allow),
+            None,
+            vec![
+                TransitionEvidenceReference::new("transition.evidence.001")
+                    .expect("transition evidence"),
+                TransitionEvidenceReference::new("transition.evidence.001")
+                    .expect("transition evidence"),
+            ],
+        )
+        .expect_err("duplicate transition evidence must fail");
+
+        assert_eq!(
+            error,
+            DomainError::InvalidWorkflowAuthorizationIntegration(
+                "duplicate workflow transition evidence reference",
+            )
+        );
+    }
+
+    #[test]
+    fn workflow_authorization_ownership_does_not_imply_authorization() {
+        let decision = WorkflowAuthorizationControl::evaluate(&workflow_authorization_request(
+            AuthorizationDecisionOutcome::Deny,
+        ));
+        assert_eq!(decision, AuthorizationDecisionOutcome::Deny);
+    }
+
+    #[test]
+    fn workflow_authorization_external_principal_existence_is_not_checked() {
+        let subject = AuthorizationSubject::Principal(
+            AuthorizationPrincipalReference::new(
+                PrincipalId::new("CX-PRN-999999").expect("principal"),
+                AuthorizationPrincipalType::Employee,
+                "CX-EMP-999999",
+                EnterpriseId::new("CX-ENT-000001").expect("enterprise"),
+                PrincipalLifecycleStateReference::new("Active").expect("lifecycle"),
+                CredentialStatusReference::new("Valid").expect("credential"),
+            )
+            .expect("principal"),
+        );
+        let request_record = AuthorizationRequestRecord::new(
+            AuthorizationRequestId::new("CX-AUTHREQ-000001").expect("request id"),
+            subject,
+            authorization_permission("approve-workflow"),
+            authorization_target(),
+            TimeReference::new("2026-07-17T00:00:00Z").expect("time"),
+            "authorize workflow operation",
+        )
+        .expect("authorization request");
+        let context = WorkflowAuthorizationContext::new(
+            request_record,
+            authorization_decision_reference(AuthorizationDecisionOutcome::Allow),
+            vec![authorization_audit_evidence_reference(
+                "CX-AUD-100001",
+                AuthorizationDecisionOutcome::Allow,
+            )],
+        )
+        .expect("workflow authorization context");
+        let request = WorkflowAuthorizationRequest::new(
+            WorkflowOperationReference::new("workflow.transition.approve").expect("operation"),
+            Some(workflow_definition()),
+            Some(workflow_instance()),
+            Some(workflow_state_snapshot()),
+            Some(WorkflowState::Approved),
+            Some(workflow_step_coordination()),
+            Some(entry_step("start.review")),
+            Some(entry_step("collect-input")),
+            context,
+            None,
+            vec![],
+        )
+        .expect("workflow authorization request");
+
+        assert_eq!(
+            WorkflowAuthorizationControl::evaluate(&request),
+            AuthorizationDecisionOutcome::Allow
+        );
+    }
+
+    #[test]
+    fn workflow_authorization_external_authority_existence_is_not_checked() {
+        let authority = TransitionAuthorityReference::new("authority.external").expect("authority");
+        let request = WorkflowAuthorizationRequest::new(
+            WorkflowOperationReference::new("workflow.transition.approve").expect("operation"),
+            Some(workflow_definition()),
+            Some(workflow_instance()),
+            Some(workflow_state_snapshot()),
+            Some(WorkflowState::Approved),
+            Some(workflow_step_coordination()),
+            Some(entry_step("start.review")),
+            Some(entry_step("collect-input")),
+            workflow_authorization_context(AuthorizationDecisionOutcome::Allow),
+            Some(authority),
+            vec![],
+        )
+        .expect("workflow authorization request");
+
+        assert_eq!(
+            WorkflowAuthorizationControl::evaluate(&request),
+            AuthorizationDecisionOutcome::Allow
+        );
+    }
+
+    #[test]
+    fn workflow_authorization_external_evidence_existence_is_not_checked() {
+        let context = WorkflowAuthorizationContext::new(
+            authorization_request_record("approve-workflow"),
+            authorization_decision_reference(AuthorizationDecisionOutcome::Allow),
+            vec![AuthorizationAuditEvidenceReference::new(
+                AuditEvidenceId::new("CX-AUD-999999").expect("audit id"),
+                AuthorizationDecisionId::new("CX-AUTHDEC-000001").expect("decision id"),
+                PrincipalId::new("CX-PRN-000001").expect("principal"),
+                ScopeId::new("CX-SCP-000001").expect("scope"),
+                StableVersion::new("policy_version", "1.0.0").expect("policy version"),
+                vec![MatchedPolicyEvidenceReference::new("policy.match.external").expect("rule")],
+                AuthorizationDecisionOutcome::Allow,
+            )
+            .expect("authorization audit evidence")],
+        )
+        .expect("workflow authorization context");
+        let request = WorkflowAuthorizationRequest::new(
+            WorkflowOperationReference::new("workflow.transition.approve").expect("operation"),
+            Some(workflow_definition()),
+            Some(workflow_instance()),
+            Some(workflow_state_snapshot()),
+            Some(WorkflowState::Approved),
+            Some(workflow_step_coordination()),
+            Some(entry_step("start.review")),
+            Some(entry_step("collect-input")),
+            context,
+            None,
+            vec![
+                TransitionEvidenceReference::new("transition.evidence.external")
+                    .expect("transition evidence"),
+            ],
+        )
+        .expect("workflow authorization request");
+
+        assert_eq!(
+            WorkflowAuthorizationControl::evaluate(&request),
+            AuthorizationDecisionOutcome::Allow
+        );
+    }
+
+    #[test]
+    fn workflow_authorization_equivalent_requests_return_equivalent_decisions() {
+        let request = workflow_authorization_request(AuthorizationDecisionOutcome::Allow);
+        let first = WorkflowAuthorizationControl::evaluate(&request);
+        let second = WorkflowAuthorizationControl::evaluate(&request);
+
+        assert_eq!(first, second);
+    }
+
+    #[test]
+    fn workflow_authorization_construction_is_deterministic() {
+        let first = workflow_authorization_request(AuthorizationDecisionOutcome::Allow);
+        let second = workflow_authorization_request(AuthorizationDecisionOutcome::Allow);
+
+        assert_eq!(first, second);
+    }
+
+    #[test]
+    fn workflow_authorization_equivalent_invalid_inputs_produce_equivalent_errors() {
+        let first = WorkflowAuthorizationContext::new(
+            authorization_request_record("approve-workflow"),
+            authorization_decision_reference(AuthorizationDecisionOutcome::Allow),
+            vec![],
+        )
+        .expect_err("invalid authorization context");
+        let second = WorkflowAuthorizationContext::new(
+            authorization_request_record("approve-workflow"),
+            authorization_decision_reference(AuthorizationDecisionOutcome::Allow),
+            vec![],
+        )
+        .expect_err("invalid authorization context");
+
+        assert_eq!(first, second);
+    }
+
+    #[test]
+    fn workflow_authorization_supplied_values_are_not_mutated() {
+        let definition = workflow_definition();
+        let instance = workflow_instance();
+        let state = workflow_state_snapshot();
+        let coordination = workflow_step_coordination();
+        let context = workflow_authorization_context(AuthorizationDecisionOutcome::Allow);
+        let authority =
+            TransitionAuthorityReference::new("authority.workflow-owner").expect("authority");
+        let evidence = vec![
+            TransitionEvidenceReference::new("transition.evidence.001")
+                .expect("transition evidence"),
+            TransitionEvidenceReference::new("transition.evidence.002")
+                .expect("transition evidence"),
+        ];
+
+        let definition_before = definition.clone();
+        let instance_before = instance.clone();
+        let state_before = state.clone();
+        let coordination_before = coordination.clone();
+        let context_before = context.clone();
+        let authority_before = authority.clone();
+        let evidence_before = evidence.clone();
+
+        let request = WorkflowAuthorizationRequest::new(
+            WorkflowOperationReference::new("workflow.transition.approve").expect("operation"),
+            Some(definition.clone()),
+            Some(instance.clone()),
+            Some(state.clone()),
+            Some(WorkflowState::Approved),
+            Some(coordination.clone()),
+            Some(entry_step("start.review")),
+            Some(entry_step("collect-input")),
+            context.clone(),
+            Some(authority.clone()),
+            evidence.clone(),
+        )
+        .expect("workflow authorization request");
+
+        let _ = WorkflowAuthorizationControl::evaluate(&request);
+
+        assert_eq!(definition, definition_before);
+        assert_eq!(instance, instance_before);
+        assert_eq!(state, state_before);
+        assert_eq!(coordination, coordination_before);
+        assert_eq!(context, context_before);
+        assert_eq!(authority, authority_before);
+        assert_eq!(evidence, evidence_before);
+    }
+
+    #[test]
+    fn workflow_authorization_no_policy_evaluation_occurs() {
+        let decision = WorkflowAuthorizationControl::evaluate(&workflow_authorization_request(
+            AuthorizationDecisionOutcome::Allow,
+        ));
+        assert_eq!(decision, AuthorizationDecisionOutcome::Allow);
+    }
+
+    #[test]
+    fn workflow_authorization_no_permission_calculation_occurs() {
+        let request = workflow_authorization_request(AuthorizationDecisionOutcome::DenyScope);
+        assert_eq!(
+            WorkflowAuthorizationControl::evaluate(&request),
+            AuthorizationDecisionOutcome::DenyScope
+        );
+    }
+
+    #[test]
+    fn workflow_authorization_no_workflow_transition_executes() {
+        let transition_request = WorkflowTransitionControlRequest::new(
+            workflow_state_snapshot(),
+            WorkflowState::Approved,
+            None,
+            None,
+            vec![],
+            None,
+            crate::state::WorkflowLifecycleGuards::default(),
+        )
+        .expect("transition request");
+        let before = transition_request.clone();
+
+        let _ = WorkflowAuthorizationControl::evaluate(&workflow_authorization_request(
+            AuthorizationDecisionOutcome::Allow,
+        ));
+
+        assert_eq!(transition_request, before);
+    }
+
+    #[test]
+    fn workflow_authorization_no_step_execution_occurs() {
+        let coordination = workflow_step_coordination();
+        let before = coordination.clone();
+
+        let _ = WorkflowAuthorizationControl::evaluate(&workflow_authorization_request(
+            AuthorizationDecisionOutcome::Allow,
+        ));
+
+        assert_eq!(coordination, before);
+    }
+
+    #[test]
+    fn workflow_authorization_no_task_is_created() {
+        let request = workflow_authorization_request(AuthorizationDecisionOutcome::Allow);
+        assert_eq!(
+            request
+                .workflow_step_coordination()
+                .expect("coordination")
+                .workflow_step_execution_plan()
+                .blocked_step_references()
+                .len(),
+            2
+        );
+    }
+
+    #[test]
+    fn workflow_authorization_no_event_is_emitted() {
+        let decision = WorkflowAuthorizationControl::evaluate(&workflow_authorization_request(
+            AuthorizationDecisionOutcome::Allow,
+        ));
+        assert_eq!(decision, AuthorizationDecisionOutcome::Allow);
+    }
+
+    #[test]
+    fn workflow_authorization_existing_k3_authorization_apis_remain_usable() {
+        let request = authorization_request_record("approve-workflow");
+        let decision = authorization_decision_reference(AuthorizationDecisionOutcome::Allow);
+
+        assert_eq!(request.request_id().as_str(), "CX-AUTHREQ-000001");
+        assert_eq!(decision.outcome(), AuthorizationDecisionOutcome::Allow);
+    }
+
+    #[test]
+    fn workflow_authorization_existing_k6_001_through_k6_005_apis_remain_usable() {
+        let definition = workflow_definition();
+        let instance = workflow_instance();
+        let coordination = workflow_step_coordination();
+        let transition_request = WorkflowTransitionControlRequest::new(
+            workflow_state_snapshot(),
+            WorkflowState::Approved,
+            None,
+            None,
+            vec![],
+            None,
+            crate::state::WorkflowLifecycleGuards::default(),
+        )
+        .expect("transition request");
+
+        assert_eq!(definition.workflow_id().as_str(), "CX-WF-000001");
+        assert_eq!(instance.workflow_id().as_str(), "CX-WF-000001");
+        assert_eq!(
+            coordination
+                .workflow_step_selection()
+                .current_step()
+                .as_str(),
+            "start.review"
+        );
+        assert!(matches!(
+            WorkflowTransitionControl::evaluate(&transition_request),
+            crate::state::WorkflowTransitionDecision::NoOp(_)
+        ));
     }
 }

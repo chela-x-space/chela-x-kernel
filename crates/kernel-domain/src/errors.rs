@@ -35,6 +35,7 @@ pub enum DomainError {
     InvalidWorkflowInstance(&'static str),
     InvalidWorkflowTransitionControl(&'static str),
     InvalidWorkflowStepCoordination(&'static str),
+    InvalidWorkflowAuthorizationIntegration(&'static str),
     InvalidEventReference(&'static str),
     InvalidEventTimestamp(&'static str),
     IntegrityFailure(&'static str),
@@ -121,6 +122,12 @@ impl fmt::Display for DomainError {
             }
             Self::InvalidWorkflowStepCoordination(message) => {
                 write!(formatter, "invalid workflow step coordination: {message}")
+            }
+            Self::InvalidWorkflowAuthorizationIntegration(message) => {
+                write!(
+                    formatter,
+                    "invalid workflow authorization integration: {message}"
+                )
             }
             Self::InvalidEventReference(message) => {
                 write!(formatter, "invalid event reference: {message}")
