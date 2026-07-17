@@ -1,7 +1,7 @@
 # CHELA-X Kernel
 
 ## Status
-Implementation (K5.1 Complete)
+Implementation (K6 Complete)
 
 ## Version
 0.5.0
@@ -10,7 +10,7 @@ Implementation (K5.1 Complete)
 Kernel Platform Team
 
 ## Last Updated
-2026-07-16
+2026-07-17
 
 ## Applies To
 CHELA-X Kernel repository baseline, bootstrap, and future implementation work.
@@ -52,49 +52,31 @@ AI Engineering OS -> CHELA-X CES -> CHELA-X Kernel -> CHELA-X Runtime -> CHELA-X
 | K5.3 Event Streams | PASS |
 | K5.4 Replay | PASS |
 | K5 Enterprise Event System | PASS / COMPLETE |
-| K6 Workflow Engine | NEXT |
+| K6 Workflow Engine | PASS |
 
 Canonical host validation:
 
-- **382 passed**
+- **595 passed**
 - **0 failed**
 
 ## Current Status
-`K5.1 Canonical Enterprise Event Envelope Implemented`
+`K6 Workflow Engine Domain Layer Complete`
 
 ## Constraints
 - Architecture is frozen.
 - No redesign may occur without an approved ADR.
-- K1 domain model is implemented.
-- K1.1 validation is `PASS`.
-- Domain API freeze status is `FROZEN FOR K2 CONSUMPTION`.
-- Ready for K2 is `YES`.
-- Ready for K3 is `YES`.
-- K2 implementation is additive in `crates/kernel-domain/src/state.rs`.
-- K2 implementation is complete.
-- K2 architecture review passed.
-- K2 canonical host validation passed.
-- Codex sandbox linker isolation is not a project blocker.
-- K3 implementation is additive in `crates/kernel-domain/src/enforcement.rs`.
-- K3 implementation is complete.
-- K3 canonical host validation passed with `108 passed`, `0 failed`, `0 ignored`.
-- K4.1 implementation is additive in `crates/kernel-domain/src/runtime.rs`.
-- K4.1 implementation is complete.
-- K4.1 canonical host validation passed with `108 passed`, `0 failed`, `0 ignored`.
-- K4.2 implementation is additive in `crates/kernel-domain/src/runtime.rs`.
-- K4.2 implementation is complete in source and awaits canonical host validation because native unit-test linking still requires a host with `cc` in this environment.
-- K4.3 has not started.
-- K5.1 implementation is additive in `crates/kernel-domain/src/event.rs`.
-- K5.1 implementation is complete.
-- K5.1 canonical host validation passed with `236 passed`, `0 failed`.
-- K5.2 validation implementation is complete.
-- K5.2-K5.4 canonical host validation passed with `382 passed`, `0 failed`.
-- K5 Enterprise Event System is complete.
-- K6 Workflow Engine is next.
+- K1 through K5 are complete and remain compatible with K6.
+- K6 workflow implementation is additive in `crates/kernel-domain/src/workflow.rs`, `crates/kernel-domain/src/state.rs`, and existing `kernel-domain` re-exports.
+- Canonical host validation passed with `595 passed`, `0 failed`, `0 ignored`.
+- Codex sandbox linker isolation is historical environment evidence only and is not the authoritative project status.
+- K6 Workflow Engine domain layer is complete.
+- K6 is deterministic and side-effect free.
+- K6 public API is frozen for downstream consumption.
+- K6 preserves the architecture freeze.
 - Runtime execution is not implemented.
-- Domain API baseline is frozen for K2 consumers.
+- Domain API is frozen for downstream consumption.
 - No business logic, persistence, networking, or workflow execution is introduced in K1.
-- No workflow execution, persistence, networking, or runtime orchestration is introduced in K2.
+- No workflow execution, persistence, networking, runtime orchestration, scheduler, event bus, or worker infrastructure is introduced in K6.
 - No frozen upstream repository may be modified by this repository.
 
 ## Domain Scope
@@ -108,6 +90,7 @@ Canonical host validation:
 - Authorization, agent, delegation, policy, and workflow reference types
 - Deterministic authorization enforcement inputs, traces, results, and decision construction helpers
 - Deterministic runtime registry, capability indexing, heartbeat, freshness, lease, presence, runtime-health, runtime-snapshot, and supervisor primitives
+- Deterministic workflow foundation, definition, instance, transition-control, step-coordination, authorization-integration, event-integration, and failure-or-recovery primitives
 
 ## References
 - [AGENTS.md](./AGENTS.md)

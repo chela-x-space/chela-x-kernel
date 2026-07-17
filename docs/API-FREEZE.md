@@ -1,7 +1,7 @@
 # API-FREEZE
 
 ## Status
-Draft
+Current
 
 ## Version
 0.5.0
@@ -10,10 +10,10 @@ Draft
 Kernel Platform Team
 
 ## Last Updated
-2026-07-15
+2026-07-17
 
 ## Applies To
-K1 public API compatibility governance for `kernel-domain`.
+Frozen public API governance for `kernel-domain`, including the K6 workflow-engine surface.
 
 ## Review Cycle
 Quarterly
@@ -28,85 +28,69 @@ Kernel Platform Team
 INTERNAL
 
 ## Freeze Name
-`K1 Domain API Baseline`
+
+`K6 Workflow Engine Domain API`
 
 ## Status Statement
-`FROZEN FOR K2/K3/K4.1/K4.2 CONSUMPTION`
+
+`FROZEN FOR DOWNSTREAM CONSUMPTION`
 
 ## Validation State
-- K1.1 validation status: `PASS`
+
+- Host validation status: `PASS`
 - Validation source: accepted host verification for `/home/chela-x/chela-x-kernel`
-- Unit-test result: `38 passed`, `0 failed`, `0 ignored`
-- Ready for K2: `YES`
-- K3 host validation status: `PASS`
-- K4.1 host validation status: `PASS`
+- Unit-test baseline: `595 passed`, `0 failed`, `0 ignored`
+- Doc-test baseline: `0 passed`, `0 failed`
+- Architecture Freeze: `PRESERVED`
 
-## Crate
-- name: `kernel-domain`
-- version: `0.1.0`
+## Scope Of The Freeze
 
-## Public Modules
-- `agent`
-- `authorization`
-- `decision`
-- `delegation`
-- `enforcement`
-- `errors`
-- `identifier`
-- `identity`
-- `lifecycle`
-- `ownership`
-- `policy`
-- `request`
-- `runtime`
-- `state`
-- `workflow`
+Frozen public K6 workflow types exported from `crates/kernel-domain/src/lib.rs`:
 
-## Public Types
-- stable identifiers and validated text or version values
-- ownership path and organizational context values
-- identity and lifecycle enums or references
-- authorization, decision, agent, delegation, policy, and workflow pure reference types
-- deterministic enforcement input, output, trace, and spec types
-- deterministic runtime registry, capability, heartbeat, heartbeat-freshness, lease, recovery-eligibility, runtime snapshot, supervisor, and presence spec types
-- state snapshots, transition request or outcome records, lifecycle guard structs, workflow failure codes, and lifecycle validation functions
-- spec structs for `AgentDefinition`, `DecisionRecord`, `DelegationReference`, `AuthorizationGrantRecord`, `AuthorizationPolicyRecord`, `CapabilityDescriptor`, `RuntimeEntity`, `LeaseRecord`, `HeartbeatRecord`, and `AgentRegistration`
+- workflow foundation types
+- workflow definition and instance types
+- workflow transition-control types
+- workflow step-coordination types
+- workflow authorization-integration types
+- workflow event-integration types
+- workflow failure-and-recovery types
+- workflow-related `DomainError` variants
 
-## Intentionally Private Types
-- internal validation helpers inside `identifier.rs`
-- private record fields across all public structs
+Private helpers and internal validation functions that are not publicly re-exported are not frozen by this document.
 
-## Known Partial Requirements
-- `CES-B0-011#11.2-principle`
-- `CES-B0-015#15.2-principle`
-- `CES-B0-022#normative-specification`
-- `CES-B0-024.1#normative-specification`
-- `CES-B0-024.6#normative-specification`
-- `CES-B0-026.3#normative-specification`
-- `CES-B0-027.7#normative-specification`
-- `CES-B0-027.15#normative-specification`
-- `CES-B0-029.4#normative-specification`
-- `CES-B0-029.11#normative-specification`
-- `CES-B0-029.12#normative-specification`
-- `CES-B0-029.13#normative-specification`
-- `CES-B0-030.13#normative-specification`
-- `CES-B0-029.20#normative-specification`
-- `CES-B0-030.17#normative-specification`
-- `CES-B0-030.18#normative-specification`
+## Compatibility Guarantees
 
-## Compatibility Rules
-- Breaking public API changes after this freeze require a documented CES-backed defect correction or an approved ADR.
-- Non-breaking additions remain allowed only when traced to an existing CES or Program requirement.
-- Constructor strengthening that closes an invalid state is allowed only when CES already prohibits that state.
+- Additive compatibility with K1 is preserved.
+- K2 lifecycle semantics are unchanged.
+- K3 authorization semantics are reused, not duplicated.
+- K5 event-envelope semantics are reused, not duplicated.
+- Existing public K1-K5 exports remain usable.
 
-## Allowed Change Categories
-- additive getters
-- additive non-breaking reference types
-- stronger validation that enforces existing CES rules
-- documentation and traceability corrections
+## Explicit Non-Features
 
-## Prohibited Breaking Changes
-- renaming or removing frozen public types without approved authority
-- widening mutable access to stable identity fields
-- replacing strong domain types with raw `String`
-- introducing runtime execution behavior into `kernel-domain`
+- No runtime scheduler
+- No executor
+- No persistence
+- No event bus
+- No async runtime
+- No network
+- No workflow mutation performed by step coordination, authorization integration, event integration, or recovery decision layers
+
+## Change Policy
+
+Any breaking K6 public API or semantic change requires an approved ADR.
+
+Allowed non-breaking changes:
+
+- documentation corrections
+- additive public getters
+- additive non-breaking workflow reference types
+- stronger validation only when it enforces already-approved CES or frozen-K2 semantics without changing accepted valid states
+
+Prohibited changes without approved ADR:
+
+- renaming or removing frozen K6 public types
+- changing K2 lifecycle semantics
+- duplicating K3 authorization semantics
+- duplicating K5 event-envelope semantics
+- introducing runtime infrastructure behavior into `kernel-domain`

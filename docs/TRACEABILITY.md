@@ -1,7 +1,7 @@
 # TRACEABILITY
 
 ## Status
-Draft
+Current
 
 ## Version
 0.5.0
@@ -10,10 +10,10 @@ Draft
 Kernel Platform Team
 
 ## Last Updated
-2026-07-15
+2026-07-17
 
 ## Applies To
-Requirement traceability from CES and Program sources into CHELA-X Kernel.
+Requirement traceability from CES and Program sources into CHELA-X Kernel, including K6 workflow-engine closure.
 
 ## Review Cycle
 Quarterly
@@ -27,142 +27,61 @@ Kernel Platform Team
 ## Classification
 INTERNAL
 
-| Requirement Source | Requirement ID | Requirement Summary | Target Kernel Component | Implementation Status | Test Status | Evidence |
-| --- | --- | --- | --- | --- | --- | --- |
-| CES | `CES-B0-027.1`, `CES-B0-027.2`, `CES-B0-027.8`, `CES-B0-027.15` | Agent identity, registration, runtime binding, and immutable registration facts remain explicit and additive. | `kernel-domain::runtime::{RuntimeEntity, AgentRegistration, AgentRegistry}` | VERIFIED | Passed (host verified; 108/0/0 workspace suite) | `crates/kernel-domain/src/runtime.rs`; tests: registration, duplicate detection, and deterministic lookup suite; commit range: `7fde7f9..f949bfe` plus host validation evidence |
-| CES | `CES-B0-027.5`, `CES-B0-027.9` | Capability descriptors and discovery-style lookups remain deterministic, scoped, and indexable. | `kernel-domain::runtime::{CapabilityDescriptor, AgentRegistry}` | VERIFIED | Passed (host verified; 108/0/0 workspace suite) | `crates/kernel-domain/src/runtime.rs`; tests: capability descriptor validation and capability lookup suite; commit range: `7fde7f9..f949bfe` plus host validation evidence |
-| CES | `CES-B0-027.6`, `CES-B0-027.7`, `CES-B0-027.10`, `CES-B0-027.21`, `CES-B0-027.22` | Presence, runtime health, lease validity, heartbeat freshness, and runtime validation remain deterministic and auditable. | `kernel-domain::runtime::{PresenceState, RuntimeHealth, LeaseRecord, HeartbeatRecord, AgentRegistry}` | IMPLEMENTED | Host validation exposed 3 K4.2 precedence defects in retired heartbeat rejection, retired lease renewal rejection, and duplicate lease classification; patch applied, sandbox compile, clippy, and doc pass; native test execution blocked locally by missing linker; canonical host rerun pending | `crates/kernel-domain/src/runtime.rs`; tests: lifecycle, lease validation, heartbeat freshness, deregistration, and K4.2 precedence regression suite |
-| CES | `CES-B0-015.2`, `CES-B0-022.3`, `CES-B0-022.11`, `CES-B0-024.1`, `CES-B0-024.6`, `CES-B0-027.10`, `CES-B0-027.12`, `CES-B0-027.18`, `CES-B0-027.19` | Runtime supervision, failure evidence, recovery eligibility, and supervisor recommendations remain deterministic, auditable, and non-executing. | `kernel-domain::runtime::{RuntimeFailureObservation, RecoveryEligibility, RuntimeStateSnapshot, SupervisorOutcome}` | IMPLEMENTED | Sandbox compile, clippy, and doc pass; native test execution blocked locally by missing linker | `crates/kernel-domain/src/runtime.rs`; tests: runtime supervision, failure, recovery, and deterministic trace suite; commit range: K4.2 session work |
-| CES | `CES-B0-022.3`, `CES-B0-022.7`, `CES-B0-022.11`, `CES-B0-022.13` | Decision authority, policy citation, audit linkage, and fail-closed outcomes remain explicit during authorization enforcement. | `kernel-domain::enforcement::{AuthorizationAuthorityRequirement, DecisionConstructionInput, AuthorizationEvaluationResult}` | IMPLEMENTED | Host validation exposed 2 K3 defects in decision construction and permission-scope classification; patch applied, sandbox compile, clippy, and doc pass; native test execution still blocked locally by missing linker | `crates/kernel-domain/src/enforcement.rs`; tests: authority and decision construction suite plus denial-evidence regressions; commit range: K3/K4.1 correction work |
-| CES | `CES-B0-024.1`, `CES-B0-024.2`, `CES-B0-024.6` | High-risk actions remain deny-by-default, authorized, and reconstructable through audit evidence. | `kernel-domain::enforcement::{evaluate_authorization, AuthorizationEvaluationTrace}` | IMPLEMENTED | Sandbox compile, clippy, and doc pass; native test execution blocked by missing linker | `crates/kernel-domain/src/enforcement.rs`; tests: identity, scope, explicit deny, deterministic trace suite; commit range: K3 session work |
-| CES | `CES-B0-026.1` to `CES-B0-026.8` | Authorization evaluation order, explicit deny precedence, tenant isolation, and stable outcomes are enforced deterministically. | `kernel-domain::enforcement::*` | IMPLEMENTED | Host validation exposed 2 K3 defects in deny-decision evidence construction and target-outside-permission-scope rejection; patch applied, sandbox compile, clippy, and doc pass; native test execution still blocked locally by missing linker | `crates/kernel-domain/src/enforcement.rs`; tests: `authorization_*_ces_b0_026_*`; commit range: K3/K4.1 correction work |
-| CES | `CES-B0-028.7`, `CES-B0-028.8`, `CES-B0-028.9`, `CES-B0-028.12` | Policy effects, conflict resolution, explicit deny precedence, and downstream enforcement consume policy results without redefining authority. | `kernel-domain::enforcement::{AuthorizationPolicyRecord, PolicyMatchResult}` | IMPLEMENTED | Host validation exposed that policy permit could incorrectly allow without a matching grant; patch applied, sandbox compile, clippy, and doc pass; native test execution still blocked locally by missing linker | `crates/kernel-domain/src/enforcement.rs`; tests: `authorization_policy_*_ces_b0_028_*` plus no-grant permit regression; commit range: K3/K4.1 correction work |
-| CES | `CES-B0-029.4`, `CES-B0-029.5`, `CES-B0-029.6`, `CES-B0-029.9`, `CES-B0-029.11`, `CES-B0-029.13`, `CES-B0-029.15` | Delegation remains bounded by valid authority, scope, lifecycle, depth, and separation-of-duties evidence during authorization enforcement. | `kernel-domain::enforcement::{AuthorizationDelegationBinding, DelegationBoundResult}` | IMPLEMENTED | Sandbox compile, clippy, and doc pass; native test execution blocked by missing linker | `crates/kernel-domain/src/enforcement.rs`; tests: `authorization_*delegation*_ces_b0_029_*`; commit range: K3 session work |
-| CES | `CES-B0-011#11.2-principle` | Identity persists across model, runtime, provider, and infrastructure changes. | `kernel-domain::identity::{HumanIdentity, AgentIdentity}` | PARTIAL | Passed (host verified; 38/0/0 suite) | `crates/kernel-domain/src/identity.rs`; tests: `identity_creates_valid_human_identity_ces_b0_011_2`, `identity_id_is_immutable_through_public_api_ces_b0_027_2`; commits: `cb67e70..f9c0330`, host validation accepted 2026-07-14 |
-| CES | `CES-B0-012#12.2-lifecycle` | Digital employees follow one governed lifecycle. | `kernel-domain::lifecycle::HumanLifecycle` | IMPLEMENTED | Passed (host verified; 38/0/0 suite) | `crates/kernel-domain/src/lifecycle.rs`; tests: lifecycle suite in `crates/kernel-domain/src/lifecycle.rs`; commits: `cb67e70..5c94d2a`, host validation accepted 2026-07-14 |
-| CES | `CES-B0-015#15.2-principle` | Authority exists only when granted by the organization. | `kernel-domain::authorization::AuthorityLevel` | PARTIAL | Passed (host verified; 38/0/0 suite where applicable) | `crates/kernel-domain/src/authorization.rs`; commits: `5c94d2a..f9c0330`, host validation accepted 2026-07-14 |
-| CES | `CES-B0-022#normative-specification` | Decisions are canonical, auditable, and deterministically mappable. | `kernel-domain::decision::{DecisionRecord, DecisionRecordSpec}` | PARTIAL | Passed (host verified; 38/0/0 suite) | `crates/kernel-domain/src/decision.rs`; tests: `decision_creates_valid_decision_record_ces_b0_022_1`; commits: `5c94d2a..f9c0330`, host validation accepted 2026-07-14 |
-| CES | `CES-B0-024.1#normative-specification` | High-risk actions must be authenticated, authorized, logged, and reviewable. | `kernel-domain::authorization::{AuthorizationSubject, AuthorizationTarget, PermissionReference}` | PARTIAL | Passed (host verified; 38/0/0 suite) | `crates/kernel-domain/src/authorization.rs`; tests: `authorization_request_principal_and_target_share_enterprise_traceability_k1`; commits: `5c94d2a..f9c0330`, host validation accepted 2026-07-14 |
-| CES | `CES-B0-024.6#normative-specification` | Security-relevant actions generate reconstructable audit records. | `kernel-domain::authorization::AuthorizationAuditEvidenceReference` | PARTIAL | Covered by accepted host validation evidence | `crates/kernel-domain/src/authorization.rs`; commits: `f9c0330`, host validation accepted 2026-07-14 |
-| CES | `CES-B0-025#normative-specification` | Enterprise, workspace, project, and OU hierarchy remain canonical. | `kernel-domain::ownership::{OwnershipPath, OrganizationalContext}` | IMPLEMENTED | Passed (host verified; 38/0/0 suite) | `crates/kernel-domain/src/ownership.rs`; tests: `ownership_accepts_valid_workspace_project_path_ces_b0_025_3`; commits: `cb67e70..5c94d2a`, host validation accepted 2026-07-14 |
-| CES | `CES-B0-026.3#normative-specification` | Tenant isolation denies scope widening across enterprise boundaries. | `kernel-domain::authorization::ScopeReference` | PARTIAL | Passed (host verified; 38/0/0 suite) | `crates/kernel-domain/src/authorization.rs`; tests: `authorization_scope_accepts_valid_project_scope_ces_b0_026_3`; commits: `5c94d2a..f9c0330`, host validation accepted 2026-07-14 |
-| CES | `CES-B0-026.5#normative-specification` | Authorization evaluation order is fixed and cannot be reordered locally. | `kernel-domain::authorization::{AuthorizationEvaluationStep, AuthorizationEvaluationOrderVersion}` | VERIFIED | Passed (host verified; 38/0/0 suite) | `crates/kernel-domain/src/authorization.rs`; tests: `authorization_evaluation_order_matches_ces_b0_026_5`; commits: `f9c0330`, host validation accepted 2026-07-14 |
-| CES | `CES-B0-026.6#normative-specification` | Authorization requests are immutable and decisions are deterministic. | `kernel-domain::request::AuthorizationRequestRecord`, `kernel-domain::authorization::AuthorizationDecisionReference` | VERIFIED | Passed (host verified; 38/0/0 suite) | `crates/kernel-domain/src/request.rs`, `crates/kernel-domain/src/authorization.rs`; tests: `request_creates_valid_request_record_ces_b0_026_6`; commits: `5c94d2a..f9c0330`, host validation accepted 2026-07-14 |
-| CES | `CES-B0-026.8#normative-specification` | Every authorization decision must produce stable audit evidence. | `kernel-domain::authorization::{AuthorizationDecisionReference, AuthorizationAuditEvidenceReference}` | IMPLEMENTED | Covered by accepted host validation evidence | `crates/kernel-domain/src/authorization.rs`; commits: `f9c0330`, host validation accepted 2026-07-14 |
-| CES | `CES-B0-027.7#normative-specification` | Agent activation requires lifecycle, ownership, permission, and supervision prerequisites. | `kernel-domain::lifecycle::AgentLifecycle` | PARTIAL | Passed (host verified; 38/0/0 suite) | `crates/kernel-domain/src/lifecycle.rs`; tests: `agent_terminal_states_are_explicit_ces_b0_027_7`; commits: `5c94d2a`, host validation accepted 2026-07-14 |
-| CES | `CES-B0-027.15#normative-specification` | Agent state separates immutable identity from mutable operational state and supports replay. | `kernel-domain::identity::AgentIdentity`, `kernel-domain::agent::{AgentDefinition, AgentDefinitionSpec}` | PARTIAL | Passed (host verified; 38/0/0 suite) | `crates/kernel-domain/src/identity.rs`, `crates/kernel-domain/src/agent.rs`; tests: `identity_id_is_immutable_through_public_api_ces_b0_027_2`; commits: `cb67e70..f9c0330`, host validation accepted 2026-07-14 |
-| CES | `CES-B0-027.18#normative-specification` | Critical agent failures trigger suspension or isolation before further privileged work. | `kernel-domain::agent::AgentFailureReference` | VERIFIED | Passed (host verified; 38/0/0 suite) | `crates/kernel-domain/src/agent.rs`; tests: `agent_failure_reference_rejects_premature_recovery_eligibility_ces_b0_027_18`; commits: `f9c0330..f2d0e77`, host validation accepted 2026-07-14 |
-| CES | `CES-B0-027.19#normative-specification` | Recovery requires a plan, supervisor, and validation evidence. | `kernel-domain::agent::AgentRecoveryReference` | VERIFIED | Passed (host verified; 38/0/0 suite) | `crates/kernel-domain/src/agent.rs`; tests: `agent_recovery_reference_requires_plan_and_evidence_ces_b0_027_19`; commits: `f9c0330..f2d0e77`, host validation accepted 2026-07-14 |
-| CES | `CES-B0-028.7#normative-specification` | Explicit Deny overrides Permit and remains non-waivable where marked. | `kernel-domain::policy::PolicyEffect`, `kernel-domain::delegation::PolicyResultReference` | VERIFIED | Passed (host verified; 38/0/0 suite) | `crates/kernel-domain/src/policy.rs`, `crates/kernel-domain/src/delegation.rs`; tests: `policy_effect_distinguishes_permit_and_deny_ces_b0_028_7`; commits: `f9c0330`, host validation accepted 2026-07-14 |
-| CES | `CES-B0-028.9#normative-specification` | Policy evaluation order is deterministic and immutable per published set. | `kernel-domain::policy::{PolicyEvaluationStep, PolicyEvaluationOrderVersion}` | VERIFIED | Passed (host verified; 38/0/0 suite) | `crates/kernel-domain/src/policy.rs`; tests: `policy_evaluation_order_is_total_and_stable_ces_b0_028_9`; commits: `f9c0330`, host validation accepted 2026-07-14 |
-| CES | `CES-B0-028.12#normative-specification` | Delegation and workflow must consume policy results rather than redefine policy authority. | `kernel-domain::delegation::AuthoritySourceReference` | VERIFIED | Passed (host verified; 38/0/0 suite) | `crates/kernel-domain/src/delegation.rs`; tests: `delegation_creates_valid_reference_ces_b0_029_1`; commits: `f9c0330`, host validation accepted 2026-07-14 |
-| CES | `CES-B0-029.4#normative-specification` | A delegator cannot delegate more authority than currently held. | `kernel-domain::delegation::{AuthoritySourceReference, DelegationReference}` | PARTIAL | Passed (host verified; 38/0/0 suite) | `crates/kernel-domain/src/delegation.rs`; tests: `delegation_creates_valid_reference_ces_b0_029_1`; commits: `5c94d2a..f9c0330`, host validation accepted 2026-07-14 |
-| CES | `CES-B0-029.9#normative-specification` | Delegation chains are auditable, acyclic, and depth-bounded. | `kernel-domain::delegation::{DelegationDepth, DelegationReferenceSpec}` | VERIFIED | Passed (host verified; 38/0/0 suite) | `crates/kernel-domain/src/delegation.rs`; tests: `delegation_rejects_invalid_depth_ces_b0_029_9`, `delegation_requires_explicit_policy_evidence_for_redelegation_ces_b0_029_9`; commits: `f9c0330`, host validation accepted 2026-07-14 |
-| CES | `CES-B0-029.20#normative-specification` | Delegation remains policy-constrained and downstream workflow cannot redefine it. | `kernel-domain::delegation::{DelegationReference, AuthoritySourceReference}` | PARTIAL | Passed (host verified; 38/0/0 suite) | `crates/kernel-domain/src/delegation.rs`; tests: `delegation_creates_valid_reference_ces_b0_029_1`; commits: `5c94d2a..f9c0330`, host validation accepted 2026-07-14 |
-| CES | `CES-B0-030.9#normative-specification` | Workflow transitions are deterministic and require valid upstream outcomes before running. | `kernel-domain::lifecycle::WorkflowState` | VERIFIED | Passed (host verified; 38/0/0 suite) | `crates/kernel-domain/src/lifecycle.rs`; tests: `workflow_allows_documented_transition_ces_b0_030_9`; commits: `5c94d2a`, host validation accepted 2026-07-14 |
-| CES | `CES-B0-030.14#normative-specification` | Workflow retry and recovery are bounded and must revalidate upstream evidence. | `kernel-domain::workflow::{WorkflowRetryPolicyReference, WorkflowRecoveryReference}` | VERIFIED | Passed (host verified; 38/0/0 suite) | `crates/kernel-domain/src/workflow.rs`; tests: `workflow_retry_limit_rejects_zero_ces_b0_030_14`, `workflow_recovery_requires_path_reference_ces_b0_030_14`; commits: `f9c0330`, host validation accepted 2026-07-14 |
-| CES | `CES-B0-030.17#normative-specification` | Decision-relevant workflow transitions must emit append-only audit evidence. | `kernel-domain::workflow::WorkflowAuditEvidenceReference` | PARTIAL | Covered by accepted host validation evidence | `crates/kernel-domain/src/workflow.rs`; commits: `f9c0330`, host validation accepted 2026-07-14 |
-| CES | `CES-B0-030.18#normative-specification` | Workflow must remain deterministic, tenant-isolated, and free of unbounded cycles. | `kernel-domain::lifecycle::WorkflowState` | PARTIAL | Passed (host verified; 38/0/0 suite) | `crates/kernel-domain/src/lifecycle.rs`; tests: `workflow_terminal_state_rejects_reactivation_ces_b0_030_9`; commits: `5c94d2a`, host validation accepted 2026-07-14 |
-| CES | `CES-B0-025.1#normative-specification` | Enterprise lifecycle state and terminal dissolve semantics remain deterministic. | `kernel-domain::state::{EnterpriseStateSnapshot, EnterpriseTransitionRequest}` | VERIFIED | Passed (host verified; 58/0/0 suite) | `crates/kernel-domain/src/state.rs`; tests: `enterprise_allows_activation_with_required_prerequisites_ces_b0_025_1`; commit: `7f70c80`; canonical host validation accepted 2026-07-14 |
-| CES | `CES-B0-025.2#normative-specification` | Workspace activation and retirement guards remain deterministic. | `kernel-domain::state::{WorkspaceStateSnapshot, WorkspaceTransitionRequest}` | VERIFIED | Passed (host verified; 58/0/0 suite) | `crates/kernel-domain/src/state.rs`; tests: `workspace_rejects_retirement_with_active_projects_ces_b0_025_2`; commit: `7f70c80`; canonical host validation accepted 2026-07-14 |
-| CES | `CES-B0-025.3#normative-specification` | Project lifecycle validation enforces workspace and success-criteria guards. | `kernel-domain::state::{ProjectStateSnapshot, ProjectTransitionRequest}` | VERIFIED | Passed (host verified; 58/0/0 suite) | `crates/kernel-domain/src/state.rs`; tests: `project_rejects_noop_transition_ces_b0_025_3`, `project_completion_requires_success_criteria_ces_b0_025_3`; commit: `7f70c80`; canonical host validation accepted 2026-07-14 |
-| CES | `CES-B0-025.4#normative-specification` | Organizational-unit transition validation preserves deterministic lifecycle guards. | `kernel-domain::state::{OrganizationalUnitStateSnapshot, OrganizationalUnitTransitionRequest}` | VERIFIED | Passed (host verified; 58/0/0 suite) | `crates/kernel-domain/src/state.rs`; tests: covered in state module lifecycle suite; commit: `7f70c80`; canonical host validation accepted 2026-07-14 |
-| CES | `CES-B0-025.5#normative-specification` | Ownership revocation and expiration remain terminal and auditable. | `kernel-domain::state::{OwnershipStateSnapshot, OwnershipTransitionRequest}` | VERIFIED | Passed (host verified; 58/0/0 suite) | `crates/kernel-domain/src/state.rs`; tests: `ownership_rejects_terminal_reactivation_ces_b0_025_5`; commit: `7f70c80`; canonical host validation accepted 2026-07-14 |
-| CES | `CES-B0-012#12.2-lifecycle` | Human lifecycle progression remains ordered and deterministic. | `kernel-domain::state::{HumanStateSnapshot, HumanTransitionRequest}` | VERIFIED | Passed (host verified; 58/0/0 suite) | `crates/kernel-domain/src/state.rs`; tests: `human_allows_sequential_lifecycle_progression_ces_b0_012_2`, `human_rejects_non_adjacent_transition_ces_b0_012_2`; commit: `7f70c80`; canonical host validation accepted 2026-07-14 |
-| CES | `CES-B0-022.5#normative-specification` | Decision lifecycle progression requires explicit validation, authority, and supersession lineage. | `kernel-domain::state::{DecisionStateSnapshot, DecisionTransitionRequest}` | VERIFIED | Passed (host verified; 58/0/0 suite) | `crates/kernel-domain/src/state.rs`; tests: `decision_supersession_requires_successor_or_retirement_authority_ces_b0_022_5`, `decision_transition_allows_authorized_approval_ces_b0_022_5`; commit: `7f70c80`; canonical host validation accepted 2026-07-14 |
-| CES | `CES-B0-022.6#normative-specification` | Decision status changes require rationale and evidence where CES specifies them. | `kernel-domain::state::{DecisionTransitionOutcome, TransitionReasonReference}` | VERIFIED | Passed (host verified; 58/0/0 suite) | `crates/kernel-domain/src/state.rs`; tests: `decision_rejected_status_requires_rationale_and_authority_ces_b0_022_6`; commit: `7f70c80`; canonical host validation accepted 2026-07-14 |
-| CES | `CES-B0-027.7#normative-specification` | Agent activation, suspension, recovery, retirement, and deletion remain deterministic under lifecycle guards. | `kernel-domain::state::{AgentStateSnapshot, AgentTransitionRequest}` | VERIFIED | Passed (host verified; 58/0/0 suite) | `crates/kernel-domain/src/state.rs`; tests: `agent_requires_supervision_for_activation_ces_b0_027_7`; commit: `7f70c80`; canonical host validation accepted 2026-07-14 |
-| CES | `CES-B0-027.15#normative-specification` | Agent state snapshots separate identity version from mutable lifecycle state. | `kernel-domain::state::AgentStateSnapshot` | VERIFIED | Passed (host verified; 58/0/0 suite) | `crates/kernel-domain/src/state.rs`; tests: `agent_state_snapshot_separates_identity_version_from_lifecycle_ces_b0_027_15`; commit: `7f70c80`; canonical host validation accepted 2026-07-14 |
-| CES | `CES-B0-027.19#normative-specification` | Agent recovery transitions restore only governed states under evidence-based guards. | `kernel-domain::state::{AgentTransitionOutcome, TransitionEvidenceReference}` | VERIFIED | Passed (host verified; 58/0/0 suite) | `crates/kernel-domain/src/state.rs`; tests: `agent_recovery_may_restore_to_registered_ces_b0_027_19`; commit: `7f70c80`; canonical host validation accepted 2026-07-14 |
-| CES | `CES-B0-029.11#normative-specification` | Delegation lifecycle and expiration handling follow the deterministic CES transition map. | `kernel-domain::state::{DelegationStateSnapshot, DelegationTransitionRequest}` | VERIFIED | Passed (host verified; 58/0/0 suite) | `crates/kernel-domain/src/state.rs`; tests: covered in state module lifecycle suite; commit: `7f70c80`; canonical host validation accepted 2026-07-14 |
-| CES | `CES-B0-029.12#normative-specification` | Delegation activation waits for acceptance when CES requires acceptance. | `kernel-domain::state::DelegationLifecycleGuards` | VERIFIED | Passed (host verified; 58/0/0 suite) | `crates/kernel-domain/src/state.rs`; tests: covered in state module lifecycle suite; commit: `7f70c80`; canonical host validation accepted 2026-07-14 |
-| CES | `CES-B0-029.13#normative-specification` | Suspended delegations resume only when upstream validity, scope, and time bounds remain valid. | `kernel-domain::state::{DelegationTransitionOutcome, DelegationLifecycleGuards}` | VERIFIED | Passed (host verified; 58/0/0 suite) | `crates/kernel-domain/src/state.rs`; tests: `delegation_resume_requires_valid_upstream_state_ces_b0_029_13`; commit: `7f70c80`; canonical host validation accepted 2026-07-14 |
-| CES | `CES-B0-030.9#normative-specification` | Workflow start, pause, failure, recovery, and archive transitions remain deterministic. | `kernel-domain::state::{WorkflowStateSnapshot, WorkflowTransitionRequest}` | VERIFIED | Passed (host verified; 58/0/0 suite) | `crates/kernel-domain/src/state.rs`; tests: `workflow_repeated_validation_is_deterministic_ces_b0_030_17`; commit: `7f70c80`; canonical host validation accepted 2026-07-14 |
-| CES | `CES-B0-030.13#normative-specification` | Workflow failures use stable CES failure codes before terminal or paused failure publication. | `kernel-domain::state::WorkflowFailureCode` | VERIFIED | Passed (host verified; 58/0/0 suite) | `crates/kernel-domain/src/state.rs`; tests: `workflow_failure_transition_requires_stable_failure_code_ces_b0_030_13`, `workflow_failure_codes_are_stable_ces_b0_030_13`; commit: `7f70c80`; canonical host validation accepted 2026-07-14 |
-| CES | `CES-B0-030.14#normative-specification` | Workflow recovery requires bounded retry and fresh prerequisite revalidation. | `kernel-domain::state::WorkflowLifecycleGuards` | VERIFIED | Passed (host verified; 58/0/0 suite) | `crates/kernel-domain/src/state.rs`; tests: `workflow_recovery_requires_revalidation_ces_b0_030_14`; commit: `7f70c80`; canonical host validation accepted 2026-07-14 |
-| CES | `CES-B0-030.17#normative-specification` | Workflow state snapshots and transitions preserve deterministic audit replay inputs. | `kernel-domain::state::{WorkflowStateSnapshot, TransitionEvidenceReference}` | VERIFIED | Passed (host verified; 58/0/0 suite) | `crates/kernel-domain/src/state.rs`; tests: `workflow_state_snapshot_preserves_definition_version_ces_b0_030_17`; commit: `7f70c80`; canonical host validation accepted 2026-07-14 |
-| CES | `CES-B0-030.18#normative-specification` | Workflow invariants remain downstream-only and deterministic for identical evidence inputs. | `kernel-domain::state::WorkflowTransitionOutcome` | VERIFIED | Passed (host verified; 58/0/0 suite) | `crates/kernel-domain/src/state.rs`; tests: `workflow_repeated_validation_is_deterministic_ces_b0_030_17`; commit: `7f70c80`; canonical host validation accepted 2026-07-14 |
-| Program | `CX-PGM-008#repository-dependencies` | Kernel depends only on CES and AI Engineering OS and precedes Runtime. | `README.md`, `ARCHITECTURE.md`, `docs/BASELINE.md` | IMPLEMENTED | Covered by repository validation evidence | `README.md`, `ARCHITECTURE.md`, `docs/BASELINE.md`; commits: `500286b..900041e`, host validation accepted 2026-07-14 |
+## K6 Milestone Summary
 
----
+- Milestone: `K6 Workflow Engine`
+- Status: `PASS`
+- Architecture Freeze: `PRESERVED`
+- Runtime baseline: `595 passed`, `0 failed`, `0 ignored`
+- Public API status: `FROZEN FOR DOWNSTREAM CONSUMPTION`
 
-# K5.1 Canonical Event Envelope Traceability
+## K6 Commit References
 
-| K5 Item | Canonical Implementation | Status |
-|---------|--------------------------|--------|
-| K5-001 | `EventId` | PASS |
-| K5-002 | `EventType` | PASS |
-| K5-003 | `EventVersion` | PASS |
-| K5-004 | `EventClassification` | PASS |
-| K5-005 | `CorrelationId` | PASS |
-| K5-006 | `EventCausation` using `EventId` | PASS |
-| K5-007 | `EventComponent`, `EventSource` | PASS |
-| K5-008 | `EventSubjectType`, `EventSubjectId`, `EventSubject` | PASS |
-| K5-009 | `EventActorId`, `EventTraceReference`, `EventTrace` | PASS |
-| K5-010 | `EventEnvelope<P>` | PASS |
+| K6 Slice | Commit | Summary |
+| --- | --- | --- |
+| K6-001 | `a472440` | `feat(workflow): add engine foundation` |
+| K6-002 | `ea3fe77` | `feat(workflow): add canonical definition model` |
+| K6-003 | `c40560c` | `feat(workflow): add canonical instance model` |
+| K6-004 | `549d67d` | `feat(workflow): add deterministic transition control` |
+| K6-005 | `7731f6b` | `feat(workflow): add deterministic step coordination` |
+| K6-006 | `934cad1` | `feat(workflow): integrate canonical authorization decisions` |
+| K6-007 | `b1e1189` | `feat(workflow): integrate canonical enterprise events` |
+| K6-008 | `9b2839f` | `feat(workflow): add deterministic failure recovery control` |
+| K6-009 | Working tree documentation closure | Validation, traceability, API, freeze, backlog, and milestone closure |
 
-## Canonical Properties
+## K6 Requirements Matrix
 
-- Event identity is caller supplied.
-- Event time references are caller supplied.
-- Event source supports runtime and non-runtime origins.
-- Event subject is an opaque canonical reference.
-- Event trace rejects empty traces.
-- Event trace rejects duplicate evidence identifiers.
-- Evidence order is preserved.
-- Event payload remains generic and caller supplied.
-- Correlation is optional.
-- Causation supports root and parent-event forms.
-- Direct self-causation is rejected.
-- EventEnvelope does not own transport, persistence, publishing, or replay.
----
+| Requirement ID | Requirement Summary | Specification Source | Implementation Location | Public API Or Type | Tests Proving Requirement | Validation Status | Commit Reference | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `K6-001` | Workflow engine foundation remains additive, deterministic, and side-effect free. | `docs/specifications/K6.1-workflow-engine-foundation.md` | `crates/kernel-domain/src/workflow.rs`, `crates/kernel-domain/src/lib.rs`, `crates/kernel-domain/src/errors.rs` | `WorkflowEngineFoundation`, `WorkflowRetryLimit`, `WorkflowRetryPolicyReference`, `WorkflowRecoveryReference`, `WorkflowAuditEvidenceReference`, `WorkflowLifecycleMapReference`, workflow-related `DomainError` variants | `workflow_engine_foundation_*`, `workflow_retry_limit_rejects_zero_ces_b0_030_14`, `workflow_recovery_requires_path_reference_ces_b0_030_14` | `PASS` | `a472440` | Reuses K1 identifiers, K2 workflow state, K3 evidence, and K5 event prerequisites. |
+| `K6-002` | Immutable workflow definitions bind identity, namespace, version, ownership, lifecycle map, entry steps, terminal outcomes, policy references, retry, recovery, and audit evidence. | `docs/specifications/K6.2-workflow-definition.md` | `crates/kernel-domain/src/workflow.rs`, `crates/kernel-domain/src/lib.rs`, `crates/kernel-domain/src/errors.rs` | `WorkflowDefinition`, `WorkflowStepReference`, `WorkflowTerminalOutcomeReference` | `workflow_definition_*` | `PASS` | `ea3fe77` | No definition approval or execution runtime was introduced. |
+| `K6-003` | Immutable workflow instances preserve approved definition linkage, version snapshot, ownership, state snapshot, retry or recovery snapshots, and audit evidence. | `docs/specifications/K6.3-workflow-instance.md` | `crates/kernel-domain/src/workflow.rs`, `crates/kernel-domain/src/lib.rs`, `crates/kernel-domain/src/errors.rs` | `WorkflowInstance` | `workflow_instance_*` | `PASS` | `c40560c` | Reuses `WorkflowStateSnapshot`, `StableVersion`, `OwnershipPath`, and existing workflow reference types. |
+| `K6-004` | Deterministic workflow transition control composes the frozen K2 lifecycle map and guards without introducing a second transition engine. | `docs/specifications/K6.4-workflow-transition-control.md`, `crates/kernel-domain/src/state.rs` | `crates/kernel-domain/src/state.rs`, `crates/kernel-domain/src/lib.rs`, `crates/kernel-domain/src/errors.rs` | `WorkflowTransitionControlRequest`, `WorkflowTransitionControl`, `WorkflowTransitionDecision`, `validate_workflow_transition` | `workflow_transition_control_*` | `PASS` | `549d67d` | K2 lifecycle semantics and guard precedence remain unchanged. |
+| `K6-005` | Workflow step coordination remains declarative, ordered, immutable, and distinct from task execution. | `docs/specifications/K6.5-workflow-step-coordination.md` | `crates/kernel-domain/src/workflow.rs`, `crates/kernel-domain/src/lib.rs`, `crates/kernel-domain/src/errors.rs` | `WorkflowStepSelection`, `WorkflowStepExecutionPlan`, `WorkflowStepCoordination`, `WorkflowStepOutcomeReference` | `workflow_step_coordination_*` | `PASS` | `7731f6b` | No task runtime, dispatch, or scheduler behavior exists. |
+| `K6-006` | Workflow authorization integration consumes K3 authorization facts without duplicating permission or policy semantics. | `docs/specifications/K6.6-workflow-authorization-and-policy.md` | `crates/kernel-domain/src/workflow.rs`, `crates/kernel-domain/src/lib.rs`, `crates/kernel-domain/src/errors.rs` | `WorkflowOperationReference`, `WorkflowAuthorizationContext`, `WorkflowAuthorizationRequest`, `WorkflowAuthorizationControl`, `WorkflowAuthorizationDecision` | `workflow_authorization_*` | `PASS` | `934cad1` | Reuses canonical K3 authorization decisions; no evaluation engine or identity lookup is added. |
+| `K6-007` | Workflow event integration composes accepted workflow facts with canonical K5 event-envelope semantics without publishing or persisting. | `docs/specifications/K6.7-workflow-event-integration.md` | `crates/kernel-domain/src/workflow.rs`, `crates/kernel-domain/src/lib.rs`, `crates/kernel-domain/src/errors.rs` | `WorkflowEventTypeReference`, `WorkflowEventContext`, `WorkflowEventIntegrationRequest`, `WorkflowEventIntegration`, `WorkflowEventDecision` | `workflow_event_integration_*` | `PASS` | `b1e1189` | Reuses canonical K5 event types; no event bus, outbox, or publisher support exists. |
+| `K6-008` | Workflow failure and recovery remain bounded, explicit, deterministic, and non-executing. | `docs/specifications/K6.8-workflow-failure-and-recovery.md` | `crates/kernel-domain/src/workflow.rs`, `crates/kernel-domain/src/lib.rs`, `crates/kernel-domain/src/errors.rs` | `WorkflowFailureContext`, `WorkflowFailureRecord`, `WorkflowRecoveryRequest`, `WorkflowRecoveryControl`, `WorkflowRecoveryDecision` | `workflow_failure_recovery_*` | `PASS` | `9b2839f` | Reuses K2 failure and recovery semantics; no scheduler, backoff, retry queue, or workflow mutation is introduced. |
+| `K6-009` | K6 closure records complete traceability, validation evidence, API documentation, freeze state, backlog closure, and compatibility evidence. | `README.md`, `CHANGELOG.md`, `docs/TRACEABILITY.md`, `docs/VALIDATION.md`, `docs/API.md`, `docs/API-FREEZE.md`, `docs/IMPLEMENTATION-PLAN.md`, `docs/plans/K6-IMPLEMENTATION-PLAN.md`, `docs/backlog/K6-BACKLOG.md` | Documentation only | Documentation-only closure over existing K6 public APIs and validation commands | Existing K6 compatibility suites: `workflow_authorization_existing_k6_001_through_k6_005_apis_remain_usable`, `workflow_event_integration_existing_k6_001_through_k6_006_apis_remain_usable`, `workflow_failure_recovery_existing_k6_001_through_k6_007_apis_remain_usable`; host validation gates | `PASS` | Working tree documentation closure | No standalone `docs/specifications/K6.9-...` file exists in the repository; closure is derived from the actual repository plans, specs, code, and host verification evidence. |
 
-# K5.1 Canonical Event Envelope
+## K6 Compatibility Closure
 
-| Requirement | Implementation | Status |
-|------------|----------------|--------|
-| K5-001 | EventId | PASS |
-| K5-002 | EventType | PASS |
-| K5-003 | EventVersion | PASS |
-| K5-004 | EventClassification | PASS |
-| K5-005 | CorrelationId | PASS |
-| K5-006 | EventCausation | PASS |
-| K5-007 | EventSource | PASS |
-| K5-008 | EventSubject | PASS |
-| K5-009 | EventTrace | PASS |
-| K5-010 | EventEnvelope | PASS |
+- K1 value primitives remain reusable through `kernel-domain` re-exports in `crates/kernel-domain/src/lib.rs`.
+- K2 lifecycle APIs remain reusable through `validate_workflow_transition`, `WorkflowState`, `WorkflowStateSnapshot`, and `WorkflowTransitionDecision`.
+- K3 authorization semantics are consumed by reference only through `WorkflowAuthorization*`.
+- K5 event-envelope semantics are consumed by composition only through `WorkflowEvent*`.
+- Existing compatibility tests for K6-001 through K6-008 remain present and are part of the host-verified `595 passed` baseline.
 
-## Canonical Guarantees
+## K6 Boundaries Confirmed
 
-- Immutable event identity
-- Immutable source
-- Immutable subject
-- Immutable trace
-- Generic payload
-- Caller-supplied timestamps
-- Caller-supplied identifiers
-- Optional correlation
-- Root and parent causation
-- Duplicate evidence rejection
+- No runtime scheduler
+- No executor
+- No persistence
+- No event bus
+- No async runtime
+- No network
+- No workflow mutation by step coordination, authorization integration, event integration, or recovery control
 
----
+## Program Alignment
 
-# K5.2 Event Validation
-
-| K5 Item | Canonical Implementation | Status |
-|---------|--------------------------|--------|
-| K5-011 | `validate_event_envelope` | PASS |
-| K5-012 | `validate_event_identity` | PASS |
-| K5-013 | `validate_event_version` | PASS |
-| K5-014 | `validate_event_timestamps` | PASS |
-| K5-015 | `validate_event_payload` | PASS |
-| K5-016 | `validate_event_integrity` | PASS |
-
-## Validation Evidence
-
-- Canonical host validation passed with `382 passed`, `0 failed`.
-- K5.2 Validation status is `PASS`.
-- K5.3 Event Streams status is `PASS`.
-- K5.4 Replay status is `PASS`.
-- K5 Enterprise Event System status is `PASS / COMPLETE`.
-- K5-017 through K5-022 status is `PASS`.
+- Repository dependency direction remains `AI Engineering OS -> CHELA-X CES -> CHELA-X Kernel -> CHELA-X Runtime -> CHELA-X SDK -> CHELA-X Media`.
+- K6 remains additive inside `kernel-domain` and does not redesign architecture or dependency direction.

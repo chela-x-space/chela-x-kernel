@@ -10,7 +10,7 @@ Draft
 Kernel Platform Team
 
 ## Last Updated
-2026-07-16
+2026-07-17
 
 ## Applies To
 CHELA-X Kernel repository history.
@@ -26,6 +26,35 @@ Kernel Platform Team
 
 ## Classification
 INTERNAL
+
+## K6 Workflow Engine
+
+### Added
+
+- Workflow engine foundation types and additive workflow reference surface
+- Immutable workflow definitions and workflow instances
+- Deterministic workflow transition control composed over frozen K2 lifecycle semantics
+- Deterministic workflow step coordination
+- Canonical workflow authorization integration over existing K3 authorization facts
+- Canonical workflow event integration over existing K5 event-envelope contracts
+- Deterministic workflow failure, retry, and recovery decisions
+- K6 traceability, validation closure, API documentation, and API freeze documentation
+
+### Validation
+
+- 595 unit tests passed
+- 0 tests failed
+- Formatting, checking, Clippy, documentation, and doc-test gates passed
+
+### Boundaries
+
+- Architecture freeze preserved
+- No workflow execution runtime
+- No scheduler
+- No persistence
+- No event bus
+- No publishing
+- No worker or executor support
 
 ## K5 Enterprise Event System
 

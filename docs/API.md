@@ -1,7 +1,7 @@
 # API
 
 ## Status
-Draft
+Current
 
 ## Version
 0.5.0
@@ -10,10 +10,10 @@ Draft
 Kernel Platform Team
 
 ## Last Updated
-2026-07-15
+2026-07-17
 
 ## Applies To
-K1 public API review and consumption guidance for `kernel-domain`.
+Public API review and consumption guidance for `kernel-domain`, including the frozen K6 workflow API.
 
 ## Review Cycle
 Quarterly
@@ -28,107 +28,365 @@ Kernel Platform Team
 INTERNAL
 
 ## Purpose And Scope
-This document defines the frozen K1.1 public API baseline plus the additive K2 state API, additive K3 enforcement API, additive K4.1 runtime registry API, and additive K4.2 runtime supervision API for `kernel-domain`. It covers only pure domain types, constructors, invariants, lifecycle validation, deterministic authorization enforcement, deterministic runtime registration, deterministic runtime supervision, and CES traceability. Runtime execution is out of scope.
 
-## K1 API Stability Statement
-The K1.1 domain API is frozen for K2 consumption. Breaking changes require either a CES-backed defect correction or an approved ADR.
+This document records the current public K6 workflow API exposed from `crates/kernel-domain/src/lib.rs`. K6 is additive over K1, K2, K3, and K5. All K6 types remain deterministic, side-effect free, and infrastructure-free.
 
-## Module List
-- `agent`
-- `authorization`
-- `decision`
-- `delegation`
-- `enforcement`
-- `errors`
-- `identifier`
-- `identity`
-- `lifecycle`
-- `ownership`
-- `policy`
-- `request`
-- `runtime`
-- `state`
-- `workflow`
+## K6 Public API Surface
 
-## Public Type Catalogue
-- `identifier`: enterprise, workspace, project, organizational-unit, ownership, human, agent, decision, authority, principal, role, permission, scope, authorization request or decision, audit evidence, delegation, policy, workflow, namespace, version, and non-empty text types.
-- `ownership`: `OwnershipScope`, `OwnershipSubject`, `OwnerReference`, `OwnershipPath`, `OrganizationalContext`.
-- `identity`: `IdentityKind`, `HumanIdentity`, `AgentIdentity`, `IdentityReference`.
-- `lifecycle`: enterprise, workspace, project, organizational-unit, ownership, human, agent, decision, delegation, and workflow lifecycle enums.
-- `authorization`: subject, target, scope, role, permission, evaluation-order, decision, and audit-evidence references.
-- `decision`: decision type, owner, subject, policy-set, rationale, context, and `DecisionRecord`.
-- `agent`: agent definition, type, category, runtime, failure, and recovery references.
-- `delegation`: delegator, delegate, beneficiary, scope, right, task, condition, authority-source, depth, and `DelegationReference`.
-- `enforcement`: authorization evaluation context, grants, explicit denials, role-permission bindings, policy records, authority requirements, delegation bindings, deterministic trace results, and optional decision construction inputs.
-- `runtime`: runtime identifiers, runtime entities, immutable agent registrations, capability descriptors, heartbeat freshness policies and assessments, heartbeat records and update results, lease policies and renewal records, presence states, runtime health assessments, runtime state snapshots, supervisor traces and outcomes, and deterministic registry lookup or update primitives.
-- `policy`: `PolicyEffect`, evaluation-order, and audit-evidence references.
-- `workflow`: retry, recovery, and audit-evidence references.
-- `state`: lifecycle guard structs, state snapshots, transition request records, transition outcome records, reason or authority or evidence references, deterministic sequence values, workflow failure codes, and lifecycle validation functions.
+### Foundation Types
 
-## CES Source References
-- `CES-B0-011#11.2-principle`
-- `CES-B0-012#12.2-lifecycle`
-- `CES-B0-022.1`, `CES-B0-022.5`, `CES-B0-022.6`
-- `CES-B0-025.1` to `CES-B0-025.5`
-- `CES-B0-026.1`, `CES-B0-026.3`, `CES-B0-026.5`, `CES-B0-026.6`, `CES-B0-026.8`
-- `CES-B0-015#15.2-principle`
-- `CES-B0-022.3`, `CES-B0-022.11`
-- `CES-B0-024.1`, `CES-B0-024.6`
-- `CES-B0-027.1`, `CES-B0-027.2`, `CES-B0-027.7`, `CES-B0-027.8`, `CES-B0-027.10`, `CES-B0-027.12`, `CES-B0-027.13`, `CES-B0-027.15`, `CES-B0-027.16`, `CES-B0-027.18`, `CES-B0-027.19`, `CES-B0-027.21`, `CES-B0-027.22`
-- `CES-B0-028.7`, `CES-B0-028.9`, `CES-B0-028.12`
-- `CES-B0-029.4`, `CES-B0-029.9`, `CES-B0-029.11`, `CES-B0-029.12`, `CES-B0-029.13`, `CES-B0-029.20`
-- `CES-B0-030.9`, `CES-B0-030.13`, `CES-B0-030.14`, `CES-B0-030.17`, `CES-B0-030.18`
+Types:
 
-## Invariants
-- Stable identifiers are immutable after construction.
-- Ownership paths preserve the Chapter 25 hierarchy.
-- Identity is distinct from operational state.
-- Lifecycle types remain entity-specific and are not merged.
-- Delegation remains bounded by policy and authorization.
-- Workflow and policy references remain data-only and non-executable.
+- `WorkflowRetryLimit`
+- `WorkflowRetryPolicyReference`
+- `WorkflowRecoveryReference`
+- `WorkflowAuditEvidenceReference`
+- `WorkflowLifecycleMapReference`
+- `WorkflowStepReference`
+- `WorkflowTerminalOutcomeReference`
+- `WorkflowStepOutcomeReference`
+- `WorkflowEngineFoundation`
 
-## Constructor And Parsing Rules
-- Public constructors validate CES-required mandatory data.
-- Identifier parsing rejects empty or malformed values.
-- Constructors return `DomainError`; they do not panic for invalid input.
-- Spec structs are used where constructor arity would otherwise exceed a safe public API.
+Construction entry points:
 
-## Trait Policy
-- `Clone` is used where duplication is semantically safe.
-- `Copy` is limited to scalar state and enum values.
-- `Eq` and `Hash` are derived only for immutable value semantics.
-- `Ord` is used only on identifier-like values where stable lexical ordering is acceptable.
+- `WorkflowRetryLimit::new(value: u16) -> DomainResult<Self>`
+- `WorkflowRetryPolicyReference::new(definition_version: StableVersion, retry_limit: WorkflowRetryLimit) -> Self`
+- `WorkflowRecoveryReference::new(corrective_path: impl Into<String>, requires_revalidation: bool) -> DomainResult<Self>`
+- `WorkflowAuditEvidenceReference::new(...) -> DomainResult<Self>`
+- `WorkflowLifecycleMapReference::new(value: impl Into<String>) -> DomainResult<Self>`
+- `WorkflowStepReference::new(value: impl Into<String>) -> DomainResult<Self>`
+- `WorkflowTerminalOutcomeReference::new(value: impl Into<String>) -> DomainResult<Self>`
+- `WorkflowStepOutcomeReference::new(value: impl Into<String>) -> DomainResult<Self>`
+- `WorkflowEngineFoundation::new(...) -> DomainResult<Self>`
 
-## Mutation Policy
-- Stable identifiers are private fields with accessor methods.
-- No public setter mutates identity-bearing fields.
-- Records and references contain no clocks, randomness, I/O, or execution behavior.
-- Transition validation is exposed through pure functions and immutable outcome records.
+Principal accessors:
 
-## Runtime Consumers Expected In Later Phases
-- K3 authorization and decision enforcement
-- K4 agent and delegation runtime
-- K5 workflow execution
-- K6 audit, failure, and recovery controls
+- `WorkflowRetryLimit::value(self) -> u16`
+- `WorkflowRetryPolicyReference::definition_version(&self) -> &StableVersion`
+- `WorkflowRetryPolicyReference::retry_limit(&self) -> WorkflowRetryLimit`
+- `WorkflowRecoveryReference::corrective_path(&self) -> &str`
+- `WorkflowRecoveryReference::requires_revalidation(&self) -> bool`
+- `WorkflowAuditEvidenceReference::audit_evidence_id(&self) -> &AuditEvidenceId`
+- `WorkflowLifecycleMapReference::as_str(&self) -> &str`
+- `WorkflowStepReference::as_str(&self) -> &str`
+- `WorkflowTerminalOutcomeReference::as_str(&self) -> &str`
+- `WorkflowStepOutcomeReference::as_str(&self) -> &str`
+- `WorkflowEngineFoundation::{workflow_id, ownership, definition_version, retry_policy, retry_limit, recovery_reference, audit_evidence}`
 
-## Explicitly Out Of Scope
-- persistence
-- network APIs
-- async runtime
-- workflow execution
-- policy evaluation
-- external policy language parsing
-- delegation resolution
-- audit storage
-- runtime execution
-- supervisor action execution
+Deterministic behavior:
 
-## Known Deferred Semantics
-- delegation chain resolution beyond one supplied bound
-- distributed runtime coordination
-- remote heartbeat transport
-- persistent registry storage
-- unsupported or higher-order exception and waiver publication workflows
-- workflow retry or recovery execution
-- enterprise reactivation semantics beyond explicit CES definition
-- linker-dependent native test execution on this machine because `cc` is unavailable
+- Constructor-only validation
+- Immutable post-construction state
+- No lookup, scheduling, publishing, persistence, or execution
+
+Validation boundaries:
+
+- Retry limit must be positive
+- Retry limit requires retry policy when carried by workflow foundation
+- Audit evidence rejects incomplete consumed upstream references
+
+Important non-goals:
+
+- No workflow execution
+- No runtime scheduler
+- No persistence
+
+### Definition Types
+
+Types:
+
+- `WorkflowDefinition`
+
+Construction entry point:
+
+- `WorkflowDefinition::new(...) -> DomainResult<Self>`
+
+Principal accessors:
+
+- `WorkflowDefinition::{workflow_id, namespace, definition_version, ownership, lifecycle_map, entry_steps, terminal_outcomes, policy_references, retry_policy, retry_limit, recovery_reference, audit_evidence}`
+
+Deterministic behavior:
+
+- Approved-definition model only
+- Immutable and version-bound
+- Preserves caller ordering for steps, terminal outcomes, policies, and evidence
+
+Validation boundaries:
+
+- Duplicate entry steps rejected
+- Duplicate terminal outcomes rejected
+- Duplicate policy references rejected
+- Retry limit requires retry policy
+
+Important non-goals:
+
+- No approval engine
+- No runtime schema lookup
+- No task semantics
+
+### Instance Types
+
+Types:
+
+- `WorkflowInstance`
+
+Construction entry point:
+
+- `WorkflowInstance::new(...) -> DomainResult<Self>`
+
+Principal accessors:
+
+- `WorkflowInstance::{workflow_id, workflow_definition, definition_version_snapshot, ownership_reference, current_workflow_state_snapshot, creation_evidence, retry_policy_snapshot, retry_limit_snapshot, recovery_reference, audit_evidence_references}`
+
+Deterministic behavior:
+
+- Captures one immutable execution instance snapshot
+- Reuses canonical K2 workflow state
+- Preserves supplied evidence ordering
+
+Validation boundaries:
+
+- Workflow definition is mandatory
+- Definition version snapshot is mandatory
+- Ownership reference is mandatory
+- Workflow state snapshot is mandatory
+- Retry limit requires retry policy
+- Duplicate audit evidence rejected
+
+Important non-goals:
+
+- No persistence identifiers
+- No external existence lookup
+- No execution history mutation
+
+### Transition-Control Types
+
+Types:
+
+- `WorkflowTransitionControlRequest`
+- `WorkflowTransitionControl`
+- `WorkflowTransitionDecision`
+- `WorkflowTransitionOutcome`
+
+Construction and evaluation entry points:
+
+- `WorkflowTransitionControlRequest::new(...) -> DomainResult<Self>`
+- `WorkflowTransitionControl::evaluate(request: &WorkflowTransitionControlRequest) -> WorkflowTransitionDecision`
+- `validate_workflow_transition(request: &WorkflowTransitionRequest, guards: &WorkflowLifecycleGuards) -> WorkflowTransitionOutcome`
+
+Principal accessors:
+
+- `WorkflowTransitionControlRequest::{current_workflow_state_snapshot, requested_target_workflow_state, transition_reason_reference, transition_authority_reference, transition_evidence_references, failure_code, workflow_lifecycle_guards}`
+
+Deterministic behavior:
+
+- Delegates to the frozen K2 workflow lifecycle map
+- Advances sequence only on allowed transitions
+- Preserves no-op and rejected sequence semantics
+
+Validation boundaries:
+
+- Failure transitions require `WorkflowFailureCode`
+- Non-failure transitions reject unrelated failure codes
+- Duplicate transition evidence rejected
+- Missing required K2 guard evidence remains rejected by K2
+
+Important non-goals:
+
+- No mutation of `WorkflowInstance`
+- No scheduler
+- No step or task runtime
+
+### Step-Coordination Types
+
+Types:
+
+- `WorkflowStepSelection`
+- `WorkflowStepExecutionPlan`
+- `WorkflowStepCoordination`
+
+Construction entry points:
+
+- `WorkflowStepSelection::new(current_step: WorkflowStepReference, next_candidate_steps: Vec<WorkflowStepReference>) -> Self`
+- `WorkflowStepExecutionPlan::new(...) -> DomainResult<Self>`
+- `WorkflowStepCoordination::new(...) -> DomainResult<Self>`
+
+Principal accessors:
+
+- `WorkflowStepSelection::{current_step, next_candidate_steps}`
+- `WorkflowStepExecutionPlan::{completed_step_references, blocked_step_references, skipped_step_references, terminal_step_references}`
+- `WorkflowStepCoordination::{workflow_definition, workflow_instance, workflow_step_selection, workflow_step_execution_plan}`
+
+Deterministic behavior:
+
+- Declarative step coordination only
+- Preserves caller ordering for all step-reference collections
+- Immutable after construction
+
+Validation boundaries:
+
+- Duplicate completed, blocked, skipped, and terminal references rejected
+- Current step cannot simultaneously be completed, blocked, or skipped
+
+Important non-goals:
+
+- No task creation
+- No execution callbacks
+- No scheduler
+
+### Authorization-Integration Types
+
+Types:
+
+- `WorkflowOperationReference`
+- `WorkflowAuthorizationContext`
+- `WorkflowAuthorizationRequest`
+- `WorkflowAuthorizationControl`
+- `WorkflowAuthorizationDecision`
+
+Construction and evaluation entry points:
+
+- `WorkflowOperationReference::new(value: impl Into<String>) -> DomainResult<Self>`
+- `WorkflowAuthorizationContext::new(...) -> DomainResult<Self>`
+- `WorkflowAuthorizationRequest::new(...) -> DomainResult<Self>`
+- `WorkflowAuthorizationControl::evaluate(request: &WorkflowAuthorizationRequest) -> WorkflowAuthorizationDecision`
+- `pub type WorkflowAuthorizationDecision = AuthorizationDecisionOutcome`
+
+Principal accessors:
+
+- `WorkflowOperationReference::as_str(&self) -> &str`
+- `WorkflowAuthorizationContext::{authorization_request, authorization_decision, authorization_evidence_references}`
+- `WorkflowAuthorizationRequest::{workflow_operation, workflow_definition, workflow_instance, current_workflow_state, requested_target_workflow_state, workflow_step_coordination, current_workflow_step, requested_next_workflow_step, workflow_authorization_context, transition_authority_reference, transition_evidence_references}`
+
+Deterministic behavior:
+
+- Consumes canonical K3 authorization facts by reference only
+- Returns the supplied canonical authorization outcome
+- Preserves caller ordering for transition evidence
+
+Validation boundaries:
+
+- Duplicate transition evidence rejected
+- Workflow ownership must match the authorization scope where supplied
+- No ownership-based permission inference
+
+Important non-goals:
+
+- No policy evaluation
+- No role resolution
+- No identity lookup
+
+### Event-Integration Types
+
+Types:
+
+- `WorkflowEventTypeReference`
+- `WorkflowEventContext`
+- `WorkflowEventIntegrationRequest`
+- `WorkflowEventIntegration`
+- `WorkflowEventDecision`
+
+Construction and evaluation entry points:
+
+- `pub type WorkflowEventTypeReference = EventType`
+- `WorkflowEventContext::new(...) -> DomainResult<Self>`
+- `WorkflowEventIntegrationRequest::new(...) -> DomainResult<Self>`
+- `WorkflowEventIntegration::evaluate(request: &WorkflowEventIntegrationRequest) -> DomainResult<WorkflowEventDecision>`
+- `pub type WorkflowEventDecision = EventEnvelope<WorkflowEventContext>`
+
+Principal accessors:
+
+- `WorkflowEventContext::{workflow_definition, workflow_instance, workflow_state_snapshot, workflow_step_coordination, workflow_step_reference, workflow_transition_control_request, workflow_transition_decision, workflow_authorization_request, workflow_authorization_decision, workflow_operation, transition_reason_reference, transition_authority_reference, transition_evidence_references, workflow_audit_evidence_references, failure_code}`
+- `WorkflowEventIntegrationRequest::{workflow_event_type, event_id, event_version, occurred_at, recorded_at, event_source, event_subject, event_classification, correlation_id, causation, workflow_event_context}`
+
+Deterministic behavior:
+
+- Constructs canonical K5 event envelopes only from explicit inputs
+- Preserves caller-supplied correlation, causation, and evidence ordering
+- Performs no publication or persistence
+
+Validation boundaries:
+
+- Workflow event type, event id, timestamp, source, and subject binding validated
+- Transition and authorization categories must match supplied workflow facts
+- Duplicate evidence rejected
+- Failure event requires `WorkflowFailureCode`
+
+Important non-goals:
+
+- No event bus
+- No outbox
+- No system clock
+- No UUID generation
+
+### Failure-And-Recovery Types
+
+Types:
+
+- `WorkflowFailureContext`
+- `WorkflowFailureRecord`
+- `WorkflowRecoveryRequest`
+- `WorkflowRecoveryControl`
+- `WorkflowRecoveryDecision`
+
+Construction and evaluation entry points:
+
+- `WorkflowFailureContext::new(...) -> DomainResult<Self>`
+- `WorkflowFailureRecord::new(...) -> DomainResult<Self>`
+- `WorkflowRecoveryRequest::new(workflow_failure_record: WorkflowFailureRecord, recovery_revalidated: bool) -> DomainResult<Self>`
+- `WorkflowRecoveryControl::evaluate(request: &WorkflowRecoveryRequest) -> WorkflowRecoveryDecision`
+
+Principal accessors:
+
+- `WorkflowFailureContext::{workflow_id, workflow_instance, current_workflow_state, current_workflow_step, failure_code, transition_reason_reference, transition_authority_reference, transition_evidence_references, workflow_audit_evidence_references, correlation_id, causation}`
+- `WorkflowFailureRecord::{workflow_failure_context, retry_policy_reference, retry_limit, current_retry_attempt, recovery_reference, recovery_target_state, failure_sequence}`
+- `WorkflowRecoveryRequest::{workflow_failure_record, recovery_revalidated}`
+- `WorkflowRecoveryDecision::workflow_failure_record(&self) -> &WorkflowFailureRecord`
+
+Deterministic behavior:
+
+- Recovery decisions are pure and explicit
+- Retry allowance depends only on explicit retry counters and limits
+- Terminal workflows short-circuit deterministically
+
+Validation boundaries:
+
+- Failure code is mandatory by type
+- Retry limit requires retry policy
+- Retry attempt must not exceed retry limit
+- Recovery target requires recovery reference and vice versa
+- Workflow identity and instance snapshots must remain internally consistent
+- Duplicate transition evidence and workflow audit evidence rejected
+
+Important non-goals:
+
+- No retry queue
+- No scheduler
+- No backoff calculation
+- No workflow transition execution
+
+### Workflow-Related Domain Errors
+
+Public variants:
+
+- `DomainError::InvalidWorkflowReference(&'static str)`
+- `DomainError::InvalidWorkflowDefinition(&'static str)`
+- `DomainError::InvalidWorkflowInstance(&'static str)`
+- `DomainError::InvalidWorkflowTransitionControl(&'static str)`
+- `DomainError::InvalidWorkflowStepCoordination(&'static str)`
+- `DomainError::InvalidWorkflowAuthorizationIntegration(&'static str)`
+- `DomainError::InvalidWorkflowEventIntegration(&'static str)`
+- `DomainError::InvalidWorkflowFailureRecovery(&'static str)`
+
+These variants report constructor or binding failures only. They do not imply runtime execution, external lookup, or background workflow behavior.
+
+## K6 Non-Goals
+
+- No workflow execution engine
+- No scheduler
+- No executor
+- No persistence
+- No event bus
+- No network transport
+- No async runtime
+- No external policy or identity lookup
