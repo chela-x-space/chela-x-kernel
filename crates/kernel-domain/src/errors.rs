@@ -32,6 +32,7 @@ pub enum DomainError {
     InvalidPolicyReference(&'static str),
     InvalidWorkflowReference(&'static str),
     InvalidWorkflowDefinition(&'static str),
+    InvalidWorkflowInstance(&'static str),
     InvalidEventReference(&'static str),
     InvalidEventTimestamp(&'static str),
     IntegrityFailure(&'static str),
@@ -109,6 +110,9 @@ impl fmt::Display for DomainError {
             }
             Self::InvalidWorkflowDefinition(message) => {
                 write!(formatter, "invalid workflow definition: {message}")
+            }
+            Self::InvalidWorkflowInstance(message) => {
+                write!(formatter, "invalid workflow instance: {message}")
             }
             Self::InvalidEventReference(message) => {
                 write!(formatter, "invalid event reference: {message}")

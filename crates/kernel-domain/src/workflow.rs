@@ -7,6 +7,7 @@ use crate::identifier::{
     StableVersion, WorkflowId,
 };
 use crate::ownership::OwnershipPath;
+use crate::state::WorkflowStateSnapshot;
 
 const WORKFLOW_DEFINITION_REFERENCE_EXPECTATION: &str =
     "ASCII letters, digits, dot, underscore, or hyphen";
@@ -464,12 +465,113 @@ impl WorkflowDefinition {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WorkflowInstance {
+    workflow_id: WorkflowId,
+    workflow_definition: WorkflowDefinition,
+    definition_version_snapshot: StableVersion,
+    ownership_reference: OwnershipPath,
+    current_workflow_state_snapshot: WorkflowStateSnapshot,
+    creation_evidence: WorkflowAuditEvidenceReference,
+    retry_policy_snapshot: Option<WorkflowRetryPolicyReference>,
+    retry_limit_snapshot: Option<WorkflowRetryLimit>,
+    recovery_reference: Option<WorkflowRecoveryReference>,
+    audit_evidence_references: Vec<WorkflowAuditEvidenceReference>,
+}
+
+impl WorkflowInstance {
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(
+        workflow_id: WorkflowId,
+        workflow_definition: WorkflowDefinition,
+        definition_version_snapshot: StableVersion,
+        ownership_reference: OwnershipPath,
+        current_workflow_state_snapshot: WorkflowStateSnapshot,
+        creation_evidence: WorkflowAuditEvidenceReference,
+        retry_policy_snapshot: Option<WorkflowRetryPolicyReference>,
+        retry_limit_snapshot: Option<WorkflowRetryLimit>,
+        recovery_reference: Option<WorkflowRecoveryReference>,
+        audit_evidence_references: Vec<WorkflowAuditEvidenceReference>,
+    ) -> DomainResult<Self> {
+        if retry_limit_snapshot.is_some() && retry_policy_snapshot.is_none() {
+            return Err(DomainError::InvalidWorkflowInstance(
+                "retry limit requires retry policy",
+            ));
+        }
+
+        for (index, evidence) in audit_evidence_references.iter().enumerate() {
+            if audit_evidence_references[..index]
+                .iter()
+                .any(|prior| prior.audit_evidence_id() == evidence.audit_evidence_id())
+            {
+                return Err(DomainError::InvalidWorkflowInstance(
+                    "duplicate workflow instance audit evidence reference",
+                ));
+            }
+        }
+
+        Ok(Self {
+            workflow_id,
+            workflow_definition,
+            definition_version_snapshot,
+            ownership_reference,
+            current_workflow_state_snapshot,
+            creation_evidence,
+            retry_policy_snapshot,
+            retry_limit_snapshot,
+            recovery_reference,
+            audit_evidence_references,
+        })
+    }
+
+    pub fn workflow_id(&self) -> &WorkflowId {
+        &self.workflow_id
+    }
+
+    pub fn workflow_definition(&self) -> &WorkflowDefinition {
+        &self.workflow_definition
+    }
+
+    pub fn definition_version_snapshot(&self) -> &StableVersion {
+        &self.definition_version_snapshot
+    }
+
+    pub fn ownership_reference(&self) -> &OwnershipPath {
+        &self.ownership_reference
+    }
+
+    pub fn current_workflow_state_snapshot(&self) -> &WorkflowStateSnapshot {
+        &self.current_workflow_state_snapshot
+    }
+
+    pub fn creation_evidence(&self) -> &WorkflowAuditEvidenceReference {
+        &self.creation_evidence
+    }
+
+    pub fn retry_policy_snapshot(&self) -> Option<&WorkflowRetryPolicyReference> {
+        self.retry_policy_snapshot.as_ref()
+    }
+
+    pub fn retry_limit_snapshot(&self) -> Option<WorkflowRetryLimit> {
+        self.retry_limit_snapshot
+    }
+
+    pub fn recovery_reference(&self) -> Option<&WorkflowRecoveryReference> {
+        self.recovery_reference.as_ref()
+    }
+
+    pub fn audit_evidence_references(&self) -> &[WorkflowAuditEvidenceReference] {
+        &self.audit_evidence_references
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::{
         WorkflowAuditEvidenceReference, WorkflowDefinition, WorkflowEngineFoundation,
-        WorkflowLifecycleMapReference, WorkflowRecoveryReference, WorkflowRetryLimit,
-        WorkflowRetryPolicyReference, WorkflowStepReference, WorkflowTerminalOutcomeReference,
+        WorkflowInstance, WorkflowLifecycleMapReference, WorkflowRecoveryReference,
+        WorkflowRetryLimit, WorkflowRetryPolicyReference, WorkflowStepReference,
+        WorkflowTerminalOutcomeReference,
     };
     use crate::errors::DomainError;
     use crate::identifier::EnglishNamespace;
@@ -477,7 +579,9 @@ mod tests {
         AuditEvidenceId, AuthorizationDecisionId, DecisionId, DelegationId, EnterpriseId, HumanId,
         OrganizationUnitId, PolicyId, ProjectId, StableVersion, WorkflowId, WorkspaceId,
     };
+    use crate::lifecycle::WorkflowState;
     use crate::ownership::{OwnerReference, OwnershipPath};
+    use crate::state::{StateSequence, WorkflowStateSnapshot};
 
     #[test]
     fn workflow_retry_limit_rejects_zero_ces_b0_030_14() {
@@ -589,6 +693,32 @@ mod tests {
             vec![audit_evidence("CX-AUD-000001"), second_audit_evidence()],
         )
         .expect("workflow definition")
+    }
+
+    fn workflow_state_snapshot() -> WorkflowStateSnapshot {
+        WorkflowStateSnapshot::new(
+            workflow_id(),
+            ownership(),
+            definition_version(),
+            WorkflowState::Validated,
+            StateSequence::new(1).expect("sequence"),
+        )
+    }
+
+    fn workflow_instance() -> WorkflowInstance {
+        WorkflowInstance::new(
+            workflow_id(),
+            workflow_definition(),
+            definition_version(),
+            ownership(),
+            workflow_state_snapshot(),
+            audit_evidence("CX-AUD-000003"),
+            Some(retry_policy()),
+            Some(retry_limit()),
+            Some(recovery_reference()),
+            vec![audit_evidence("CX-AUD-000001"), second_audit_evidence()],
+        )
+        .expect("workflow instance")
     }
 
     #[test]
@@ -1370,5 +1500,405 @@ mod tests {
         .expect("definition");
 
         assert_eq!(definition.policy_references()[0].as_str(), "CX-POL-999999");
+    }
+
+    #[test]
+    fn workflow_instance_valid_construction() {
+        let instance = workflow_instance();
+        assert_eq!(instance.workflow_id().as_str(), "CX-WF-000001");
+        assert_eq!(instance.audit_evidence_references().len(), 2);
+    }
+
+    #[test]
+    fn workflow_instance_definition_preserved() {
+        let workflow_definition = workflow_definition();
+        let instance = WorkflowInstance::new(
+            workflow_id(),
+            workflow_definition.clone(),
+            definition_version(),
+            ownership(),
+            workflow_state_snapshot(),
+            audit_evidence("CX-AUD-000003"),
+            None,
+            None,
+            None,
+            vec![],
+        )
+        .expect("workflow instance");
+
+        assert_eq!(instance.workflow_definition(), &workflow_definition);
+    }
+
+    #[test]
+    fn workflow_instance_definition_version_preserved() {
+        let definition_version_snapshot = definition_version();
+        let instance = WorkflowInstance::new(
+            workflow_id(),
+            workflow_definition(),
+            definition_version_snapshot.clone(),
+            ownership(),
+            workflow_state_snapshot(),
+            audit_evidence("CX-AUD-000003"),
+            None,
+            None,
+            None,
+            vec![],
+        )
+        .expect("workflow instance");
+
+        assert_eq!(
+            instance.definition_version_snapshot(),
+            &definition_version_snapshot
+        );
+    }
+
+    #[test]
+    fn workflow_instance_ownership_preserved() {
+        let ownership_reference = ownership();
+        let instance = WorkflowInstance::new(
+            workflow_id(),
+            workflow_definition(),
+            definition_version(),
+            ownership_reference.clone(),
+            workflow_state_snapshot(),
+            audit_evidence("CX-AUD-000003"),
+            None,
+            None,
+            None,
+            vec![],
+        )
+        .expect("workflow instance");
+
+        assert_eq!(instance.ownership_reference(), &ownership_reference);
+    }
+
+    #[test]
+    fn workflow_instance_workflow_state_preserved() {
+        let current_workflow_state_snapshot = workflow_state_snapshot();
+        let instance = WorkflowInstance::new(
+            workflow_id(),
+            workflow_definition(),
+            definition_version(),
+            ownership(),
+            current_workflow_state_snapshot.clone(),
+            audit_evidence("CX-AUD-000003"),
+            None,
+            None,
+            None,
+            vec![],
+        )
+        .expect("workflow instance");
+
+        assert_eq!(
+            instance.current_workflow_state_snapshot(),
+            &current_workflow_state_snapshot
+        );
+    }
+
+    #[test]
+    fn workflow_instance_retry_preserved() {
+        let retry_policy_snapshot = retry_policy();
+        let retry_limit_snapshot = retry_limit();
+        let instance = WorkflowInstance::new(
+            workflow_id(),
+            workflow_definition(),
+            definition_version(),
+            ownership(),
+            workflow_state_snapshot(),
+            audit_evidence("CX-AUD-000003"),
+            Some(retry_policy_snapshot.clone()),
+            Some(retry_limit_snapshot),
+            None,
+            vec![],
+        )
+        .expect("workflow instance");
+
+        assert_eq!(
+            instance.retry_policy_snapshot(),
+            Some(&retry_policy_snapshot)
+        );
+        assert_eq!(instance.retry_limit_snapshot(), Some(retry_limit_snapshot));
+    }
+
+    #[test]
+    fn workflow_instance_retry_validation() {
+        let error = WorkflowInstance::new(
+            workflow_id(),
+            workflow_definition(),
+            definition_version(),
+            ownership(),
+            workflow_state_snapshot(),
+            audit_evidence("CX-AUD-000003"),
+            None,
+            Some(retry_limit()),
+            None,
+            vec![],
+        )
+        .expect_err("retry limit without policy must fail");
+
+        assert_eq!(
+            error,
+            DomainError::InvalidWorkflowInstance("retry limit requires retry policy")
+        );
+    }
+
+    #[test]
+    fn workflow_instance_recovery_optional() {
+        let instance = WorkflowInstance::new(
+            workflow_id(),
+            workflow_definition(),
+            definition_version(),
+            ownership(),
+            workflow_state_snapshot(),
+            audit_evidence("CX-AUD-000003"),
+            None,
+            None,
+            None,
+            vec![],
+        )
+        .expect("workflow instance");
+
+        assert_eq!(instance.recovery_reference(), None);
+    }
+
+    #[test]
+    fn workflow_instance_empty_audit_evidence_allowed() {
+        let instance = WorkflowInstance::new(
+            workflow_id(),
+            workflow_definition(),
+            definition_version(),
+            ownership(),
+            workflow_state_snapshot(),
+            audit_evidence("CX-AUD-000003"),
+            None,
+            None,
+            Some(recovery_reference()),
+            vec![],
+        )
+        .expect("workflow instance");
+
+        assert!(instance.audit_evidence_references().is_empty());
+    }
+
+    #[test]
+    fn workflow_instance_audit_order_preserved() {
+        let first = audit_evidence("CX-AUD-000001");
+        let second = second_audit_evidence();
+        let instance = WorkflowInstance::new(
+            workflow_id(),
+            workflow_definition(),
+            definition_version(),
+            ownership(),
+            workflow_state_snapshot(),
+            audit_evidence("CX-AUD-000003"),
+            None,
+            None,
+            None,
+            vec![first.clone(), second.clone()],
+        )
+        .expect("workflow instance");
+
+        assert_eq!(instance.audit_evidence_references(), &[first, second]);
+    }
+
+    #[test]
+    fn workflow_instance_duplicate_audit_evidence_rejected() {
+        let error = WorkflowInstance::new(
+            workflow_id(),
+            workflow_definition(),
+            definition_version(),
+            ownership(),
+            workflow_state_snapshot(),
+            audit_evidence("CX-AUD-000003"),
+            None,
+            None,
+            None,
+            vec![
+                audit_evidence("CX-AUD-000001"),
+                audit_evidence("CX-AUD-000001"),
+            ],
+        )
+        .expect_err("duplicate audit evidence must fail");
+
+        assert_eq!(
+            error,
+            DomainError::InvalidWorkflowInstance(
+                "duplicate workflow instance audit evidence reference",
+            )
+        );
+    }
+
+    #[test]
+    fn workflow_instance_deterministic_construction() {
+        let first = WorkflowInstance::new(
+            workflow_id(),
+            workflow_definition(),
+            definition_version(),
+            ownership(),
+            workflow_state_snapshot(),
+            audit_evidence("CX-AUD-000003"),
+            Some(retry_policy()),
+            Some(retry_limit()),
+            Some(recovery_reference()),
+            vec![audit_evidence("CX-AUD-000001"), second_audit_evidence()],
+        );
+        let second = WorkflowInstance::new(
+            workflow_id(),
+            workflow_definition(),
+            definition_version(),
+            ownership(),
+            workflow_state_snapshot(),
+            audit_evidence("CX-AUD-000003"),
+            Some(retry_policy()),
+            Some(retry_limit()),
+            Some(recovery_reference()),
+            vec![audit_evidence("CX-AUD-000001"), second_audit_evidence()],
+        );
+
+        assert_eq!(first, second);
+    }
+
+    #[test]
+    fn workflow_instance_equivalent_invalid_inputs() {
+        let first = WorkflowInstance::new(
+            workflow_id(),
+            workflow_definition(),
+            definition_version(),
+            ownership(),
+            workflow_state_snapshot(),
+            audit_evidence("CX-AUD-000003"),
+            None,
+            Some(retry_limit()),
+            None,
+            vec![],
+        )
+        .expect_err("invalid");
+        let second = WorkflowInstance::new(
+            workflow_id(),
+            workflow_definition(),
+            definition_version(),
+            ownership(),
+            workflow_state_snapshot(),
+            audit_evidence("CX-AUD-000003"),
+            None,
+            Some(retry_limit()),
+            None,
+            vec![],
+        )
+        .expect_err("invalid");
+
+        assert_eq!(first, second);
+    }
+
+    #[test]
+    fn workflow_instance_value_semantics() {
+        let instance = workflow_instance();
+        assert_eq!(instance.clone(), instance);
+    }
+
+    #[test]
+    fn workflow_instance_supplied_values_not_mutated() {
+        let workflow_id = workflow_id();
+        let workflow_definition = workflow_definition();
+        let definition_version_snapshot = definition_version();
+        let ownership_reference = ownership();
+        let current_workflow_state_snapshot = workflow_state_snapshot();
+        let creation_evidence = audit_evidence("CX-AUD-000003");
+        let retry_policy_snapshot = retry_policy();
+        let retry_limit_snapshot = retry_limit();
+        let recovery_reference = recovery_reference();
+        let audit_evidence_references =
+            vec![audit_evidence("CX-AUD-000001"), second_audit_evidence()];
+
+        let workflow_id_before = workflow_id.clone();
+        let workflow_definition_before = workflow_definition.clone();
+        let definition_version_snapshot_before = definition_version_snapshot.clone();
+        let ownership_reference_before = ownership_reference.clone();
+        let current_workflow_state_snapshot_before = current_workflow_state_snapshot.clone();
+        let creation_evidence_before = creation_evidence.clone();
+        let retry_policy_snapshot_before = retry_policy_snapshot.clone();
+        let recovery_reference_before = recovery_reference.clone();
+        let audit_evidence_references_before = audit_evidence_references.clone();
+
+        let instance = WorkflowInstance::new(
+            workflow_id.clone(),
+            workflow_definition.clone(),
+            definition_version_snapshot.clone(),
+            ownership_reference.clone(),
+            current_workflow_state_snapshot.clone(),
+            creation_evidence.clone(),
+            Some(retry_policy_snapshot.clone()),
+            Some(retry_limit_snapshot),
+            Some(recovery_reference.clone()),
+            audit_evidence_references.clone(),
+        )
+        .expect("workflow instance");
+
+        assert_eq!(workflow_id, workflow_id_before);
+        assert_eq!(workflow_definition, workflow_definition_before);
+        assert_eq!(
+            definition_version_snapshot,
+            definition_version_snapshot_before
+        );
+        assert_eq!(ownership_reference, ownership_reference_before);
+        assert_eq!(
+            current_workflow_state_snapshot,
+            current_workflow_state_snapshot_before
+        );
+        assert_eq!(creation_evidence, creation_evidence_before);
+        assert_eq!(retry_policy_snapshot, retry_policy_snapshot_before);
+        assert_eq!(recovery_reference, recovery_reference_before);
+        assert_eq!(audit_evidence_references, audit_evidence_references_before);
+        assert_eq!(instance.workflow_id(), &workflow_id_before);
+    }
+
+    #[test]
+    fn workflow_instance_external_references_not_validated() {
+        let workflow_definition = WorkflowDefinition::new(
+            workflow_id(),
+            namespace(),
+            definition_version(),
+            ownership(),
+            WorkflowLifecycleMapReference::new("custom.lifecycle.map").expect("lifecycle map"),
+            vec![WorkflowStepReference::new("entry.custom-step").expect("entry step")],
+            vec![],
+            vec![PolicyId::new("CX-POL-999999").expect("policy")],
+            None,
+            None,
+            None,
+            vec![],
+        )
+        .expect("workflow definition");
+        let creation_evidence =
+            WorkflowAuditEvidenceReference::new(
+                AuditEvidenceId::new("CX-AUD-999999").expect("audit evidence id"),
+                workflow_id(),
+                definition_version(),
+                vec![PolicyId::new("CX-POL-999999").expect("policy")],
+                vec![AuthorizationDecisionId::new("CX-AUTHDEC-999999")
+                    .expect("authorization decision")],
+                vec![DelegationId::new("CX-DEL-999999").expect("delegation")],
+                vec![DecisionId::new("CX-DEC-999999").expect("decision")],
+            )
+            .expect("creation evidence");
+
+        let instance = WorkflowInstance::new(
+            workflow_id(),
+            workflow_definition,
+            definition_version(),
+            ownership(),
+            workflow_state_snapshot(),
+            creation_evidence,
+            None,
+            None,
+            None,
+            vec![],
+        )
+        .expect("workflow instance");
+
+        assert_eq!(
+            instance.creation_evidence().audit_evidence_id().as_str(),
+            "CX-AUD-999999"
+        );
     }
 }
