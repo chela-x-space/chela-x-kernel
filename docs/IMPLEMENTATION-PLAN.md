@@ -78,6 +78,8 @@ This breakdown is an implementation tracking document only. It does not create a
 - Implementation: `IN PROGRESS`
 - API: `NOT ESTABLISHED`
 - K7-001: `IMPLEMENTED — API REVIEW PASSED`
+- K7-002: `IMPLEMENTED — REVIEW PASSED`
+- K7-003: `READY FOR IMPLEMENTATION`
 
 Before `K7-001` Rust implementation begins, the K7 specification package MUST receive an architecture review confirming:
 

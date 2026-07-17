@@ -29,7 +29,7 @@ INTERNAL
 
 ## Purpose And Scope
 
-This document records the current public K6 workflow API and the additive K7.1 task-foundation API exposed from `crates/kernel-domain/src/lib.rs`. K6 remains frozen. K7-001 is implemented, deterministic, and pending API acceptance.
+This document records the current public K6 workflow API and the additive K7.1 and K7.2 task-domain APIs exposed from `crates/kernel-domain/src/lib.rs`. K6 remains frozen. K7-001 and K7-002 are implemented and not frozen.
 
 ## K6 Public API Surface
 
@@ -325,7 +325,7 @@ Important non-goals:
 
 API status:
 
-- `IMPLEMENTED — PENDING API ACCEPTANCE`
+- `IMPLEMENTED — REVIEW PASSED`
 - `NOT FROZEN`
 
 Types:
@@ -393,6 +393,80 @@ Important non-goals:
 - No completion or failure semantics beyond vocabulary
 - No scheduler, executor, persistence, async runtime, or network integration
 
+### Task Definition Types
+
+API status:
+
+- `IMPLEMENTED — REVIEW PASSED`
+- `NOT FROZEN`
+
+Types:
+
+- `TaskDefinition`
+- `TaskDefinitionVersion`
+- `TaskDefinitionName`
+- `TaskDescription`
+- `TaskKind`
+- `TaskInputContract`
+- `TaskOutputContract`
+- `TaskRequirement`
+- `TaskCapabilityRequirement`
+- `TaskEvidenceRequirement`
+- `TaskCompletionRequirement`
+- `TaskFailurePolicyReference`
+
+Construction entry points:
+
+- `TaskDefinition::new(...) -> DomainResult<Self>`
+- `TaskDefinitionVersion::new(value: impl Into<String>) -> DomainResult<Self>`
+- `TaskDefinitionName::new(value: impl Into<String>) -> DomainResult<Self>`
+- `TaskDescription::new(value: impl Into<String>) -> DomainResult<Self>`
+- `TaskKind::new(value: impl Into<String>) -> DomainResult<Self>`
+- `TaskInputContract::new(value: impl Into<String>) -> DomainResult<Self>`
+- `TaskOutputContract::new(value: impl Into<String>) -> DomainResult<Self>`
+- `TaskRequirement::new(value: impl Into<String>) -> DomainResult<Self>`
+- `TaskCapabilityRequirement::new(value: impl Into<String>) -> DomainResult<Self>`
+- `TaskEvidenceRequirement::new(value: impl Into<String>) -> DomainResult<Self>`
+- `TaskCompletionRequirement::new(value: impl Into<String>) -> DomainResult<Self>`
+
+Principal accessors:
+
+- `TaskDefinition::{task_definition_id, task_definition_version, task_definition_name, task_description, task_kind, task_input_contracts, task_output_contracts, task_requirements, task_capability_requirements, task_evidence_requirements, task_completion_requirements, task_failure_policy_reference, task_workflow_reference, task_step_reference}`
+- `TaskDefinitionVersion::as_str(&self) -> &str`
+- `TaskDefinitionName::as_str(&self) -> &str`
+- `TaskDescription::as_str(&self) -> &str`
+- `TaskKind::as_str(&self) -> &str`
+- `TaskInputContract::as_str(&self) -> &str`
+- `TaskOutputContract::as_str(&self) -> &str`
+- `TaskRequirement::as_str(&self) -> &str`
+- `TaskCapabilityRequirement::as_str(&self) -> &str`
+- `TaskEvidenceRequirement::as_str(&self) -> &str`
+- `TaskCompletionRequirement::as_str(&self) -> &str`
+
+Deterministic behavior:
+
+- Task definitions are immutable after construction
+- Caller-supplied ordering is preserved for inputs, outputs, and all requirement collections
+- Explicit workflow and step bindings remain optional and data-only
+- No id generation, clock access, persistence, execution, or publication occurs
+
+Validation boundaries:
+
+- Task definition requires at least one input contract
+- Task definition requires at least one completion requirement
+- Duplicate task input, output, general requirement, capability requirement, evidence requirement, and completion requirement declarations are rejected
+- Task step binding requires workflow binding
+- Version, name, description, kind, and contract values reuse existing validated K1 primitives
+
+Important non-goals:
+
+- No task instance creation
+- No assignment state
+- No readiness evaluation
+- No lifecycle state
+- No dependency execution
+- No scheduler, executor, persistence, or network integration
+
 ### Failure-And-Recovery Types
 
 Types:
@@ -443,6 +517,7 @@ Important non-goals:
 
 Public variants:
 
+- `DomainError::InvalidTaskDefinition(&'static str)`
 - `DomainError::InvalidWorkflowReference(&'static str)`
 - `DomainError::InvalidWorkflowDefinition(&'static str)`
 - `DomainError::InvalidWorkflowInstance(&'static str)`

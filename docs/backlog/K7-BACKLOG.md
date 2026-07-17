@@ -38,7 +38,7 @@ NOT ESTABLISHED
   - additive compatibility preserved
 
 ### K7-002 Task Definition
-- Status: `BLOCKED BY K7-001`
+- Status: `DONE — REVIEW PASSED`
 - Purpose: define immutable task-definition model
 - Source specification: `docs/specifications/K7.2-task-definition.md`
 - Dependencies: K7-001
@@ -57,7 +57,7 @@ NOT ESTABLISHED
   - workflow compatibility preserved
 
 ### K7-003 Task Instance
-- Status: `BLOCKED BY K7-002`
+- Status: `READY FOR IMPLEMENTATION`
 - Purpose: define immutable task-instance model
 - Source specification: `docs/specifications/K7.3-task-instance.md`
 - Dependencies: K7-002
@@ -217,4 +217,5 @@ NOT ESTABLISHED
 ## Final Determination
 
 K7-001 is implemented, API-reviewed, and pending native validation in a linker-capable environment.
-K7-002 remains blocked by the K7 sequencing rules and is not authorized in this implementation slice.
+K7-002 is implemented, review-passed, and pending native validation in a linker-capable environment.
+K7-003 is the next authorized implementation slice.

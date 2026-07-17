@@ -13,7 +13,7 @@ ARCHITECTURE APPROVED
 PASS
 
 ## Implementation
-NOT STARTED
+IN PROGRESS
 
 ## API
 NOT ESTABLISHED
@@ -58,7 +58,7 @@ The architecture review MUST verify:
 - Traceability requirement: architecture traceability plus `CES TRACEABILITY: PENDING AUTHORITATIVE MAPPING` until authoritative IDs are available
 - Completion criteria: stable task vocabulary defined in code without public `TaskId` and without infrastructure semantics
 - Commit boundary: `feat(task): add task engine foundation`
-- Current status: `READY FOR IMPLEMENTATION`
+- Current status: `IMPLEMENTED — API REVIEW PASSED`
 
 ### K7-002 Task Definition
 - Objective: add immutable task-definition model
@@ -72,7 +72,7 @@ The architecture review MUST verify:
 - Traceability requirement: architecture traceability plus pending CES mapping
 - Completion criteria: immutable definition semantics with deterministic rejection coverage
 - Commit boundary: `feat(task): add task definition model`
-- Current status: `BLOCKED BY K7-001`
+- Current status: `IMPLEMENTED — REVIEW PASSED`
 
 ### K7-003 Task Instance
 - Objective: add immutable task-instance model
@@ -86,7 +86,7 @@ The architecture review MUST verify:
 - Traceability requirement: architecture traceability plus pending CES mapping
 - Completion criteria: deterministic instance creation and immutable snapshot binding
 - Commit boundary: `feat(task): add task instance model`
-- Current status: `BLOCKED BY K7-002`
+- Current status: `READY FOR IMPLEMENTATION`
 
 ### K7-004 Task Ownership And Assignment
 - Objective: define accountable ownership and future-execution assignment model
@@ -188,4 +188,4 @@ The architecture review MUST verify:
 
 ## Final Determination
 
-K7 planning is complete at the documentation-package level. The architecture review is recorded and K7-001 is authorized to begin implementation without architectural redesign.
+K7 planning is complete at the documentation-package level. The architecture review is recorded, K7-001 and K7-002 are implemented, and K7-003 is authorized to begin implementation without architectural redesign.
