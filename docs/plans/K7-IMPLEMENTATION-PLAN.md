@@ -92,15 +92,15 @@ The architecture review MUST verify:
 - Objective: define accountable ownership and future-execution assignment model
 - Authoritative specification: `docs/specifications/K7.4-task-ownership-and-assignment.md`
 - Allowed production files: additive task-domain files, `lib.rs`, `errors.rs`
-- Likely public API surface: task ownership, assignment, assignment statuses, assignment evidence
+- Likely public API surface: task ownership, assignment, assignment statuses, assignment reasons, deterministic decision outcomes, authority-scoped control
 - Explicit non-goals: policy redefinition, execution, scheduler
 - Upstream compatibility obligations: K3 authorization outcomes, K4 runtime and supervision facts, K6 workflow compatibility
-- Test groups: `task_ownership_assignment_*`
+- Test groups: `task_ownership_*`, `task_assignment_*`
 - Validation gates: full repository gates
 - Traceability requirement: architecture traceability plus pending CES mapping
 - Completion criteria: explicit owner and assignee semantics with eligibility validation, with `Assigned` used only as assignment status
-- Commit boundary: `feat(task): add ownership and assignment model`
-- Current status: `READY FOR IMPLEMENTATION`
+- Commit boundary: `feat(task): add K7 task ownership and assignment`
+- Current status: `IMPLEMENTED — REVIEW PASSED`
 
 ### K7-005 Task Priority And Readiness
 - Objective: define deterministic priority and readiness evaluation
@@ -114,7 +114,7 @@ The architecture review MUST verify:
 - Traceability requirement: architecture traceability plus pending CES mapping
 - Completion criteria: side-effect-free readiness evaluation with `Ready` and `Blocked` only as derived readiness outcomes
 - Commit boundary: `feat(task): add priority and readiness validation`
-- Current status: `BLOCKED BY K7-004`
+- Current status: `READY FOR IMPLEMENTATION`
 
 ### K7-006 Task Lifecycle And State
 - Objective: define task lifecycle vocabulary and transition control
@@ -188,4 +188,4 @@ The architecture review MUST verify:
 
 ## Final Determination
 
-K7 planning is complete at the documentation-package level. The architecture review is recorded, K7-001 through K7-003 are implemented, and K7-004 is authorized to begin implementation without architectural redesign.
+K7 planning is complete at the documentation-package level. The architecture review is recorded, K7-001 through K7-004 are implemented, and K7-005 is authorized to begin implementation without architectural redesign.

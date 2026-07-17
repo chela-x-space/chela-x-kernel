@@ -148,6 +148,10 @@ fn minimal_task_instance() -> TaskInstance {
     .expect("instance")
 }
 
+pub(crate) fn minimal_task_instance_for_shared_tests() -> TaskInstance {
+    minimal_task_instance()
+}
+
 #[test]
 fn task_instance_valid_minimal_task_instance_constructs_successfully() {
     let instance = minimal_task_instance();

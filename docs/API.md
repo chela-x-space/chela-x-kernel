@@ -29,7 +29,7 @@ INTERNAL
 
 ## Purpose And Scope
 
-This document records the current public K6 workflow API and the additive K7.1 through K7.3 task-domain APIs exposed from `crates/kernel-domain/src/lib.rs`. K6 remains frozen. K7-001 through K7-003 are implemented and not frozen.
+This document records the current public K6 workflow API and the additive K7.1 through K7.4 task-domain APIs exposed from `crates/kernel-domain/src/lib.rs`. K6 remains frozen. K7-001 through K7-004 are implemented and not frozen.
 
 ## K6 Public API Surface
 
@@ -535,6 +535,83 @@ Important non-goals:
 - No dependency execution
 - No completion or failure outcomes
 - No executor, scheduler, persistence, or network integration
+
+### Task Ownership And Assignment Types
+
+API status:
+
+- `IMPLEMENTED — REVIEW PASSED`
+- `NOT FROZEN`
+
+Types:
+
+- `TaskOwner`
+- `TaskOwnership`
+- `TaskOwnershipAuthority`
+- `TaskOwnershipScope`
+- `TaskAssignee`
+- `TaskAssignment`
+- `TaskAssignmentAuthority`
+- `TaskAssignmentStatus`
+- `TaskAssignmentReason`
+- `TaskAssignmentRejectionReason`
+- `TaskAssignmentRequest`
+- `TaskAssignmentChange`
+- `TaskAssignmentRejection`
+- `TaskAssignmentNoOp`
+- `TaskAssignmentDecision`
+- `TaskAssignmentControl`
+
+Construction and evaluation entry points:
+
+- `TaskOwner::{from_identity, from_ownership_subject}`
+- `TaskOwnership::new(task_instance_reference: TaskInstanceReference, task_owner: TaskOwner, task_ownership_scope: TaskOwnershipScope, task_ownership_authority: TaskOwnershipAuthority) -> Self`
+- `TaskAssignee::{from_identity, from_ownership_subject}`
+- `TaskAssignment::new(...) -> DomainResult<Self>`
+- `TaskAssignmentReason::new(value: impl Into<String>) -> DomainResult<Self>`
+- `TaskAssignmentRequest::new(...) -> Self`
+- `TaskAssignmentControl::evaluate(request: &TaskAssignmentRequest) -> TaskAssignmentDecision`
+
+Principal accessors:
+
+- `TaskOwner::{identity_reference, ownership_subject}`
+- `TaskOwnership::{task_instance_reference, task_owner, task_ownership_scope, task_ownership_authority}`
+- `TaskAssignee::{identity_reference, ownership_subject}`
+- `TaskAssignment::{task_instance_reference, task_assignee, task_assignment_status, task_assignment_authority, task_assignment_reason}`
+- `TaskAssignmentReason::as_str(&self) -> &str`
+- `TaskAssignmentRequest::{current_assignment, requested_assignee, task_assignment_authority, task_assignment_reason, authorization_outcome}`
+- `TaskAssignmentChange::{previous_assignment, current_assignment}`
+- `TaskAssignmentRejection::{current_assignment, reason}`
+- `TaskAssignmentNoOp::current_assignment(&self) -> &TaskAssignment`
+
+Deterministic behavior:
+
+- Ownership and assignment are modeled as separate immutable snapshots
+- Assignment decisions return explicit `Updated`, `Rejected`, or `NoOp` outcomes
+- Reassignment preserves previous assignment state in the returned change record
+- Assignment consumes explicit K3 authorization outcomes and explicit K4 lifecycle facts only
+- No lifecycle transition, readiness evaluation, execution, persistence, event publication, scheduler interaction, clock access, or random generation occurs
+
+Validation boundaries:
+
+- Ownership requires explicit owner, scope, authority, and task-instance reference by type
+- `Unassigned` assignment snapshots reject retained assignee, authority, or reason
+- `Assigned` and `Accepted` snapshots require assignee and authority
+- `Rejected`, `Released`, and `Revoked` snapshots require cleared assignee, authority, and reason
+- Assignment without required authority is rejected deterministically
+- Unassignment without required reason is rejected deterministically
+- Authorization-denied outcomes are rejected without consulting external policy services
+- Human assignees in `Retirement` or `Archive` are rejected when those explicit upstream lifecycle facts are supplied
+- Agent assignees in `Paused`, `Suspended`, `Recovering`, `Retired`, or `Deleted` are rejected when those explicit upstream lifecycle facts are supplied
+
+Important non-goals:
+
+- No ownership transfer workflow
+- No readiness evaluation
+- No lifecycle transition execution
+- No dependency resolution
+- No task execution or worker dispatch
+- No policy redefinition, persistence, event publication, scheduler, executor, or network integration
 
 ### Failure-And-Recovery Types
 

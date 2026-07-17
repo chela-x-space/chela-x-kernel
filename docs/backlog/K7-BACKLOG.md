@@ -76,17 +76,17 @@ NOT ESTABLISHED
   - workflow binding additive only
 
 ### K7-004 Task Ownership And Assignment
-- Status: `READY FOR IMPLEMENTATION`
+- Status: `DONE — REVIEW PASSED`
 - Purpose: separate accountable ownership from future-execution assignment
 - Source specification: `docs/specifications/K7.4-task-ownership-and-assignment.md`
 - Dependencies: K7-003
-- Implementation scope: ownership, assignment, authority, assignment status, evidence, reassignment outcomes
+- Implementation scope: ownership, assignment, authority, assignment status, assignment reasons, deterministic reassignment outcomes
 - Prohibited scope: policy redefinition, execution, capacity reservation
 - Expected files: additive task-domain Rust files, `lib.rs`, `errors.rs`
-- Required tests: `task_ownership_assignment_*`
+- Required tests: `task_ownership_*`, `task_assignment_*`
 - Required documentation updates: API and traceability coverage after implementation
 - Validation commands: full repository gates
-- Commit message recommendation: `feat(task): add ownership and assignment model`
+- Commit message recommendation: `feat(task): add K7 task ownership and assignment`
 - Acceptance checklist:
   - owner distinct from assignee
   - `Assigned` used only as assignment status
@@ -96,7 +96,7 @@ NOT ESTABLISHED
   - no unsupported multi-assignee behavior
 
 ### K7-005 Task Priority And Readiness
-- Status: `BLOCKED BY K7-004`
+- Status: `READY FOR IMPLEMENTATION`
 - Purpose: define explicit priority and side-effect-free readiness evaluation
 - Source specification: `docs/specifications/K7.5-task-priority-and-readiness.md`
 - Dependencies: K7-004
@@ -219,4 +219,5 @@ NOT ESTABLISHED
 K7-001 is implemented, API-reviewed, and pending native validation in a linker-capable environment.
 K7-002 is implemented, review-passed, and pending native validation in a linker-capable environment.
 K7-003 is implemented, review-passed, and pending native validation in a linker-capable environment.
-K7-004 is the next authorized implementation slice.
+K7-004 is implemented, review-passed, and pending native validation in a linker-capable environment.
+K7-005 is the next authorized implementation slice.

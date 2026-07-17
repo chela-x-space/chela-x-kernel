@@ -122,13 +122,18 @@ pub use state::{
     WorkspaceStateSnapshot, WorkspaceTransitionOutcome, WorkspaceTransitionRequest,
 };
 pub use task::{
-    TaskCapabilityRequirement, TaskCompletionRequirement, TaskCreationContext, TaskDefinition,
-    TaskDefinitionId, TaskDefinitionName, TaskDefinitionReference, TaskDefinitionSnapshotReference,
-    TaskDefinitionVersion, TaskDependencyId, TaskDependencyReference, TaskDescription,
-    TaskEvidenceId, TaskEvidenceReference, TaskEvidenceRequirement, TaskFailurePolicyReference,
-    TaskInputBinding, TaskInputContract, TaskInstance, TaskInstanceId, TaskInstanceReference,
-    TaskKind, TaskOutputBinding, TaskOutputContract, TaskRequirement, TaskState, TaskStepBinding,
-    TaskStepReference, TaskWorkflowBinding, TaskWorkflowReference,
+    TaskAssignee, TaskAssignment, TaskAssignmentAuthority, TaskAssignmentChange,
+    TaskAssignmentControl, TaskAssignmentDecision, TaskAssignmentNoOp, TaskAssignmentReason,
+    TaskAssignmentRejection, TaskAssignmentRejectionReason, TaskAssignmentRequest,
+    TaskAssignmentStatus, TaskCapabilityRequirement, TaskCompletionRequirement,
+    TaskCreationContext, TaskDefinition, TaskDefinitionId, TaskDefinitionName,
+    TaskDefinitionReference, TaskDefinitionSnapshotReference, TaskDefinitionVersion,
+    TaskDependencyId, TaskDependencyReference, TaskDescription, TaskEvidenceId,
+    TaskEvidenceReference, TaskEvidenceRequirement, TaskFailurePolicyReference, TaskInputBinding,
+    TaskInputContract, TaskInstance, TaskInstanceId, TaskInstanceReference, TaskKind,
+    TaskOutputBinding, TaskOutputContract, TaskOwner, TaskOwnership, TaskOwnershipAuthority,
+    TaskOwnershipScope, TaskRequirement, TaskState, TaskStepBinding, TaskStepReference,
+    TaskWorkflowBinding, TaskWorkflowReference,
 };
 pub use workflow::{
     WorkflowAuditEvidenceReference, WorkflowAuthorizationContext, WorkflowAuthorizationControl,
