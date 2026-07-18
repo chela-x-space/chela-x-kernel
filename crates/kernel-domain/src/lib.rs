@@ -17,6 +17,11 @@ pub mod execution_validation;
 pub mod identifier;
 pub mod identity;
 pub mod lifecycle;
+pub mod memory;
+pub mod memory_projection;
+pub mod memory_query;
+pub mod memory_record;
+pub mod memory_validation;
 pub mod ownership;
 pub mod policy;
 pub mod request;
@@ -91,6 +96,19 @@ pub use lifecycle::{
     AgentLifecycle, DecisionRecordStatus, DelegationLifecycle, EnterpriseLifecycle, HumanLifecycle,
     OrganizationalUnitLifecycle, OwnershipLifecycle, ProjectLifecycle, WorkflowState,
     WorkspaceLifecycle,
+};
+pub use memory::{MemoryAuditReference, MemoryRecordId, MemoryRecordReference};
+pub use memory_projection::{
+    ExecutionMemoryProjection, MemoryProjection, RuntimeMemoryProjection, TaskMemoryProjection,
+    WorkflowMemoryProjection,
+};
+pub use memory_query::{
+    MemoryQuery, MemoryQueryResult, MemoryRetrievalRequest, MemoryRetrievalResult,
+};
+pub use memory_record::{
+    MemoryCaptureDecision, MemoryCaptureRequest, MemoryClassification, MemoryProvenance,
+    MemoryRecord, MemoryRejectionReason, MemoryRelationship, MemoryRelationshipRequest,
+    MemoryRetentionDecision, MemoryRetentionPolicyReference,
 };
 pub use ownership::{
     OrganizationalContext, OwnerReference, OwnershipPath, OwnershipScope, OwnershipSubject,
@@ -199,3 +217,15 @@ mod execution_separation_tests;
 mod execution_session_tests;
 #[cfg(test)]
 mod execution_test_support;
+#[cfg(test)]
+mod memory_identity_tests;
+#[cfg(test)]
+mod memory_projection_tests;
+#[cfg(test)]
+mod memory_query_tests;
+#[cfg(test)]
+mod memory_record_tests;
+#[cfg(test)]
+mod memory_separation_tests;
+#[cfg(test)]
+mod memory_test_support;
