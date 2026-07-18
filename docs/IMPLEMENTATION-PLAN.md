@@ -68,7 +68,7 @@ This breakdown is an implementation tracking document only. It does not create a
 
 ## Next Approved Milestone
 
-`K9 Enterprise Memory`
+`K10 API Gateway`
 
 ## K7 Current Milestone State
 
@@ -152,8 +152,27 @@ K9 implementation constraints preserved:
 - K9 consumes frozen K1-K8 contracts additively.
 - K9 remains in `kernel-domain`; no application-service, runtime, API, or frontend crate is introduced in this milestone.
 - K9 does not create runtime orchestration, storage, transport, dashboard UI, or API Gateway behavior.
-- K10 planning is authorized.
+- K10 planning is complete.
+- K10 architecture review is pending human review.
 - K10 implementation is not started.
+
+## K10 Current Milestone State
+
+- Exact title: `K10 API Gateway`
+- Planning status: `COMPLETE`
+- Architecture review status: `PENDING HUMAN REVIEW`
+- Implementation status: `NOT STARTED`
+- Implementation authorization status: `PENDING ARCHITECTURE REVIEW`
+- Planned repository scope: new additive gateway crate and planning evidence only
+- ADR status from current repository evidence: `NOT REQUIRED`
+
+K10 planning constraints preserved:
+
+- K10 consumes frozen K1-K9 contracts additively.
+- K10 must not modify `kernel-domain` public APIs.
+- K10 must not introduce HTTP, WebSocket, gRPC, IPC, or other concrete transport infrastructure in its approved planning baseline.
+- K10 establishes gateway contracts, request validation, response mapping, and error translation only.
+- K11 planning remains unauthorized by this document.
 
 Before `K7-001` Rust implementation begins, the K7 specification package MUST receive an architecture review confirming:
 
@@ -177,7 +196,9 @@ Before `K7-001` Rust implementation begins, the K7 specification package MUST re
 - [plans/K7-IMPLEMENTATION-PLAN.md](./plans/K7-IMPLEMENTATION-PLAN.md)
 - [plans/K8-IMPLEMENTATION-PLAN.md](./plans/K8-IMPLEMENTATION-PLAN.md)
 - [plans/K9-IMPLEMENTATION-PLAN.md](./plans/K9-IMPLEMENTATION-PLAN.md)
+- [plans/K10-IMPLEMENTATION-PLAN.md](./plans/K10-IMPLEMENTATION-PLAN.md)
 - [backlog/K6-BACKLOG.md](./backlog/K6-BACKLOG.md)
 - [backlog/K7-BACKLOG.md](./backlog/K7-BACKLOG.md)
 - [backlog/K8-BACKLOG.md](./backlog/K8-BACKLOG.md)
 - [backlog/K9-BACKLOG.md](./backlog/K9-BACKLOG.md)
+- [backlog/K10-BACKLOG.md](./backlog/K10-BACKLOG.md)

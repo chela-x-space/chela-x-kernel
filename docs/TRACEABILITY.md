@@ -210,3 +210,44 @@ INTERNAL
 | --- | --- | --- |
 | `K9-009` | `DEFERRED` | Direct K9 CES specification package remains repository-local partial / inherited only. |
 | `K9-010` | `DEFERRED` | Operational memory infrastructure remains outside K9 domain scope. |
+
+## K10 Planning Summary
+
+- Milestone: `K10 API Gateway`
+- Planning status: `COMPLETE`
+- Architecture review status: `PENDING HUMAN REVIEW`
+- Implementation status: `NOT STARTED`
+- Implementation authorization status: `PENDING ARCHITECTURE REVIEW`
+- Planned repository scope: `NEW GATEWAY CRATE; NO DOMAIN API CHANGE`
+- Repository-local CES mapping status: `PARTIAL / INHERITED — DO NOT FABRICATE NEW CES IDS`
+
+## K10 Planning Matrix
+
+| Kernel requirement | Requirement summary | Repository-local source | Supporting CES-traceable source | Planned contract or behavior | Frozen dependency | Validation method | Test category | Classification | Planning status |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `K10-001` | Gateway contracts remain versioned, canonical, and transport-independent. | `docs/kernel-architecture/11-api-gateway-architecture.md` §5, §11 | `docs/kernel-architecture/16-traceability.md` §4 | `GatewayApiVersion`, `GatewayOperationReference` | K1 identifiers | native tests | construction and versioning | `NATIVE_TESTED` | `PLANNED` |
+| `K10-002` | Authentication context remains explicit and separate from authorization. | `docs/kernel-architecture/11-api-gateway-architecture.md` §6 | `docs/kernel-architecture/01-kernel-overview.md` §16 | `GatewayAuthenticationContext` | K1 identity rules, K3 vocabulary | native tests | context validation | `NATIVE_TESTED` | `PLANNED` |
+| `K10-003` | Gateway authorization remains integrated with Kernel outcomes rather than reimplemented. | `docs/kernel-architecture/11-api-gateway-architecture.md` §7 | inherited K3 traceability | `GatewayAuthorizationBinding` | K3 authorization decisions | native tests | delegation and enforcement | `NATIVE_TESTED` | `PLANNED` |
+| `K10-004` | Requests remain validated before any lower-layer invocation. | `docs/kernel-architecture/11-api-gateway-architecture.md` §8 | `docs/kernel-architecture/13-data-flow.md` §3-§4 | `GatewayRequestContext`, `GatewayRequestEnvelope` | K1 identifiers, K3 classification, K9 memory retrieval rules | native tests | request validation | `NATIVE_TESTED` | `PLANNED` |
+| `K10-005` | Commands remain explicit requests over approved Kernel operations only. | `docs/kernel-architecture/01-kernel-overview.md` §16 | `docs/kernel-architecture/13-data-flow.md` §4 | `GatewayCommandRequest`, `GatewayCommandResponse` | K6-K9 public APIs | native tests | command validation | `NATIVE_TESTED` | `PLANNED` |
+| `K10-006` | Queries expose deterministic read-only Kernel views for later Studio use. | `docs/kernel-architecture/12-studio-integration-architecture.md` §7-§12 | `docs/kernel-architecture/10-memory-architecture.md` §12 | `GatewayQueryRequest`, `GatewayQueryResponse`, `GatewayStatusSnapshot` | K4-K9 public APIs | native tests | query and read models | `NATIVE_TESTED` | `PLANNED` |
+| `K10-007` | Response mapping preserves canonical Kernel meaning. | `docs/kernel-architecture/11-api-gateway-architecture.md` §9 | `docs/kernel-architecture/13-data-flow.md` §11 | `GatewayResponseEnvelope` | K1-K9 canonical outcomes | native tests | response determinism | `NATIVE_TESTED` | `PLANNED` |
+| `K10-008` | Error translation preserves semantic meaning without leaking internal details. | `docs/kernel-architecture/11-api-gateway-architecture.md` §10 | inherited K1-K9 rejection semantics | `GatewayError`, `GatewayErrorCode` | `DomainError`, K3-K9 rejection enums | native tests | error mapping | `NATIVE_TESTED` | `PLANNED` |
+| `K10-009` | Rate governance and protocol adaptation remain explicit and transport-neutral. | `docs/kernel-architecture/11-api-gateway-architecture.md` §3, §13 | `docs/kernel-architecture/01-kernel-overview.md` §16 | `GatewayProtocol`, `GatewayRateGovernanceReference` | K1 identifiers, K3 governance vocabulary | compile gates, static audits | protocol neutrality | `COMPILE_GATED` | `PLANNED` |
+| `K10-010` | K10 preserves frozen boundaries and remains infrastructure-free in the Kernel repository. | `docs/kernel-architecture/16-traceability.md` §4-§7 | inherited repository governance | conformance coverage only | K1-K9 frozen APIs | static audits, compile gates | no infrastructure leakage | `STATIC_AUDIT` | `PLANNED` |
+
+## K10 Deferred Work
+
+| Kernel requirement | Status | Notes |
+| --- | --- | --- |
+| `K10-011` | `DEFERRED` | Concrete transport adapters require future protocol-specific authority. |
+| `K10-012` | `DEFERRED` | Authentication provider and SDK integration remain outside the current planning baseline. |
+| `K10-013` | `OUT_OF_SCOPE` | Gateway hosting, persistence, and background services are not part of K10 planning. |
+
+## K10 Planning Assertions
+
+- Production source changed: `NO`
+- Tests changed: `NO`
+- Public API changed: `NO`
+- Architecture changed: `NO`
+- ADR required: `NO`

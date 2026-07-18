@@ -1,7 +1,7 @@
 # CHELA-X Kernel
 
 ## Status
-Implementation (K8 Closed, K9 Closed)
+Implementation (K8 Closed, K9 Closed, K10 Planned)
 
 ## Version
 0.5.0
@@ -56,6 +56,7 @@ AI Engineering OS -> CHELA-X CES -> CHELA-X Kernel -> CHELA-X Runtime -> CHELA-X
 | K7 Task Engine | PASS / COMPLETE |
 | K8 Execution Engine | PASS / COMPLETE |
 | K9 Enterprise Memory | PASS / COMPLETE |
+| K10 API Gateway | PLANNING COMPLETE |
 
 Canonical host validation:
 
@@ -63,7 +64,7 @@ Canonical host validation:
 - **0 failed**
 
 ## Current Status
-`K8 Execution Engine Closed And Frozen; K9 Enterprise Memory Closed And Frozen`
+`K8 Execution Engine Closed And Frozen; K9 Enterprise Memory Closed And Frozen; K10 API Gateway Planning Complete`
 
 ## Constraints
 - Architecture is frozen.
@@ -79,8 +80,9 @@ Canonical host validation:
 - K7 public API is frozen for next-milestone consumption.
 - K8 execution-domain API is frozen for next-milestone consumption.
 - K9 implementation is complete, native verification passed, and K9 public API is frozen for K10 consumption.
-- K10 planning is authorized.
-- K10 implementation is not started.
+- K10 planning is complete and architecture review is pending human approval.
+- K10 implementation is not started and remains unauthorized.
+- K10 will establish API Gateway contracts without introducing transport infrastructure in the planning baseline.
 - K6 preserves the architecture freeze.
 - K8 preserves the architecture freeze.
 - Runtime execution is not implemented.
