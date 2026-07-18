@@ -118,9 +118,7 @@ pub(super) fn failure_happy_path() -> FailureFlow {
         in_progress_snapshot.clone(),
         super::outcome_test_support::failure(
             super::outcome_test_support::failure_evidence_set(),
-            Some(
-                super::TaskFailurePolicyReference::new("task.failure.policy.demo").expect("policy"),
-            ),
+            Some(super::outcome_test_support::task_failure_policy_reference()),
         ),
         None,
     ));

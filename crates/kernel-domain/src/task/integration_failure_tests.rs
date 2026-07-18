@@ -40,9 +40,7 @@ fn integration_failure_accepted_does_not_mutate_lifecycle() {
         start_snapshot.clone(),
         super::outcome_test_support::failure(
             super::outcome_test_support::failure_evidence_set(),
-            Some(
-                super::TaskFailurePolicyReference::new("task.failure.policy.demo").expect("policy"),
-            ),
+            Some(super::outcome_test_support::task_failure_policy_reference()),
         ),
         None,
     ));
@@ -97,6 +95,6 @@ fn integration_failure_record_preserves_code_category_evidence_and_policy() {
             .task_failure_policy_reference()
             .expect("policy")
             .as_str(),
-        "task.failure.policy.demo"
+        "CX-POL-900001"
     );
 }

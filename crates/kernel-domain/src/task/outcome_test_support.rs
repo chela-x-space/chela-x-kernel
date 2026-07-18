@@ -45,7 +45,7 @@ pub fn task_definition() -> TaskDefinition {
         Vec::new(),
         vec![evidence_requirement()],
         vec![completion_requirement()],
-        Some(TaskFailurePolicyReference::new("task.failure.policy.demo").expect("policy")),
+        Some(task_failure_policy_reference()),
         None,
         None,
     )
@@ -157,7 +157,7 @@ pub fn failure_request(
         state_snapshot(TaskState::InProgress),
         failure(
             failure_evidence_set(),
-            Some(TaskFailurePolicyReference::new("task.failure.policy.demo").expect("policy")),
+            Some(task_failure_policy_reference()),
         ),
         task_completion,
     )
@@ -225,4 +225,8 @@ pub fn completion_requirement() -> TaskCompletionRequirement {
 
 pub fn recovery_reference() -> TaskRecoveryReference {
     TaskRecoveryReference::new("recovery/manual-review", true).expect("recovery reference")
+}
+
+pub fn task_failure_policy_reference() -> TaskFailurePolicyReference {
+    TaskFailurePolicyReference::new("CX-POL-900001").expect("policy")
 }

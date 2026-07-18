@@ -4,9 +4,7 @@ use super::{TaskFailureControl, TaskFailureOutcome, TaskFailureRejectionReason};
 fn task_failure_preserves_code_category_policy_and_evidence() {
     let failure = super::outcome_test_support::failure(
         super::outcome_test_support::failure_evidence_set(),
-        Some(
-            super::TaskFailurePolicyReference::new("task.failure.policy.demo").expect("policy"),
-        ),
+        Some(super::outcome_test_support::task_failure_policy_reference()),
     );
 
     assert_eq!(failure.task_failure_code().as_str(), "task.failure.timeout");
@@ -16,9 +14,7 @@ fn task_failure_preserves_code_category_policy_and_evidence() {
     );
     assert_eq!(
         failure.task_failure_policy_reference(),
-        Some(
-            &super::TaskFailurePolicyReference::new("task.failure.policy.demo").expect("policy")
-        )
+        Some(&super::outcome_test_support::task_failure_policy_reference())
     );
     assert_eq!(failure.task_failure_evidence_set().task_evidences().len(), 1);
 }
@@ -40,7 +36,7 @@ fn task_failure_rejects_policy_mismatch() {
         super::outcome_test_support::failure(
             super::outcome_test_support::failure_evidence_set(),
             Some(
-                super::TaskFailurePolicyReference::new("task.failure.policy.other")
+                super::TaskFailurePolicyReference::new("CX-POL-900002")
                     .expect("policy"),
             ),
         ),
@@ -88,10 +84,7 @@ fn task_failure_rejects_task_instance_mismatch() {
         super::outcome_test_support::state_snapshot(super::TaskState::InProgress),
         super::outcome_test_support::failure(
             other_evidence.expect("evidence set"),
-            Some(
-                super::TaskFailurePolicyReference::new("task.failure.policy.demo")
-                    .expect("policy"),
-            ),
+            Some(super::outcome_test_support::task_failure_policy_reference()),
         ),
         None,
     );
