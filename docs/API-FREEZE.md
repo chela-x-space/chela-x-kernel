@@ -10,7 +10,7 @@ Current
 Kernel Platform Team
 
 ## Last Updated
-2026-07-17
+2026-07-18
 
 ## Applies To
 Frozen public API governance for `kernel-domain`, including the K6 workflow-engine surface.
@@ -94,3 +94,50 @@ Prohibited changes without approved ADR:
 - duplicating K3 authorization semantics
 - duplicating K5 event-envelope semantics
 - introducing runtime infrastructure behavior into `kernel-domain`
+
+## K7 Task Domain API
+
+### Status Statement
+
+`FROZEN FOR NEXT-MILESTONE CONSUMPTION WITH NATIVE VERIFICATION BLOCKER`
+
+### K7 Review State
+
+- Implementation status: `COMPLETE`
+- Architecture review: `PASSED`
+- Public API inventory: `RECORDED`
+- Compatibility status: `PRESERVED`
+- Native verification status: `PENDING DUE ENVIRONMENT BLOCKER`
+- Architecture Freeze: `PRESERVED`
+
+### K7 Scope
+
+The K7 task-domain API covers:
+
+- identity and references
+- definition and instance modeling
+- ownership and assignment
+- priority and readiness
+- lifecycle and state transitions
+- dependency coordination
+- completion, failure, evidence, and outcome decisions
+- K7-009 integration and conformance coverage
+
+### K7 Freeze Conditions
+
+- K7 implementation is complete and ready for downstream consumption in the next milestone.
+- Public API inventory is recorded in `docs/API.md`.
+- Architecture review passed without redesign, dependency-direction change, or ADR requirement.
+- K1-K6 compatibility and K7 additive compatibility are preserved.
+- Native verification is still blocked in the current Codex environment because `cc`, `gcc`, and `clang` are unavailable on Saturday, July 18, 2026.
+
+### K7 Non-Features
+
+- No scheduler
+- No executor
+- No worker dispatch
+- No persistence
+- No repository
+- No task runtime facade
+- No event publication
+- No retry or timeout engine

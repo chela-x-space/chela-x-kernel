@@ -40,6 +40,7 @@ INTERNAL
 - Deterministic K7-006 task-lifecycle and task-state model covering immutable lifecycle snapshots, sequence-aware transition requests, canonical transition map validation, readiness-gated start semantics, explicit completion and failure guard facts, and pure allowed, rejected, or no-op outcomes without runtime orchestration
 - Deterministic K7-007 task-dependency coordination model covering explicit dependency graph references, typed source and target edges, canonical completion, success, evidence, and output dependency rules, deterministic duplicate and cycle validation, and aggregate satisfied, unsatisfied, unresolved, or rejected coordination outcomes without runtime orchestration
 - Deterministic K7-008 task-completion, task-failure, and task-evidence model covering explicit completion results, typed output references and bindings, infrastructure-neutral evidence identity and metadata, stable failure references and recovery references, deterministic validation outcomes, and distinct completed, failed, or rejected outcome vocabulary without runtime execution or storage
+- Deterministic K7-009 integration and conformance coverage covering explicit definition-to-instance composition, dependency-to-readiness composition, readiness-to-lifecycle composition, completion-to-lifecycle composition, failure-to-lifecycle composition, identity continuity, state-sequence continuity, deterministic full-flow evaluation, and cross-concern separation without introducing a runtime facade
 - Deterministic K7-001 unit coverage for immutable value semantics, identity separation, and reference preservation
 - Deterministic K7-002 unit coverage for definition construction, duplicate rejection, workflow-binding validation, field preservation, and immutable ordering
 - Deterministic K7-003 unit coverage for definition snapshot preservation, input validation, workflow and step binding validation, explicit initial state, and immutable instance creation
@@ -48,6 +49,14 @@ INTERNAL
 - Deterministic K7-006 unit coverage for every approved lifecycle edge, sequence mismatch rejection, terminal-state protection, no-op semantics, readiness integration, and separation from assignment, ownership, priority, and runtime concerns
 - Deterministic K7-007 unit coverage for dependency construction, duplicate and cycle validation, satisfaction and unresolved outcomes, aggregate coordination, and separation from lifecycle mutation, readiness mutation, assignment, dispatch, and scheduler concerns
 - Deterministic K7-008 unit coverage for completion validation, failure validation, evidence identity and declaration validation, completion-versus-failure conflict rejection, and separation from lifecycle mutation, retry, and runtime infrastructure
+- Deterministic K7-009 integration coverage for happy-path completion and failure flows, blocked readiness rejection, dependency-readiness composition, lifecycle guard composition, mutual exclusion, immutability, determinism, and additive compatibility preservation
+
+### Validation
+
+- K7 implementation is complete through `K7-009`
+- Architecture remains unchanged
+- ADR not required
+- Native `cargo test --workspace --all-targets` remains blocked by the environment linker because `cc`, `gcc`, and `clang` are unavailable on Saturday, July 18, 2026
 
 ### Boundaries
 

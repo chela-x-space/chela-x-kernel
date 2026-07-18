@@ -150,6 +150,26 @@ mod evidence_tests;
 #[cfg(test)]
 mod instance_tests;
 #[cfg(test)]
+mod integration_completion_tests;
+#[cfg(test)]
+mod integration_dependency_tests;
+#[cfg(test)]
+mod integration_determinism_tests;
+#[cfg(test)]
+mod integration_failure_tests;
+#[cfg(test)]
+mod integration_flow_support;
+#[cfg(test)]
+mod integration_identity_tests;
+#[cfg(test)]
+mod integration_readiness_tests;
+#[cfg(test)]
+mod integration_separation_tests;
+#[cfg(test)]
+mod integration_sequence_tests;
+#[cfg(test)]
+mod integration_test_support;
+#[cfg(test)]
 mod lifecycle_allowed_tests;
 #[cfg(test)]
 mod lifecycle_noop_tests;

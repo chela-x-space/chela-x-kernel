@@ -64,10 +64,18 @@ pub fn task_instance_reference() -> TaskInstanceReference {
     TaskInstanceReference::new(task_instance().task_instance_id().clone())
 }
 
-pub fn evidence_set(requirement: Option<super::TaskEvidenceRequirement>) -> TaskEvidenceSet {
+pub fn required_evidence_set(requirement: super::TaskEvidenceRequirement) -> TaskEvidenceSet {
     TaskEvidenceSet::new(
         task_instance_reference(),
-        vec![task_evidence("task.evidence.demo", requirement)],
+        vec![task_evidence("task.evidence.demo", Some(requirement))],
+    )
+    .expect("evidence set")
+}
+
+pub fn failure_evidence_set() -> TaskEvidenceSet {
+    TaskEvidenceSet::new(
+        task_instance_reference(),
+        vec![task_evidence("task.evidence.demo", None)],
     )
     .expect("evidence set")
 }
@@ -114,7 +122,7 @@ pub fn completion_request(task_state: TaskState) -> TaskCompletionValidationRequ
         state_snapshot(task_state),
         completion_result(
             valid_outputs(),
-            evidence_set(Some(evidence_requirement())),
+            required_evidence_set(evidence_requirement()),
             vec![completion_requirement()],
         ),
         None,
@@ -144,7 +152,7 @@ pub fn failure_request(
         task_instance(),
         state_snapshot(TaskState::InProgress),
         failure(
-            evidence_set(None),
+            failure_evidence_set(),
             Some(TaskFailurePolicyReference::new("task.failure.policy.demo").expect("policy")),
         ),
         task_completion,

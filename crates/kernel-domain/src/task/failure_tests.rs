@@ -3,7 +3,7 @@ use super::{TaskFailureControl, TaskFailureOutcome, TaskFailureRejectionReason};
 #[test]
 fn task_failure_preserves_code_category_policy_and_evidence() {
     let failure = super::outcome_test_support::failure(
-        super::outcome_test_support::evidence_set(None),
+        super::outcome_test_support::failure_evidence_set(),
         Some(
             super::TaskFailurePolicyReference::new("task.failure.policy.demo").expect("policy"),
         ),
@@ -38,7 +38,7 @@ fn task_failure_rejects_policy_mismatch() {
         super::outcome_test_support::task_instance(),
         super::outcome_test_support::state_snapshot(super::TaskState::InProgress),
         super::outcome_test_support::failure(
-            super::outcome_test_support::evidence_set(None),
+            super::outcome_test_support::failure_evidence_set(),
             Some(
                 super::TaskFailurePolicyReference::new("task.failure.policy.other")
                     .expect("policy"),

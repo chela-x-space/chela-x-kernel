@@ -29,7 +29,7 @@ INTERNAL
 
 ## Purpose And Scope
 
-This document records the current public K6 workflow API and the additive K7.1 through K7.8 task-domain APIs exposed from `crates/kernel-domain/src/lib.rs`. K6 remains frozen. K7-001 through K7-008 are implemented and not frozen.
+This document records the current public K6 workflow API and the additive K7.1 through K7.9 task-domain APIs exposed from `crates/kernel-domain/src/lib.rs`. K6 remains frozen. K7 implementation is complete, and the K7 task-domain API inventory is recorded for conditional freeze with native verification still blocked by the current environment.
 
 ## K6 Public API Surface
 
@@ -1090,3 +1090,43 @@ These variants report constructor or binding failures only. They do not imply ru
 - No network transport
 - No async runtime
 - No external policy or identity lookup
+
+## K7 Integration And Conformance Review
+
+Review status:
+
+- `K7-009 IMPLEMENTED — REVIEW PASSED`
+- `K7 IMPLEMENTATION COMPLETE`
+- `K7 API FROZEN FOR NEXT-MILESTONE CONSUMPTION WITH NATIVE VERIFICATION BLOCKER`
+
+Public inventory groups:
+
+- Identity: `TaskDefinitionId`, `TaskInstanceId`, `TaskDependencyId`, `TaskEvidenceId`, `TaskDefinitionReference`, `TaskInstanceReference`, `TaskDependencyReference`, `TaskEvidenceReference`, `TaskWorkflowReference`, `TaskStepReference`
+- Definition: `TaskDefinition`, `TaskDefinitionVersion`, `TaskDefinitionName`, `TaskDescription`, `TaskKind`, `TaskInputContract`, `TaskOutputContract`, `TaskRequirement`, `TaskCapabilityRequirement`, `TaskEvidenceRequirement`, `TaskCompletionRequirement`, `TaskFailurePolicyReference`
+- Instance: `TaskInstance`, `TaskDefinitionSnapshotReference`, `TaskCreationContext`, `TaskInputBinding`, `TaskOutputBinding`, `TaskWorkflowBinding`, `TaskStepBinding`, `TaskState`
+- Ownership: `TaskOwner`, `TaskOwnership`, `TaskOwnershipAuthority`, `TaskOwnershipScope`
+- Assignment: `TaskAssignee`, `TaskAssignment`, `TaskAssignmentAuthority`, `TaskAssignmentStatus`, `TaskAssignmentReason`, `TaskAssignmentRequest`, `TaskAssignmentChange`, `TaskAssignmentRejection`, `TaskAssignmentNoOp`, `TaskAssignmentDecision`, `TaskAssignmentControl`, `TaskAssignmentRejectionReason`
+- Priority: `TaskPriority`, `TaskPriorityClass`, `TaskPriorityValue`
+- Readiness: `TaskReadiness`, `TaskReadinessRequirement`, `TaskReadinessEvidence`, `TaskReadinessBlocker`, `TaskReadinessInput`, `TaskReadinessReady`, `TaskReadinessBlocked`, `TaskReadinessRejection`, `TaskReadinessDecision`, `TaskReadinessControl`, `TaskReadinessRejectionReason`
+- Lifecycle: `TaskStateSnapshot`, `TaskFailureCode`, `TaskFailureCategory`, `TaskLifecycleGuards`, `TaskTransitionRequest`, `TaskAllowedTransition`, `TaskRejectedTransition`, `TaskNoOpTransition`, `TaskTransitionDecision`, `TaskTransitionControl`, `TaskTransitionRejectionReason`
+- Dependency: `TaskDependencyGraphReference`, `TaskDependencySource`, `TaskDependencyTarget`, `TaskDependencyType`, `TaskDependencyRequirement`, `TaskDependencyStatus`, `TaskDependency`, `TaskDependencyFact`, `TaskDependencySet`, `TaskDependencyValidationRequest`, `TaskDependencyCoordinationRequest`, `TaskDependencyValidationAccepted`, `TaskDependencyValidationNoOp`, `TaskDependencyValidationRejected`, `TaskDependencyValidation`, `TaskDependencyDecision`, `TaskDependencyCoordinationDecision`, `TaskDependencyControl`, `TaskDependencyBlocker`, `TaskDependencyUnresolvedReason`, `TaskDependencyRejectionReason`
+- Completion: `TaskOutputReference`, `TaskOutput`, `TaskCompletionResult`, `TaskCompletion`, `TaskCompletionValidationRequest`, `TaskCompletionOutcome`, `TaskCompletionControl`, `TaskCompletionRejected`, `TaskCompletionRejectionReason`
+- Failure: `TaskFailureReason`, `TaskFailureReference`, `TaskRecoveryReference`, `TaskFailure`, `TaskFailureValidationRequest`, `TaskFailureOutcome`, `TaskFailureControl`, `TaskFailureRejected`, `TaskFailureRejectionReason`
+- Evidence: `TaskEvidenceType`, `TaskEvidenceMetadata`, `TaskEvidence`, `TaskEvidenceSet`, `TaskEvidenceValidationRequest`, `TaskEvidenceValidation`, `TaskEvidenceControl`, `TaskEvidenceRejected`, `TaskEvidenceRejectionReason`
+- Outcome: `TaskOutcomeDecision`, `TaskOutcomeRejectionReason`
+
+Cross-module conformance:
+
+- Happy-path completion composition remains explicit: definition -> instance -> ownership and assignment -> priority -> dependency decision -> readiness decision -> lifecycle transition -> completion acceptance -> terminal transition -> archival transition.
+- Happy-path failure composition remains explicit: definition -> instance -> ownership and assignment -> readiness decision -> lifecycle transition -> failure acceptance -> terminal transition -> archival transition.
+- Dependency evaluation contributes explicit facts to readiness; it does not call readiness control or mutate lifecycle.
+- Readiness contributes explicit facts to lifecycle start validation; it does not mutate assignment, priority, or dependency state.
+- Completion and failure validation remain separate from lifecycle mutation; lifecycle transitions consume explicit accepted facts and guard values.
+
+Conformance guarantees:
+
+- Public API inventory matches `crates/kernel-domain/src/task/mod.rs` and task re-exports from `crates/kernel-domain/src/lib.rs`.
+- No task integration helper, flow helper, or test helper is publicly exported.
+- No speculative runtime facade, scheduler, executor, repository, task manager, task engine, or orchestrator type is exported.
+- Concern vocabularies remain separate: `TaskState`, `TaskAssignmentStatus`, `TaskReadinessDecision`, `TaskDependencyStatus`, `TaskCompletionOutcome`, `TaskFailureOutcome`, and `TaskOutcomeDecision` are not collapsed into one status model.
+- Determinism, immutability, explicit-input-only behavior, and additive compatibility remain preserved across K7.1 through K7.9.

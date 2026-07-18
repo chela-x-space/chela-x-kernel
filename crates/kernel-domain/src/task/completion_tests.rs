@@ -7,9 +7,9 @@ use super::{
 fn task_completion_result_preserves_bindings_and_order() {
     let result = super::outcome_test_support::completion_result(
         super::outcome_test_support::valid_outputs(),
-        super::outcome_test_support::evidence_set(Some(
+        super::outcome_test_support::required_evidence_set(
             super::outcome_test_support::evidence_requirement(),
-        )),
+        ),
         vec![super::outcome_test_support::completion_requirement()],
     );
 
@@ -40,9 +40,9 @@ fn task_completion_rejects_duplicate_output_reference() {
             .clone(),
         vec![super::outcome_test_support::completion_requirement()],
         vec![duplicate.clone(), duplicate],
-        super::outcome_test_support::evidence_set(Some(
+        super::outcome_test_support::required_evidence_set(
             super::outcome_test_support::evidence_requirement(),
-        )),
+        ),
         None,
         None,
     )
@@ -70,9 +70,9 @@ fn task_completion_rejects_missing_required_output() {
         super::outcome_test_support::state_snapshot(TaskState::InProgress),
         super::outcome_test_support::completion_result(
             vec![super::outcome_test_support::valid_outputs()[0].clone()],
-            super::outcome_test_support::evidence_set(Some(
+            super::outcome_test_support::required_evidence_set(
                 super::outcome_test_support::evidence_requirement(),
-            )),
+            ),
             vec![super::outcome_test_support::completion_requirement()],
         ),
         None,
@@ -102,9 +102,9 @@ fn task_completion_rejects_undeclared_output() {
                 super::outcome_test_support::valid_outputs()[0].clone(),
                 undeclared_output,
             ],
-            super::outcome_test_support::evidence_set(Some(
+            super::outcome_test_support::required_evidence_set(
                 super::outcome_test_support::evidence_requirement(),
-            )),
+            ),
             vec![super::outcome_test_support::completion_requirement()],
         ),
         None,
@@ -164,9 +164,9 @@ fn task_completion_allows_recovery_bound_completion_after_failure() {
         super::outcome_test_support::state_snapshot(TaskState::Failed),
         super::outcome_test_support::completion_result(
             super::outcome_test_support::valid_outputs(),
-            super::outcome_test_support::evidence_set(Some(
+            super::outcome_test_support::required_evidence_set(
                 super::outcome_test_support::evidence_requirement(),
-            )),
+            ),
             vec![super::outcome_test_support::completion_requirement()],
         ),
         Some(super::outcome_test_support::recovery_reference()),

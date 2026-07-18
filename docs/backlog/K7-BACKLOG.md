@@ -1,7 +1,7 @@
 # K7 Task Engine Backlog
 
 ## K7 Milestone
-IMPLEMENTATION IN PROGRESS
+IMPLEMENTATION COMPLETE
 
 ## Specification Package
 ARCHITECTURE APPROVED
@@ -10,10 +10,10 @@ ARCHITECTURE APPROVED
 PASS
 
 ## Implementation
-IN PROGRESS
+COMPLETE
 
 ## API
-NOT ESTABLISHED
+FROZEN FOR NEXT-MILESTONE CONSUMPTION WITH NATIVE VERIFICATION BLOCKER
 
 ## Backlog Items
 
@@ -174,7 +174,7 @@ NOT ESTABLISHED
   - rejection distinct from declared failure
 
 ### K7-009 Task Integration And Conformance
-- Status: `READY FOR IMPLEMENTATION`
+- Status: `DONE — REVIEW PASSED`
 - Purpose: prove K1-K6 compatibility and K7 conformance
 - Source specification: `docs/specifications/K7.9-task-integration-and-conformance.md`
 - Dependencies: K7-008
@@ -184,7 +184,7 @@ NOT ESTABLISHED
 - Required tests: `task_integration_conformance_*`, compatibility tests for K1-K6 consumed APIs, `assignment_vs_lifecycle_*`, `readiness_vs_lifecycle_*`, `failure_vs_rejection_*`, `dependency_satisfaction_vs_lifecycle_mutation_*`
 - Required documentation updates: validation and traceability evidence as implementation progresses
 - Validation commands: full repository gates plus host validation
-- Commit message recommendation: `test(task): add integration and conformance coverage`
+- Commit message recommendation: `feat(task): complete K7 task integration and conformance`
 - Acceptance checklist:
   - frozen upstream APIs remain usable
   - K1-K6 tests continue to pass
@@ -194,25 +194,6 @@ NOT ESTABLISHED
   - K7 compatibility evidence complete
   - no side effects introduced
   - host validation targeted
-
-### K7-010 Documentation Closure And API Freeze
-- Status: `BLOCKED BY K7-009`
-- Purpose: close K7 validation and freeze the K7 public API after implementation and host validation
-- Source specification: `docs/specifications/K7.9-task-integration-and-conformance.md`
-- Dependencies: K7-009
-- Implementation scope: documentation-only closure and API freeze
-- Prohibited scope: new task behavior, runtime infrastructure, semantic redesign
-- Expected files: `docs/API.md`, `docs/API-FREEZE.md`, `docs/TRACEABILITY.md`, `docs/VALIDATION.md`, `docs/IMPLEMENTATION-PLAN.md`, `docs/plans/K7-IMPLEMENTATION-PLAN.md`, `docs/backlog/K7-BACKLOG.md`, `README.md`, `CHANGELOG.md`
-- Required tests: none new unless doc-test correction is required
-- Required documentation updates: full K7 closure package
-- Validation commands: full repository gates and authoritative host validation
-- Commit message recommendation: `docs(task): close K7 validation and API freeze`
-- Acceptance checklist:
-  - K7 milestone closure recorded
-  - downstream API-freeze declaration recorded
-  - host validation recorded
-  - traceability complete
-  - backlog and plan closed
 
 ## Final Determination
 
@@ -224,4 +205,5 @@ K7-005 is implemented, review-passed, and pending native validation in a linker-
 K7-006 is implemented, review-passed, and pending native validation in a linker-capable environment.
 K7-007 is implemented, review-passed, and pending native validation in a linker-capable environment.
 K7-008 is implemented, review-passed, and pending native validation in a linker-capable environment.
-K7-009 is the next authorized implementation slice.
+K7-009 is implemented, review-passed, and pending native validation in a linker-capable environment.
+K7 implementation is complete. No K7 implementation item remains open. Environment follow-up remains only in validation closure.

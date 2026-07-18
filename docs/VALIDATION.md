@@ -354,3 +354,60 @@ Validation date: `2026-07-18`
 - Validation: `PASS WITH ENVIRONMENT BLOCKER`
 - Native unit-test execution remains blocked in the current Codex environment because linker `cc` is unavailable.
 - The authoritative unchanged host baseline remains `595 passed`, `0 failed`.
+
+## K7-009 Local Validation
+
+Validation date: `2026-07-18`
+
+- `cargo fmt --all -- --check`: `PASS`
+- `cargo check --workspace --all-targets`: `PASS`
+- `cargo test --workspace --all-targets`: `BLOCKED`
+- blocker: `linker cc not found (os error 2)`
+- Native runtime tests: `BLOCKED`
+- `cargo clippy --workspace --all-targets -- -D warnings`: `PASS`
+- `cargo doc --workspace --no-deps`: `PASS`
+- `cargo test --doc`: `PASS`
+- `cargo check --workspace --all-features --all-targets`: `PASS`
+- `cargo clippy --workspace --all-features --all-targets -- -D warnings`: `PASS`
+- `git diff --check`: `PASS`
+- Host upstream baseline: `595 passed`, `0 failed`
+- Previously added K7-001 tests: `15`
+- Previously added K7-002 tests: `12`
+- Previously added K7-003 tests: `12`
+- Previously added K7-004 tests: `17`
+- Previously added K7-005 tests: `20`
+- Previously added K7-006 tests: `25`
+- Previously added K7-007 tests: `25`
+- Previously added K7-008 tests: `20`
+- New K7-009 tests authored: `28`
+- Total K7 authored tests: `174`
+- Expected combined count if all pass: `769`
+- Actual combined execution: `NOT VERIFIED`
+
+## K7-009 Validation Conclusion
+
+- `K7-009`: `IMPLEMENTED — REVIEW PASSED`
+- Validation: `PASS WITH ENVIRONMENT BLOCKER`
+- Native unit-test execution remains blocked in the current Codex environment because linker `cc` is unavailable.
+- The authoritative unchanged host baseline remains `595 passed`, `0 failed`.
+
+## K7 Validation Closure
+
+- `K7 IMPLEMENTATION COMPLETE`
+- `K7 NATIVE VERIFICATION BLOCKED — ENVIRONMENT ONLY`
+- `K7 ARCHITECTURE REVIEW: PASSED`
+- `K7 API: FROZEN FOR NEXT-MILESTONE CONSUMPTION WITH NATIVE VERIFICATION BLOCKER`
+- `ADR status: NOT REQUIRED`
+- `Compatibility status: K1-K6 preserved; K7 additive compatibility preserved`
+
+## K7 Static Architecture Audits
+
+Audit date: `2026-07-18`
+
+- Runtime or infrastructure audit over `crates/kernel-domain/src/task`: `PASS`
+- Mutable public task-domain API audit over `crates/kernel-domain/src/task`: `PASS`
+- Clock and randomness audit over `crates/kernel-domain/src/task`: `PASS`
+- Duplicate identity audit over `crates/kernel-domain/src`: `PASS`
+- Duplicate lifecycle vocabulary audit over `crates/kernel-domain/src/task`: `PASS`
+- Runtime facade audit over `crates/kernel-domain/src/task`: `PASS`
+- Cross-concern mutation audit over `crates/kernel-domain/src/task`: `PASS`

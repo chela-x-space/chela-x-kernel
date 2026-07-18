@@ -42,9 +42,9 @@ fn task_evidence_set_rejects_duplicate_identity() {
 fn task_evidence_validation_accepts_declared_requirement() {
     let request = super::TaskEvidenceValidationRequest::new(
         super::outcome_test_support::task_instance(),
-        super::outcome_test_support::evidence_set(Some(
+        super::outcome_test_support::required_evidence_set(
             super::outcome_test_support::evidence_requirement(),
-        )),
+        ),
     );
 
     assert!(matches!(
@@ -57,10 +57,10 @@ fn task_evidence_validation_accepts_declared_requirement() {
 fn task_evidence_validation_rejects_undeclared_requirement() {
     let request = super::TaskEvidenceValidationRequest::new(
         super::outcome_test_support::task_instance(),
-        super::outcome_test_support::evidence_set(Some(
+        super::outcome_test_support::required_evidence_set(
             super::TaskEvidenceRequirement::new("task.evidence.undeclared")
                 .expect("evidence requirement"),
-        )),
+        ),
     );
 
     let decision = TaskEvidenceControl::validate(&request);
