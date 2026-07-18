@@ -524,7 +524,7 @@ K8 implementation closure assertions:
 - K8 native verification status: `PASSED`
 - K8 API status: `FROZEN FOR NEXT-MILESTONE CONSUMPTION`
 
-## K9 Planning Validation
+## K9 Implementation Validation
 
 Validation date: `2026-07-18`
 
@@ -534,23 +534,34 @@ Authoritative frozen baseline:
 - K8 closure commit: `10bdd2c`
 - authoritative host-native baseline: `790 passed`, `0 failed`, `0 ignored`, `0 measured`, `0 filtered out`, exit code `0`
 
-Codex planning validation:
+Codex local implementation validation:
 
 - `cargo fmt --all -- --check`: `PASS`
 - `cargo check --workspace --all-targets`: `PASS`
+- `cargo check --workspace --all-features --all-targets`: `PASS`
+- `cargo clippy --workspace --all-targets -- -D warnings`: `PASS`
+- `cargo clippy --workspace --all-features --all-targets -- -D warnings`: `PASS`
+- `cargo doc --workspace --no-deps`: `PASS`
+- `cargo test --doc`: `PASS`
 - `git diff --check`: `PASS`
-- `git diff --name-only`: `PASS`
-- documentation static review: `PASS`
+- K9 memory static audits: `PASS`
 - working-tree scope review: `PASS`
+- `cargo test --workspace --all-targets`: `BLOCKED`
+- blocker: `linker cc not found (os error 2)`
 
-Planning assertions:
+K9 implementation evidence:
 
 - K7 remains closed and frozen.
 - K8 remains closed and frozen.
-- K9 planning is documentation-only in this change set.
-- Production source changed: `NO`
-- Tests changed: `NO`
-- Public API changed: `NO`
+- New K9 memory production files: `5`
+- New K9 memory test files: `5`
+- New K9 authored tests: `33`
+- Production source changed: `YES — ADDITIVE K9 MEMORY CONTRACTS ONLY`
+- Tests changed: `YES — K9 REQUIREMENT-ALIGNED COVERAGE ONLY`
+- Public API changed: `YES — ADDITIVE K9 API ONLY`
 - Architecture changed: `NO`
 - ADR required: `NO`
-- K9 implementation authorized: `NO`
+- K9 implementation status: `COMPLETE`
+- K9 compile validation status: `PASSED`
+- K9 native verification status: `BLOCKED — PRIMARY HOST RERUN REQUIRED`
+- K9 API status: `NOT YET FROZEN`

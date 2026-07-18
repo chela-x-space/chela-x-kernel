@@ -1,7 +1,7 @@
 # CHELA-X Kernel
 
 ## Status
-Implementation (K8 Complete, K9 Planning Complete)
+Implementation (K8 Closed, K9 Complete)
 
 ## Version
 0.5.0
@@ -55,7 +55,7 @@ AI Engineering OS -> CHELA-X CES -> CHELA-X Kernel -> CHELA-X Runtime -> CHELA-X
 | K6 Workflow Engine | PASS |
 | K7 Task Engine | PASS / COMPLETE |
 | K8 Execution Engine | PASS / COMPLETE |
-| K9 Enterprise Memory | PLANNING COMPLETE |
+| K9 Enterprise Memory | IMPLEMENTATION COMPLETE / HOST RERUN REQUIRED |
 
 Canonical host validation:
 
@@ -63,7 +63,7 @@ Canonical host validation:
 - **0 failed**
 
 ## Current Status
-`K8 Execution Engine Closed And Frozen; K9 Enterprise Memory Planning Complete`
+`K8 Execution Engine Closed And Frozen; K9 Enterprise Memory Implementation Complete`
 
 ## Constraints
 - Architecture is frozen.
@@ -79,7 +79,9 @@ Canonical host validation:
 - K6 public API is frozen for downstream consumption.
 - K7 public API is frozen for next-milestone consumption.
 - K8 execution-domain API is frozen for next-milestone consumption.
-- K9 planning is complete and K9 implementation remains unauthorized pending human architecture review.
+- K9 implementation is complete, compile validation passed, and primary-host native rerun is still required before K9 freeze.
+- K9 public API is additive and not yet frozen.
+- K10 implementation remains unauthorized.
 - K6 preserves the architecture freeze.
 - K8 preserves the architecture freeze.
 - Runtime execution is not implemented.
@@ -102,7 +104,7 @@ Canonical host validation:
 - Deterministic workflow foundation, definition, instance, transition-control, step-coordination, authorization-integration, event-integration, and failure-or-recovery primitives
 - Deterministic task foundation, definition, instance, ownership, assignment, priority, readiness, lifecycle, dependency, completion, failure, evidence, and integration primitives
 - Deterministic execution request, context, session, outcome, evidence-binding, retry-eligibility, and audit-reference primitives
-- Planned enterprise-memory identity, provenance, classification, retention, retrieval, and read-only projection primitives
+- Deterministic enterprise-memory identity, provenance, classification, retention, retrieval, and read-only projection primitives
 
 ## References
 - [AGENTS.md](./AGENTS.md)

@@ -27,27 +27,29 @@ Kernel Platform Team
 ## Classification
 INTERNAL
 
-## K9 Planning
+## K9 Enterprise Memory
 
 ### Added
 
-- Planning package for `K9 Enterprise Memory` derived from the frozen Memory, Roadmap, Traceability, API Gateway, and Studio architecture chapters
-- Repository-local K9 planning traceability over memory identity, records, provenance, classification, relationships, retention, retrieval, projection readiness, and boundary conformance requirements
-- K9 backlog covering planned memory-domain contracts plus deferred direct CES package work and explicit out-of-scope infrastructure exclusions
+- Additive `MemoryRecordId`, `MemoryRecordReference`, and `MemoryAuditReference`
+- Additive `MemoryRecord`, `MemoryProvenance`, `MemoryClassification`, `MemoryRetentionPolicyReference`, `MemoryCaptureRequest`, `MemoryCaptureDecision`, `MemoryRetentionDecision`, `MemoryRelationship`, `MemoryRelationshipRequest`, and `MemoryRejectionReason`
+- Additive `MemoryRetrievalRequest`, `MemoryRetrievalResult`, `MemoryQuery`, and `MemoryQueryResult`
+- Additive `MemoryProjection`, `WorkflowMemoryProjection`, `TaskMemoryProjection`, `ExecutionMemoryProjection`, and `RuntimeMemoryProjection`
+- Deterministic K9 unit coverage over identity, provenance, classification, relationships, retention, retrieval, projections, and architecture boundaries
+- K9 implementation evidence recorded with compile validation passed and API freeze deferred pending authoritative host-native rerun
 
 ### Validation
 
 - Authoritative K8 native baseline remains `790 passed`, `0 failed`, `0 ignored`, `0 measured`, `0 filtered out`, exit code `0`
-- Codex planning-safe gates passed for `cargo fmt --all -- --check`, `cargo check --workspace --all-targets`, and `git diff --check`
-- No native rerun was required for this planning-only change set
+- Codex implementation gates passed for `cargo fmt --all -- --check`, `cargo check --workspace --all-targets`, `cargo check --workspace --all-features --all-targets`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo clippy --workspace --all-features --all-targets -- -D warnings`, `cargo doc --workspace --no-deps`, `cargo test --doc`, and `git diff --check`
+- Native `cargo test --workspace --all-targets` is blocked in Codex by `linker cc not found (os error 2)`
 
 ### Boundaries
 
-- No production Rust source changes
-- No test changes
-- No public API changes
+- K9 public API is additive only
 - No architecture change
-- No runtime, API Gateway, dashboard, transport, persistence, or frontend implementation introduced
+- No scheduler, worker, queue, search, vector, embedding, transport, persistence, API Gateway, dashboard, or frontend implementation introduced
+- No ADR required
 
 ## K8 Execution Engine
 

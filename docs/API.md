@@ -1234,3 +1234,30 @@ Conformance guarantees:
 - K8 public API is additive only.
 - No scheduler, worker dispatch, queue, process execution, network, filesystem, database, event publication, memory persistence, automatic retry execution, or automatic timeout execution is exposed.
 - No task lifecycle mutation is introduced.
+
+## K9 Enterprise Memory Implementation Review
+
+Review status:
+
+- `K9-001 THROUGH K9-008 IMPLEMENTED`
+- `K9 IMPLEMENTATION COMPLETE`
+- `K9 API NOT YET FROZEN`
+
+Public inventory groups:
+
+- Identity: `MemoryRecordId`, `MemoryRecordReference`
+- Record: `MemoryRecord`, `MemoryProvenance`, `MemoryClassification`, `MemoryRetentionPolicyReference`, `MemoryAuditReference`
+- Command and Decision: `MemoryCaptureRequest`, `MemoryCaptureDecision`, `MemoryRetentionDecision`, `MemoryRelationship`, `MemoryRelationshipRequest`, `MemoryRejectionReason`
+- Retrieval: `MemoryRetrievalRequest`, `MemoryRetrievalResult`, `MemoryQuery`, `MemoryQueryResult`
+- Projection: `MemoryProjection`, `WorkflowMemoryProjection`, `TaskMemoryProjection`, `ExecutionMemoryProjection`, `RuntimeMemoryProjection`
+
+Conformance guarantees:
+
+- K9 public API matches additive memory re-exports from `crates/kernel-domain/src/lib.rs`.
+- K1-K8 compatibility is preserved.
+- K9 public API is additive only.
+- Classification reuses the frozen `EventClassification` vocabulary.
+- Provenance remains explicit and reference-based over K5 events, K6 workflows, K7 tasks, K8 execution sessions, K4 runtime facts, K3 authorization decisions, and task evidence references.
+- Retrieval and query contracts remain deterministic over supplied immutable records and projections only.
+- No application service, runtime orchestration, scheduler, worker dispatch, queue, search infrastructure, network, filesystem, database, persistence, API Gateway, or frontend implementation is exposed.
+- No event, workflow, task, execution, or runtime lifecycle mutation is introduced.

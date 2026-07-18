@@ -195,3 +195,64 @@ The frozen additive K8 execution-domain API covers:
 - No automatic retry execution
 - No automatic timeout execution
 - No task lifecycle mutation
+
+## K9 Enterprise Memory Domain API
+
+### Status Statement
+
+`NOT YET FROZEN`
+
+### K9 Review State
+
+- Implementation status: `COMPLETE`
+- Architecture review: `PASSED`
+- Compile validation status: `PASSED`
+- Native verification status: `BLOCKED — PRIMARY HOST RERUN REQUIRED`
+- Public API inventory: `RECORDED`
+- Compatibility status: `K1-K8 PRESERVED; K9 ADDITIVE`
+- Architecture Freeze: `PRESERVED`
+
+### K9 Scope
+
+The additive K9 memory-domain API currently covers:
+
+- `MemoryRecordId`
+- `MemoryRecordReference`
+- `MemoryRecord`
+- `MemoryProvenance`
+- `MemoryClassification`
+- `MemoryRelationship`
+- `MemoryRetentionPolicyReference`
+- `MemoryCaptureRequest`
+- `MemoryCaptureDecision`
+- `MemoryRetentionDecision`
+- `MemoryRelationshipRequest`
+- `MemoryRetrievalRequest`
+- `MemoryRetrievalResult`
+- `MemoryQuery`
+- `MemoryQueryResult`
+- `MemoryProjection`
+- `WorkflowMemoryProjection`
+- `TaskMemoryProjection`
+- `ExecutionMemoryProjection`
+- `RuntimeMemoryProjection`
+- `MemoryAuditReference`
+- `MemoryRejectionReason`
+
+### K9 Freeze Conditions
+
+- K9 implementation is complete in `kernel-domain`.
+- Public API inventory is recorded in `docs/API.md`.
+- Architecture review passed without redesign, dependency-direction change, or ADR requirement.
+- K1-K8 API compatibility is preserved and K9 public API is additive only.
+- Native host verification has not yet been rerun for K9 in this Codex change set.
+
+### K9 Non-Features
+
+- No application service
+- No runtime orchestration
+- No scheduler, worker dispatch, or queue
+- No network transport
+- No filesystem or database persistence
+- No search, vector, or embedding infrastructure
+- No API Gateway or Studio implementation
