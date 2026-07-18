@@ -32,10 +32,13 @@ pub(crate) fn scopes_are_compatible(
     target_ownership_path: &OwnershipPath,
 ) -> bool {
     source_ownership_path.enterprise_id() == target_ownership_path.enterprise_id()
-        && target_ownership_path
+        && source_ownership_path
             .workspace_id()
-            .is_none_or(|workspace_id| source_ownership_path.workspace_id() == Some(workspace_id))
-        && target_ownership_path
+            .is_none_or(|workspace_id| target_ownership_path.workspace_id() == Some(workspace_id))
+        && source_ownership_path
             .project_id()
-            .is_none_or(|project_id| source_ownership_path.project_id() == Some(project_id))
+            .is_none_or(|project_id| target_ownership_path.project_id() == Some(project_id))
+        && source_ownership_path
+            .organizational_unit_id()
+            .is_none_or(|unit_id| target_ownership_path.organizational_unit_id() == Some(unit_id))
 }

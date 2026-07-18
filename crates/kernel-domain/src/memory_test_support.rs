@@ -12,8 +12,9 @@ use crate::ownership::OwnershipPath;
 use crate::request::TimeReference;
 use crate::{
     AuditEvidenceId, AuthorizationDecisionId, AuthorizationRequestId, EnterpriseId, EventId,
-    ExecutionSessionId, MemoryRetrievalRequest, PolicyId, ProjectId, RuntimeId, TaskEvidenceId,
-    TaskEvidenceReference, TaskInstanceId, TaskInstanceReference, WorkflowId, WorkspaceId,
+    ExecutionSessionId, MemoryRetrievalRequest, OrganizationUnitId, PolicyId, ProjectId, RuntimeId,
+    TaskEvidenceId, TaskEvidenceReference, TaskInstanceId, TaskInstanceReference, WorkflowId,
+    WorkspaceId,
 };
 
 pub(crate) fn memory_record_id(value: &str) -> MemoryRecordId {
@@ -35,11 +36,22 @@ pub(crate) fn enterprise_ownership() -> OwnershipPath {
 }
 
 pub(crate) fn workspace_ownership(workspace: &str) -> OwnershipPath {
+    scoped_ownership(workspace, "CX-PROJ-000001", None)
+}
+
+pub(crate) fn scoped_ownership(
+    workspace: &str,
+    project: &str,
+    organizational_unit: Option<&str>,
+) -> OwnershipPath {
     OwnershipPath::new(
         EnterpriseId::new("CX-ENT-000001").expect("enterprise"),
         Some(WorkspaceId::new(workspace).expect("workspace")),
-        Some(ProjectId::new("CX-PROJ-000001").expect("project")),
-        None,
+        Some(ProjectId::new(project).expect("project")),
+        organizational_unit
+            .map(OrganizationUnitId::new)
+            .transpose()
+            .expect("organizational unit"),
     )
     .expect("ownership")
 }
@@ -90,9 +102,13 @@ pub(crate) fn runtime_id() -> RuntimeId {
 }
 
 pub(crate) fn memory_provenance() -> MemoryProvenance {
+    workflow_memory_provenance(workflow_id())
+}
+
+pub(crate) fn workflow_memory_provenance(workflow_id: WorkflowId) -> MemoryProvenance {
     MemoryProvenance::new(
         EventId::new("CX-EVT-000001").expect("event"),
-        Some(workflow_id()),
+        Some(workflow_id),
         Some(task_instance_reference()),
         Some(execution_session_id()),
         Some(runtime_id()),
@@ -125,12 +141,24 @@ pub(crate) fn memory_audit_reference(value: &str) -> MemoryAuditReference {
 }
 
 pub(crate) fn memory_record(value: &str) -> MemoryRecord {
+    memory_record_with(
+        value,
+        workspace_ownership("CX-WS-000001"),
+        workflow_memory_provenance(workflow_id()),
+    )
+}
+
+pub(crate) fn memory_record_with(
+    value: &str,
+    ownership_path: OwnershipPath,
+    memory_provenance: MemoryProvenance,
+) -> MemoryRecord {
     MemoryRecord::new(
         memory_record_reference(value),
-        workspace_ownership("CX-WS-000001"),
+        ownership_path,
         "retained enterprise memory",
         memory_classification(),
-        memory_provenance(),
+        memory_provenance,
         MemoryRetentionPolicyReference::new(
             PolicyId::new("CX-POL-000002").expect("retention policy"),
         ),

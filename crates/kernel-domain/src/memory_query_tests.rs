@@ -1,7 +1,8 @@
 use crate::authorization::AuthorizationDecisionOutcome;
 use crate::memory_test_support::{
     authorization_reference, memory_projection, memory_record, memory_record_reference,
-    retrieval_request, runtime_id, task_instance_reference, workflow_id, workspace_ownership,
+    memory_record_with, retrieval_request, runtime_id, scoped_ownership, task_instance_reference,
+    workflow_id, workflow_memory_provenance, workspace_ownership,
 };
 use crate::{
     DomainError, MemoryQuery, MemoryQueryResult, MemoryRetrievalRequest, MemoryRetrievalResult,
@@ -71,8 +72,80 @@ fn memory_retrieval_result_preserves_supplied_order_k9_006() {
 #[test]
 fn memory_retrieval_result_rejects_query_mismatch_k9_006() {
     let request = retrieval_request(MemoryQuery::by_workflow(workflow_id()));
-    let error = MemoryRetrievalResult::new(request, vec![memory_record("memory.record-0001")])
-        .expect_err("record outside requested scope must fail");
+    let error = MemoryRetrievalResult::new(
+        request,
+        vec![memory_record_with(
+            "memory.record-0001",
+            workspace_ownership("CX-WS-000001"),
+            workflow_memory_provenance(crate::WorkflowId::new("CX-WF-000002").expect("workflow")),
+        )],
+    )
+    .expect_err("record outside requested scope must fail");
+    assert_eq!(
+        error,
+        DomainError::InvalidMemory(
+            "memory retrieval result contains a record outside the requested scope or query"
+        )
+    );
+}
+
+#[test]
+fn memory_retrieval_result_rejects_matching_query_with_workspace_scope_mismatch_k9_006() {
+    let request = retrieval_request(MemoryQuery::by_workflow(workflow_id()));
+    let error = MemoryRetrievalResult::new(
+        request,
+        vec![memory_record_with(
+            "memory.record-0003",
+            scoped_ownership("CX-WS-000002", "CX-PROJ-000001", None),
+            workflow_memory_provenance(workflow_id()),
+        )],
+    )
+    .expect_err("workspace mismatch must fail");
+    assert_eq!(
+        error,
+        DomainError::InvalidMemory(
+            "memory retrieval result contains a record outside the requested scope or query"
+        )
+    );
+}
+
+#[test]
+fn memory_retrieval_result_rejects_matching_query_with_project_scope_mismatch_k9_006() {
+    let request = retrieval_request(MemoryQuery::by_workflow(workflow_id()));
+    let error = MemoryRetrievalResult::new(
+        request,
+        vec![memory_record_with(
+            "memory.record-0004",
+            scoped_ownership("CX-WS-000001", "CX-PROJ-000002", None),
+            workflow_memory_provenance(workflow_id()),
+        )],
+    )
+    .expect_err("project mismatch must fail");
+    assert_eq!(
+        error,
+        DomainError::InvalidMemory(
+            "memory retrieval result contains a record outside the requested scope or query"
+        )
+    );
+}
+
+#[test]
+fn memory_retrieval_result_rejects_matching_query_with_organizational_unit_scope_mismatch_k9_006() {
+    let request = MemoryRetrievalRequest::new(
+        authorization_reference(AuthorizationDecisionOutcome::Allow),
+        scoped_ownership("CX-WS-000001", "CX-PROJ-000001", Some("CX-OU-000001")),
+        MemoryQuery::by_workflow(workflow_id()),
+    )
+    .expect("request");
+    let error = MemoryRetrievalResult::new(
+        request,
+        vec![memory_record_with(
+            "memory.record-0005",
+            scoped_ownership("CX-WS-000001", "CX-PROJ-000001", Some("CX-OU-000002")),
+            workflow_memory_provenance(workflow_id()),
+        )],
+    )
+    .expect_err("organizational unit mismatch must fail");
     assert_eq!(
         error,
         DomainError::InvalidMemory(
