@@ -76,7 +76,7 @@ This breakdown is an implementation tracking document only. It does not create a
 - Specification Package: `ARCHITECTURE APPROVED`
 - Architecture Review: `PASSED`
 - Implementation: `COMPLETE`
-- API: `FROZEN FOR NEXT-MILESTONE CONSUMPTION WITH NATIVE VERIFICATION BLOCKER`
+- API: `FROZEN FOR NEXT-MILESTONE CONSUMPTION`
 - K7-001: `IMPLEMENTED — API REVIEW PASSED`
 - K7-002: `IMPLEMENTED — REVIEW PASSED`
 - K7-003: `IMPLEMENTED — REVIEW PASSED`
@@ -101,7 +101,8 @@ K7 closure summary:
 
 - K7 implementation status: `COMPLETE`
 - K7 architecture review status: `PASSED`
-- K7 native verification status: `BLOCKED — ENVIRONMENT ONLY`
+- K7 native verification status: `PASSED`
+- K8 authorized: `NO`
 
 Before `K7-001` Rust implementation begins, the K7 specification package MUST receive an architecture review confirming:
 

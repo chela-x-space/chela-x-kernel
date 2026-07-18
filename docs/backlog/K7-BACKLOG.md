@@ -13,7 +13,7 @@ PASS
 COMPLETE
 
 ## API
-FROZEN FOR NEXT-MILESTONE CONSUMPTION WITH NATIVE VERIFICATION BLOCKER
+FROZEN FOR NEXT-MILESTONE CONSUMPTION
 
 ## Backlog Items
 
@@ -197,13 +197,6 @@ FROZEN FOR NEXT-MILESTONE CONSUMPTION WITH NATIVE VERIFICATION BLOCKER
 
 ## Final Determination
 
-K7-001 is implemented, API-reviewed, and pending native validation in a linker-capable environment.
-K7-002 is implemented, review-passed, and pending native validation in a linker-capable environment.
-K7-003 is implemented, review-passed, and pending native validation in a linker-capable environment.
-K7-004 is implemented, review-passed, and pending native validation in a linker-capable environment.
-K7-005 is implemented, review-passed, and pending native validation in a linker-capable environment.
-K7-006 is implemented, review-passed, and pending native validation in a linker-capable environment.
-K7-007 is implemented, review-passed, and pending native validation in a linker-capable environment.
-K7-008 is implemented, review-passed, and pending native validation in a linker-capable environment.
-K7-009 is implemented, review-passed, and pending native validation in a linker-capable environment.
-K7 implementation is complete. No K7 implementation item remains open. Environment follow-up remains only in validation closure.
+K7-001 through K7-009 are implemented, review-passed, and native-verified on the primary machine.
+K7 implementation is complete. K7 native linker verification, native unit-test execution, fixture correction, final validation evidence, and documentation closure follow-up items are closed.
+K8 remains `NOT AUTHORIZED`, `NOT ACTIVE`, and `NOT STARTED`.

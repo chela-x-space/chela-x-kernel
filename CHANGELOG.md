@@ -56,7 +56,8 @@ INTERNAL
 - K7 implementation is complete through `K7-009`
 - Architecture remains unchanged
 - ADR not required
-- Native `cargo test --workspace --all-targets` remains blocked by the environment linker because `cc`, `gcc`, and `clang` are unavailable on Saturday, July 18, 2026
+- Native `cargo test --workspace --all-targets` passed on the primary machine on Saturday, July 18, 2026 with `765 passed`, `0 failed`, `0 ignored`, `0 measured`, `0 filtered out`
+- Defect-fix history recorded for `e7f8256`, `8bf4390`, and `c2e8a36`
 
 ### Boundaries
 

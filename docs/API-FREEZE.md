@@ -99,7 +99,7 @@ Prohibited changes without approved ADR:
 
 ### Status Statement
 
-`FROZEN FOR NEXT-MILESTONE CONSUMPTION WITH NATIVE VERIFICATION BLOCKER`
+`FROZEN FOR NEXT-MILESTONE CONSUMPTION`
 
 ### K7 Review State
 
@@ -107,7 +107,7 @@ Prohibited changes without approved ADR:
 - Architecture review: `PASSED`
 - Public API inventory: `RECORDED`
 - Compatibility status: `PRESERVED`
-- Native verification status: `PENDING DUE ENVIRONMENT BLOCKER`
+- Native verification status: `PASSED`
 - Architecture Freeze: `PRESERVED`
 
 ### K7 Scope
@@ -129,7 +129,8 @@ The K7 task-domain API covers:
 - Public API inventory is recorded in `docs/API.md`.
 - Architecture review passed without redesign, dependency-direction change, or ADR requirement.
 - K1-K6 compatibility and K7 additive compatibility are preserved.
-- Native verification is still blocked in the current Codex environment because `cc`, `gcc`, and `clang` are unavailable on Saturday, July 18, 2026.
+- Native verification passed on the primary machine on Saturday, July 18, 2026.
+- `cargo test --workspace --all-targets` result: `765 passed`, `0 failed`, `0 ignored`, `0 measured`, `0 filtered out`, exit code `0`.
 
 ### K7 Non-Features
 
