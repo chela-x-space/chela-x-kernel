@@ -140,31 +140,33 @@ INTERNAL
 - Repository dependency direction remains `AI Engineering OS -> CHELA-X CES -> CHELA-X Kernel -> CHELA-X Runtime -> CHELA-X SDK -> CHELA-X Media`.
 - K6 remains additive inside `kernel-domain` and does not redesign architecture or dependency direction.
 
-## K8 Planning Summary
+## K8 Implementation Summary
 
 - Milestone: `K8 Execution Engine`
-- Planning status: `AUTHORIZED`
-- Architecture review status: `PENDING HUMAN REVIEW`
-- Implementation status: `NOT AUTHORIZED`
-- Planned crate: `crates/kernel-domain`
+- Implementation status: `COMPLETE`
+- Architecture review status: `PASSED`
+- Compile validation status: `PASSED`
+- Native verification status: `BLOCKED — PRIMARY HOST RERUN REQUIRED`
+- API status: `NOT YET FROZEN`
+- Implemented crate: `crates/kernel-domain`
 - Repository-local CES mapping status: `PARTIAL / INHERITED — DO NOT FABRICATE NEW CES IDS`
 
-## K8 Planning Matrix
+## K8 Requirements Matrix
 
-| Kernel requirement | Requirement summary | Repository-local source | Supporting CES-traceable source | Planned contract or type | Frozen dependency | Validation method | Test category | Classification | Planning status |
+| Kernel requirement | Requirement summary | Repository-local source | Supporting CES-traceable source | Implemented contract or type | Frozen dependency | Validation method | Test category | Classification | Validation status |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `K8-001` | Execution requests bind approved work explicitly. | `docs/kernel-architecture/09-execution-architecture.md` §5 | `CES-B0-030.18` via `docs/specifications/K6.3-workflow-instance.md` | `ExecutionRequest` | K7 task identity and lifecycle | native tests | construction and identity | `NATIVE_TESTED` | `PLANNED` |
-| `K8-002` | Execution context is immutable and caller-supplied. | `docs/kernel-architecture/09-execution-architecture.md` §6 | `CES-B0-027.10`, `CES-B0-027.21` via `docs/K4.2-RUNTIME-SUPERVISION.md`; `CES-B0-030.17` via `docs/specifications/K6.8-workflow-failure-and-recovery.md` | `ExecutionContext` | K3 authorization, K4 runtime, K7 evidence | native tests | context invariants | `NATIVE_TESTED` | `PLANNED` |
-| `K8-003` | Execution sessions represent one governed attempt. | `docs/kernel-architecture/09-execution-architecture.md` §7 | `CES-B0-030.18` via `docs/specifications/K6.3-workflow-instance.md` | `ExecutionSession`, `ExecutionSessionId` | K1 identifiers, K7 task references | native tests | session continuity | `NATIVE_TESTED` | `PLANNED` |
-| `K8-004` | Execution outcomes and termination stay explicit and mutually exclusive. | `docs/kernel-architecture/09-execution-architecture.md` §8, §14 | `CES-B0-030.13`, `CES-B0-030.18` via `docs/specifications/K6.4-workflow-transition-control.md`, `docs/specifications/K6.8-workflow-failure-and-recovery.md` | `ExecutionOutcome`, `ExecutionTermination` | K7 completion and failure contracts | native tests | outcome and rejection | `NATIVE_TESTED` | `PLANNED` |
-| `K8-005` | Execution evidence remains preserved by reference. | `docs/kernel-architecture/09-execution-architecture.md` §9 | `CES-B0-030.17` via `docs/specifications/K6.3-workflow-instance.md`, `docs/specifications/K6.8-workflow-failure-and-recovery.md` | `ExecutionEvidenceBinding` | K5 event references, K7 evidence | native tests | evidence binding | `NATIVE_TESTED` | `PLANNED` |
-| `K8-006` | Retry eligibility is deterministic and non-automatic. | `docs/kernel-architecture/09-execution-architecture.md` §10 | `CES-B0-030.14`, `CES-B0-030.18` via `docs/specifications/K6.5-workflow-step-coordination.md`, `docs/specifications/K6.8-workflow-failure-and-recovery.md` | `ExecutionRetryEligibilityDecision` | K4 recovery facts, K7 failure policy references | native tests | retry gating | `NATIVE_TESTED` | `PLANNED` |
-| `K8-007` | Execution composes with Event and Memory by reference only. | `docs/kernel-architecture/09-execution-architecture.md` §12-§13 | K5 event system and K9 memory deferral | `ExecutionAuditReference` | K5 event vocabulary, future K9 references | compile gates | composition only | `COMPILE_GATED` | `PLANNED` |
-| `K8-008` | K8 preserves frozen architecture boundaries and concern separation. | `docs/kernel-architecture/01-kernel-overview.md` §6-§9, `docs/kernel-architecture/16-traceability.md` §7 | inherited repository governance and prior milestone boundaries | conformance coverage only | K1-K7 frozen APIs | static audit | no infrastructure leakage | `STATIC_AUDIT` | `PLANNED` |
+| `K8-001` | Execution requests bind approved work explicitly. | `docs/kernel-architecture/09-execution-architecture.md` §5 | `CES-B0-030.18` via `docs/specifications/K6.3-workflow-instance.md` | `ExecutionRequest` | K7 task identity, readiness, lifecycle, authorization | native tests | construction and identity | `NATIVE_TESTED` | `IMPLEMENTED — PRIMARY HOST RERUN REQUIRED` |
+| `K8-002` | Execution context is immutable and caller-supplied. | `docs/kernel-architecture/09-execution-architecture.md` §6 | `CES-B0-027.10`, `CES-B0-027.21` via `docs/K4.2-RUNTIME-SUPERVISION.md`; `CES-B0-030.17` via `docs/specifications/K6.8-workflow-failure-and-recovery.md` | `ExecutionContext` | K3 authorization, K4 runtime, K6 workflow bindings, K7 task bindings | native tests | context invariants | `NATIVE_TESTED` | `IMPLEMENTED — PRIMARY HOST RERUN REQUIRED` |
+| `K8-003` | Execution sessions represent one governed attempt. | `docs/kernel-architecture/09-execution-architecture.md` §7 | `CES-B0-030.18` via `docs/specifications/K6.3-workflow-instance.md` | `ExecutionSession`, `ExecutionSessionId` | K1 identifiers, K4 runtime, K7 task references | native tests | session continuity | `NATIVE_TESTED` | `IMPLEMENTED — PRIMARY HOST RERUN REQUIRED` |
+| `K8-004` | Execution outcomes and termination stay explicit and mutually exclusive. | `docs/kernel-architecture/09-execution-architecture.md` §8, §14 | `CES-B0-030.13`, `CES-B0-030.18` via `docs/specifications/K6.4-workflow-transition-control.md`, `docs/specifications/K6.8-workflow-failure-and-recovery.md` | `ExecutionOutcome`, `ExecutionTermination` | K7 completion and failure contracts | native tests | outcome and rejection | `NATIVE_TESTED` | `IMPLEMENTED — PRIMARY HOST RERUN REQUIRED` |
+| `K8-005` | Execution evidence remains preserved by reference. | `docs/kernel-architecture/09-execution-architecture.md` §9 | `CES-B0-030.17` via `docs/specifications/K6.3-workflow-instance.md`, `docs/specifications/K6.8-workflow-failure-and-recovery.md` | `ExecutionEvidenceBinding` | K5 event references, K7 evidence and outputs | native tests | evidence binding | `NATIVE_TESTED` | `IMPLEMENTED — PRIMARY HOST RERUN REQUIRED` |
+| `K8-006` | Retry eligibility is deterministic and non-automatic. | `docs/kernel-architecture/09-execution-architecture.md` §10 | `CES-B0-030.14`, `CES-B0-030.18` via `docs/specifications/K6.5-workflow-step-coordination.md`, `docs/specifications/K6.8-workflow-failure-and-recovery.md` | `ExecutionRetryEligibilityDecision` | K4 recovery facts, K7 failure policy references | native tests | retry gating | `NATIVE_TESTED` | `IMPLEMENTED — PRIMARY HOST RERUN REQUIRED` |
+| `K8-007` | Execution composes with Event and Memory by reference only. | `docs/kernel-architecture/09-execution-architecture.md` §12-§13 | K5 event system and K9 memory deferral | `ExecutionAuditReference` | K5 event vocabulary, future K9 references | compile gates | composition only | `COMPILE_GATED` | `VERIFIED BY COMPILE GATES` |
+| `K8-008` | K8 preserves frozen architecture boundaries and concern separation. | `docs/kernel-architecture/01-kernel-overview.md` §6-§9, `docs/kernel-architecture/16-traceability.md` §7 | inherited repository governance and prior milestone boundaries | execution conformance coverage | K1-K7 frozen APIs | static audit | no infrastructure leakage | `STATIC_AUDIT` | `VERIFIED BY STATIC AUDIT` |
 
-## K8 Planning Assertions
+## K8 Implementation Assertions
 
-- Production behavior changed: `NO`
-- Public API changed: `NO`
+- Production behavior changed: `YES — ADDITIVE K8 EXECUTION CONTRACTS ONLY`
+- Public API changed: `YES — ADDITIVE K8 API ONLY`
 - Architecture changed: `NO`
 - ADR required: `NO`

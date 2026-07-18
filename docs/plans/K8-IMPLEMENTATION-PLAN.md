@@ -1,7 +1,7 @@
 # K8 Implementation Plan
 
 ## Status
-Planning Complete
+Implementation Complete
 
 ## Last Updated
 2026-07-18
@@ -53,7 +53,7 @@ Plan the bounded K8 execution-domain milestone that consumes frozen K1-K7 contra
 - K6 workflow definition, instance, step, authorization, event, and failure or recovery contracts
 - K7 task identity, instance, ownership, assignment, readiness, lifecycle, dependency, completion, failure, and evidence contracts
 
-## Planned Domain Contracts
+## Implemented Domain Contracts
 - `ExecutionSessionId`
 - `ExecutionRequest`
 - `ExecutionContext`
@@ -64,7 +64,7 @@ Plan the bounded K8 execution-domain milestone that consumes frozen K1-K7 contra
 - `ExecutionRetryEligibilityDecision`
 - `ExecutionAuditReference`
 
-## Planned Public API Surface
+## Implemented Public API Surface
 - New additive `execution` module under `crates/kernel-domain/src`
 - Additive `kernel-domain` re-exports for approved K8 execution types only
 - No runtime facade, repository, scheduler, or executor API
@@ -144,7 +144,7 @@ Plan the bounded K8 execution-domain milestone that consumes frozen K1-K7 contra
 - Transport and execution infrastructure remain out of scope
 
 ## Native Test Matrix
-| Requirement | Planned native test focus |
+| Requirement | Native test coverage |
 | --- | --- |
 | `K8-001` | execution-request construction, task binding, and identity preservation |
 | `K8-002` | execution-context immutability, supplied-time usage, and authorization reference preservation |
@@ -156,26 +156,26 @@ Plan the bounded K8 execution-domain milestone that consumes frozen K1-K7 contra
 | `K8-008` | cross-concern conformance proving no lifecycle mutation, no dispatch, and no runtime lookup |
 
 ## Compile-Gate Matrix
-| Gate | Planned expectation |
+| Gate | Actual result |
 | --- | --- |
-| `cargo fmt --all -- --check` | pass |
-| `cargo check --workspace --all-targets` | pass |
-| `cargo check --workspace --all-features --all-targets` | pass |
-| `cargo clippy --workspace --all-targets -- -D warnings` | pass |
-| `cargo clippy --workspace --all-features --all-targets -- -D warnings` | pass |
-| `cargo doc --workspace --no-deps` | pass |
-| `cargo test --doc` | pass |
+| `cargo fmt --all -- --check` | `PASS` |
+| `cargo check --workspace --all-targets` | `PASS` |
+| `cargo check --workspace --all-features --all-targets` | `PASS` |
+| `cargo clippy --workspace --all-targets -- -D warnings` | `PASS` |
+| `cargo clippy --workspace --all-features --all-targets -- -D warnings` | `PASS` |
+| `cargo doc --workspace --no-deps` | `PASS` |
+| `cargo test --doc` | `PASS` |
 
 ## Static-Audit Matrix
-| Audit | Planned expectation |
+| Audit | Actual result |
 | --- | --- |
-| runtime or infrastructure keywords | no execution infrastructure implementation |
-| clock and randomness usage | no matches in execution production files |
-| mutable public API | no public mutators or mutable fields |
-| cross-concern mutation API | no task, workflow, or runtime mutation helpers |
+| runtime or infrastructure keywords | `PASS` |
+| clock and randomness usage | `PASS` |
+| mutable public API | `PASS` |
+| cross-concern mutation API | `PASS` |
 
 ## Traceability Table
-| Kernel requirement | Repository-local source | Supporting CES-traceable source | Planned contract or type | Dependency | Validation method | Test category | Classification |
+| Kernel requirement | Repository-local source | Supporting CES-traceable source | Implemented contract or type | Dependency | Validation method | Test category | Classification |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `K8-001` | execution request must bind approved work | `09-execution-architecture.md` §5, `15-roadmap.md` §8 | `CES-B0-030.18` via `K6.3`, `K7.9` deferred execution boundary | `ExecutionRequest` | K7 task instance, readiness, lifecycle references | native tests | construction and binding | `NATIVE_TESTED` |
 | `K8-002` | execution context is explicit and immutable | `09-execution-architecture.md` §6 | `CES-B0-027.10`, `CES-B0-027.21` via `K4.2`; `CES-B0-030.17` via `K6.8` | `ExecutionContext` | K3 authorization, K4 runtime, K7 evidence | native tests | context invariants | `NATIVE_TESTED` |
@@ -186,7 +186,7 @@ Plan the bounded K8 execution-domain milestone that consumes frozen K1-K7 contra
 | `K8-007` | execution outcomes compose with events and memory by reference only | `01-kernel-overview.md` §4, `09-execution-architecture.md` §12-§13 | K5 event traceability and K9 memory deferral | `ExecutionAuditReference` | K5 event references, future K9 memory references | compile gates | composition only | `COMPILE_GATED` |
 | `K8-008` | K8 preserves architecture boundaries and concern separation | `01-kernel-overview.md` §6-§9, `16-traceability.md` §7 | runtime, workflow, task, and execution separation obligations | conformance coverage only | K1-K7 frozen APIs | static audit | boundary enforcement | `STATIC_AUDIT` |
 
-## Planned File Sequence
+## Implemented File Sequence
 1. `crates/kernel-domain/src/execution.rs`
 2. `crates/kernel-domain/src/execution_request.rs`
 3. `crates/kernel-domain/src/execution_context.rs`
@@ -195,16 +195,23 @@ Plan the bounded K8 execution-domain milestone that consumes frozen K1-K7 contra
 6. `crates/kernel-domain/src/execution_retry.rs`
 7. `crates/kernel-domain/src/execution_validation.rs`
 8. `crates/kernel-domain/src/lib.rs`
-9. `docs/API.md`
-10. `docs/TRACEABILITY.md`
-11. `docs/VALIDATION.md`
+9. `crates/kernel-domain/src/execution_request_tests.rs`
+10. `crates/kernel-domain/src/execution_context_tests.rs`
+11. `crates/kernel-domain/src/execution_session_tests.rs`
+12. `crates/kernel-domain/src/execution_outcome_tests.rs`
+13. `crates/kernel-domain/src/execution_retry_tests.rs`
+14. `crates/kernel-domain/src/execution_conformance_tests.rs`
+15. `crates/kernel-domain/src/execution_separation_tests.rs`
+16. `crates/kernel-domain/src/lib.rs`
+17. `crates/kernel-domain/src/errors.rs`
+18. `docs/plans/K8-IMPLEMENTATION-PLAN.md`
+19. `docs/backlog/K8-BACKLOG.md`
+20. `docs/IMPLEMENTATION-PLAN.md`
+21. `docs/TRACEABILITY.md`
+22. `docs/VALIDATION.md`
 
-## Planned Commit Sequence
-1. `feat(execution): add K8 execution request and context contracts`
-2. `feat(execution): add K8 execution session and outcome contracts`
-3. `feat(execution): add K8 retry and audit contracts`
-4. `test(execution): add K8 execution conformance coverage`
-5. `docs(kernel): close K8 execution validation and traceability`
+## Commit Sequence
+1. `feat(execution): add K8 execution engine contracts`
 
 ## Review Gates
 - Frozen K1-K7 public APIs unchanged
@@ -216,8 +223,9 @@ Plan the bounded K8 execution-domain milestone that consumes frozen K1-K7 contra
 - K8 specification package approved
 - Architecture review passed
 - Planned K8 requirements implemented additively
-- Host native validation passed
-- Public API inventory recorded
+- Compile validation passed
+- Primary-host native rerun still required
+- K8 API not yet frozen
 - No ADR required unless scope changes
 
 ## Deferred Work
@@ -228,6 +236,9 @@ Plan the bounded K8 execution-domain milestone that consumes frozen K1-K7 contra
 
 ## Architecture And ADR Assessment
 - Architecture fit: `PASS — NO ADR REQUIRED`
-- Current K8 architecture review status: `PENDING HUMAN REVIEW`
-- K8 implementation authorization: `NOT AUTHORIZED`
+- Current K8 architecture review status: `PASSED`
+- K8 implementation status: `COMPLETE`
+- K8 compile validation status: `PASSED`
+- K8 native verification status: `BLOCKED — PRIMARY HOST RERUN REQUIRED`
+- K8 API status: `NOT YET FROZEN`
 - CES requirement mapping beyond repository-local inherited sources remains pending the authoritative K8 specification package and must not be fabricated

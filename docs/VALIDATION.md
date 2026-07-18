@@ -454,7 +454,7 @@ Audit date: `2026-07-18`
 - Runtime facade audit over `crates/kernel-domain/src/task`: `PASS`
 - Cross-concern mutation audit over `crates/kernel-domain/src/task`: `PASS`
 
-## K8 Planning Validation
+## K8 Implementation Validation
 
 Validation date: `2026-07-18`
 
@@ -468,15 +468,29 @@ Authoritative K7 native baseline from the primary machine:
 - filtered out: `0`
 - exit code: `0`
 
-Codex documentation-planning validation:
+Codex local implementation validation:
 
 - `cargo fmt --all -- --check`: `PASS`
 - `cargo check --workspace --all-targets`: `PASS`
+- `cargo check --workspace --all-features --all-targets`: `PASS`
+- `cargo clippy --workspace --all-targets -- -D warnings`: `PASS`
+- `cargo clippy --workspace --all-features --all-targets -- -D warnings`: `PASS`
+- `cargo doc --workspace --no-deps`: `PASS`
+- `cargo test --doc`: `PASS`
 - `git diff --check`: `PASS`
-- documentation static review: `PASS`
+- execution-module static review: `PASS`
 - working-tree scope review: `PASS`
-- `cargo test --workspace --all-targets`: `NOT AVAILABLE`
+- `cargo test --workspace --all-targets`: `BLOCKED`
 - blocker: `linker cc not found (os error 2)`
+
+K8 implementation evidence:
+
+- New K8 execution production files: `7`
+- New K8 test files: `8`
+- New K8 authored tests: `25`
+- K8 compile validation: `PASSED`
+- K8 native verification: `BLOCKED — PRIMARY HOST RERUN REQUIRED`
+- K8 API: `NOT YET FROZEN`
 
 Environment classification:
 
@@ -484,13 +498,13 @@ Environment classification:
 - `REPOSITORY BASELINE FAILURE: NO`
 - `K7 NATIVE VERIFICATION REGRESSION: NO`
 
-K8 planning closure assertions:
+K8 implementation closure assertions:
 
 - K7 remains closed and frozen on the authoritative host baseline.
-- K8 planning is documentation-only in this change set.
-- Production source changed: `NO`
-- Tests changed: `NO`
-- Public API changed: `NO`
+- K8 implementation is additive over frozen K1-K7 contracts.
+- Production source changed: `YES — ADDITIVE K8 EXECUTION CONTRACTS ONLY`
+- Tests changed: `YES — K8 REQUIREMENT-ALIGNED COVERAGE ONLY`
+- Public API changed: `YES — ADDITIVE K8 API ONLY`
 - Architecture changed: `NO`
 - ADR required: `NO`
-- K8 implementation authorized: `NO`
+- K8 implementation status: `COMPLETE`

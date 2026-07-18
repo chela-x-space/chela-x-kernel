@@ -68,7 +68,7 @@ This breakdown is an implementation tracking document only. It does not create a
 
 ## Next Approved Milestone
 
-`K8 Planning Only`
+`K8 Execution Engine`
 
 ## K7 Current Milestone State
 
@@ -104,22 +104,35 @@ K7 closure summary:
 - K7 native verification status: `PASSED`
 - K8 implementation authorized: `NO`
 
-## K8 Planning State
+## K8 Current Milestone State
 
 - Exact title: `K8 Execution Engine`
-- Planning status: `AUTHORIZED`
-- Architecture review status: `PENDING HUMAN REVIEW`
-- Implementation status: `NOT AUTHORIZED`
+- Milestone status: `IMPLEMENTATION COMPLETE`
+- Architecture review status: `PASSED`
+- Compile validation status: `PASSED`
+- Native verification status: `BLOCKED — PRIMARY HOST RERUN REQUIRED`
+- API status: `NOT YET FROZEN`
 - Planned crate: `crates/kernel-domain`
-- Planned scope: additive execution-domain contracts only
-- Planned public API status: `NOT STARTED`
+- Scope: additive execution-domain contracts only
 - ADR status from current repository evidence: `NOT REQUIRED`
 
-K8 planning constraints:
+K8 closure summary:
 
-- K8 must consume frozen K1-K7 contracts additively.
-- K8 must not create runtime infrastructure, scheduler, worker, queue, transport, filesystem, network, or database behavior.
-- K8 planning may update documentation only until explicit implementation authorization is granted.
+- `K8-001 COMPLETE`
+- `K8-002 COMPLETE`
+- `K8-003 COMPLETE`
+- `K8-004 COMPLETE`
+- `K8-005 COMPLETE`
+- `K8-006 COMPLETE`
+- `K8-007 COMPLETE`
+- `K8-008 COMPLETE`
+
+K8 implementation constraints preserved:
+
+- K8 consumes frozen K1-K7 contracts additively.
+- K8 does not create runtime infrastructure, scheduler, worker, queue, transport, filesystem, network, or database behavior.
+- K8 remains pure, immutable, deterministic, explicit, and side-effect free.
+- K9 implementation remains unauthorized.
 
 Before `K7-001` Rust implementation begins, the K7 specification package MUST receive an architecture review confirming:
 

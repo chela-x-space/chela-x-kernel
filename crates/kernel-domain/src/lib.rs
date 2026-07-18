@@ -7,6 +7,13 @@ pub mod delegation;
 pub mod enforcement;
 pub mod errors;
 pub mod event;
+pub mod execution;
+pub mod execution_context;
+pub mod execution_outcome;
+pub mod execution_request;
+pub mod execution_retry;
+pub mod execution_session;
+pub mod execution_validation;
 pub mod identifier;
 pub mod identity;
 pub mod lifecycle;
@@ -64,6 +71,13 @@ pub use event::{
     EventTrace, EventTraceReference, EventType, EventVersion, StreamAppendCandidate,
     StreamPosition,
 };
+pub use execution::{ExecutionAuditReference, ExecutionEvidenceBinding, ExecutionSessionId};
+pub use execution_context::ExecutionContext;
+pub use execution_outcome::{ExecutionOutcome, ExecutionTermination};
+pub use execution_request::ExecutionRequest;
+pub use execution_retry::{ExecutionRetryEligibilityDecision, ExecutionRetryIneligibilityReason};
+pub use execution_session::ExecutionSession;
+pub use execution_validation::ExecutionValidation;
 pub use identifier::{
     AgentId, AgentUuid, AuditEvidenceId, AuthorizationDecisionId, AuthorizationRequestId,
     CapabilityId, CorrelationId, DecisionAuthorityId, DecisionId, DelegationId, EnglishNamespace,
@@ -168,3 +182,20 @@ pub use workflow::{
     WorkflowStepOutcomeReference, WorkflowStepReference, WorkflowStepSelection,
     WorkflowTerminalOutcomeReference,
 };
+
+#[cfg(test)]
+mod execution_conformance_tests;
+#[cfg(test)]
+mod execution_context_tests;
+#[cfg(test)]
+mod execution_outcome_tests;
+#[cfg(test)]
+mod execution_request_tests;
+#[cfg(test)]
+mod execution_retry_tests;
+#[cfg(test)]
+mod execution_separation_tests;
+#[cfg(test)]
+mod execution_session_tests;
+#[cfg(test)]
+mod execution_test_support;
