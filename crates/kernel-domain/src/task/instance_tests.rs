@@ -79,16 +79,19 @@ fn workflow_definition() -> KernelWorkflowDefinition {
         )),
         Some(WorkflowRetryLimit::new(2).expect("limit")),
         Some(WorkflowRecoveryReference::new("manual.review", true).expect("recovery")),
-        vec![WorkflowAuditEvidenceReference::new(
-            AuditEvidenceId::new("CX-AUD-700001").expect("evidence"),
-            workflow_id,
-            definition_version,
-            vec![PolicyId::new("CX-POL-700001").expect("policy")],
-            vec![AuthorizationDecisionId::new("CX-AUTHZ-700001").expect("authorization decision")],
-            vec![DelegationId::new("CX-DEL-700001").expect("delegation")],
-            vec![DecisionId::new("CX-DEC-700001").expect("decision")],
-        )
-        .expect("audit")],
+        vec![
+            WorkflowAuditEvidenceReference::new(
+                AuditEvidenceId::new("CX-AUD-700001").expect("evidence"),
+                workflow_id,
+                definition_version,
+                vec![PolicyId::new("CX-POL-700001").expect("policy")],
+                vec![AuthorizationDecisionId::new("CX-AUTHDEC-700001")
+                    .expect("authorization decision")],
+                vec![DelegationId::new("CX-DEL-700001").expect("delegation")],
+                vec![DecisionId::new("CX-DEC-700001").expect("decision")],
+            )
+            .expect("audit"),
+        ],
     )
     .expect("workflow definition")
 }
@@ -122,7 +125,8 @@ fn workflow_instance() -> WorkflowInstance {
             workflow_id,
             definition_version,
             vec![PolicyId::new("CX-POL-700001").expect("policy")],
-            vec![AuthorizationDecisionId::new("CX-AUTHZ-700002").expect("authorization decision")],
+            vec![AuthorizationDecisionId::new("CX-AUTHDEC-700002")
+                .expect("authorization decision")],
             vec![DelegationId::new("CX-DEL-700002").expect("delegation")],
             vec![DecisionId::new("CX-DEC-700002").expect("decision")],
         )
