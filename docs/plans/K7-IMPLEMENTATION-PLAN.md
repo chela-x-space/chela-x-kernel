@@ -156,7 +156,7 @@ The architecture review MUST verify:
 - Traceability requirement: architecture traceability plus pending CES mapping
 - Completion criteria: explicit completion, failure, and evidence validation with deterministic distinction between failure, rejection, and dependency blockage
 - Commit boundary: `feat(task): add completion failure and evidence model`
-- Current status: `READY FOR IMPLEMENTATION`
+- Current status: `IMPLEMENTED — REVIEW PASSED`
 
 ### K7-009 Task Integration And Conformance
 - Objective: add cross-layer compatibility and conformance coverage
@@ -170,7 +170,7 @@ The architecture review MUST verify:
 - Traceability requirement: architecture traceability plus pending CES mapping
 - Completion criteria: compatibility and conformance evidence complete and all prior K7 slices pass without lifecycle or readiness conflation
 - Commit boundary: `test(task): add integration and conformance coverage`
-- Current status: `BLOCKED BY K7-008`
+- Current status: `READY FOR IMPLEMENTATION`
 
 ### K7-010 Documentation Closure And API Freeze
 - Objective: close K7 traceability, validation, API documentation, backlog, README, CHANGELOG, and API freeze after host validation
@@ -188,4 +188,4 @@ The architecture review MUST verify:
 
 ## Final Determination
 
-K7 planning is complete at the documentation-package level. The architecture review is recorded, K7-001 through K7-007 are implemented, and K7-008 is ready for implementation without architectural redesign.
+K7 planning is complete at the documentation-package level. The architecture review is recorded, K7-001 through K7-008 are implemented, and K7-009 is ready for implementation without architectural redesign.

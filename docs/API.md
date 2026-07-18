@@ -29,7 +29,7 @@ INTERNAL
 
 ## Purpose And Scope
 
-This document records the current public K6 workflow API and the additive K7.1 through K7.7 task-domain APIs exposed from `crates/kernel-domain/src/lib.rs`. K6 remains frozen. K7-001 through K7-007 are implemented and not frozen.
+This document records the current public K6 workflow API and the additive K7.1 through K7.8 task-domain APIs exposed from `crates/kernel-domain/src/lib.rs`. K6 remains frozen. K7-001 through K7-008 are implemented and not frozen.
 
 ## K6 Public API Surface
 
@@ -885,6 +885,129 @@ Important non-goals:
 - No automatic downstream mutation or propagation
 - No readiness evaluation invocation from dependency control
 
+### Task Completion, Failure, And Evidence Types
+
+API status:
+
+- `IMPLEMENTED — REVIEW PASSED`
+- `NOT FROZEN`
+
+Types:
+
+- `TaskOutputReference`
+- `TaskOutput`
+- `TaskEvidenceType`
+- `TaskEvidenceMetadata`
+- `TaskEvidence`
+- `TaskEvidenceSet`
+- `TaskEvidenceValidationRequest`
+- `TaskEvidenceRejectionReason`
+- `TaskEvidenceRejected`
+- `TaskEvidenceValidation`
+- `TaskEvidenceControl`
+- `TaskCompletionResult`
+- `TaskCompletion`
+- `TaskCompletionValidationRequest`
+- `TaskCompletionRejectionReason`
+- `TaskCompletionRejected`
+- `TaskCompletionOutcome`
+- `TaskCompletionControl`
+- `TaskFailureReason`
+- `TaskFailureReference`
+- `TaskRecoveryReference`
+- `TaskFailure`
+- `TaskFailureValidationRequest`
+- `TaskFailureRejectionReason`
+- `TaskFailureRejected`
+- `TaskFailureOutcome`
+- `TaskFailureControl`
+- `TaskOutcomeDecision`
+- `TaskOutcomeRejectionReason`
+
+Construction and evaluation entry points:
+
+- `TaskOutputReference::new(value: impl Into<String>) -> DomainResult<Self>`
+- `TaskOutput::new(task_output_reference: TaskOutputReference, task_output_binding: TaskOutputBinding) -> Self`
+- `TaskEvidenceType::new(value: impl Into<String>) -> DomainResult<Self>`
+- `TaskEvidenceMetadata::new(task_evidence_requirement: Option<TaskEvidenceRequirement>, transition_evidence_reference: Option<TransitionEvidenceReference>) -> Self`
+- `TaskEvidence::new(...) -> Self`
+- `TaskEvidenceSet::new(task_instance_reference: TaskInstanceReference, task_evidences: Vec<TaskEvidence>) -> DomainResult<Self>`
+- `TaskEvidenceValidationRequest::new(task_instance: TaskInstance, task_evidence_set: TaskEvidenceSet) -> Self`
+- `TaskEvidenceControl::validate(request: &TaskEvidenceValidationRequest) -> TaskEvidenceValidation`
+- `TaskCompletionResult::new(...) -> DomainResult<Self>`
+- `TaskCompletionValidationRequest::new(...) -> Self`
+- `TaskCompletionControl::evaluate(request: &TaskCompletionValidationRequest) -> TaskCompletionOutcome`
+- `TaskFailureReason::new(value: impl Into<String>) -> DomainResult<Self>`
+- `TaskFailureReference::new(value: impl Into<String>) -> DomainResult<Self>`
+- `TaskRecoveryReference::new(corrective_path: impl Into<String>, requires_revalidation: bool) -> DomainResult<Self>`
+- `TaskFailure::new(...) -> Self`
+- `TaskFailureValidationRequest::new(...) -> Self`
+- `TaskFailureControl::evaluate(request: &TaskFailureValidationRequest) -> TaskFailureOutcome`
+
+Principal accessors:
+
+- `TaskOutputReference::as_str(&self) -> &str`
+- `TaskOutput::{task_output_reference, task_output_binding}`
+- `TaskEvidenceType::as_str(&self) -> &str`
+- `TaskEvidenceMetadata::{task_evidence_requirement, transition_evidence_reference}`
+- `TaskEvidence::{task_evidence_reference, subject_task_instance_reference, task_evidence_type, producer_authority_reference, task_evidence_metadata}`
+- `TaskEvidenceSet::{task_instance_reference, task_evidences}`
+- `TaskEvidenceValidationRequest::{task_instance, task_evidence_set}`
+- `TaskEvidenceRejected::{task_evidence_set, reason}`
+- `TaskCompletionResult::{task_instance_reference, task_definition_snapshot_reference, task_completion_requirements, task_outputs, task_evidence_set, completion_authority_reference, completion_reason_reference}`
+- `TaskCompletion::task_completion_result(&self) -> &TaskCompletionResult`
+- `TaskCompletionValidationRequest::{task_instance, task_state_snapshot, task_completion_result, task_recovery_reference}`
+- `TaskCompletionRejected::{task_completion_result, reason}`
+- `TaskFailureReason::as_str(&self) -> &str`
+- `TaskFailureReference::as_str(&self) -> &str`
+- `TaskRecoveryReference::{corrective_path, requires_revalidation}`
+- `TaskFailure::{task_instance_reference, task_failure_reference, task_failure_code, task_failure_category, task_failure_reason, task_failure_evidence_set, task_failure_authority_reference, task_failure_policy_reference}`
+- `TaskFailureValidationRequest::{task_instance, task_state_snapshot, task_failure, task_completion}`
+- `TaskFailureRejected::{task_failure, reason}`
+
+Completion requirement and output validation:
+
+- Completion remains explicit and deterministic; it is not inferred from `TaskState::Completed`
+- Completion validation requires exact `TaskInstanceReference` and `TaskDefinitionSnapshotReference` match
+- Every declared `TaskCompletionRequirement` from the supplied task definition must be present
+- Every declared `TaskOutputContract` must have exactly one explicit `TaskOutput` binding
+- Undeclared output contracts are rejected
+- Duplicate output bindings by contract are rejected
+- Output ordering is preserved exactly as supplied
+
+Evidence model and validation:
+
+- Evidence remains identity-bearing and infrastructure-neutral through `TaskEvidenceReference`, `TaskEvidenceType`, and typed metadata only
+- Evidence must bind an explicit subject `TaskInstanceReference`
+- Duplicate evidence identity is rejected where detectable
+- Evidence metadata may carry only declared `TaskEvidenceRequirement` and `TransitionEvidenceReference`
+- Undeclared evidence requirements are rejected
+- Evidence ordering is preserved exactly as supplied
+
+Failure classification and policy boundary:
+
+- Failure uses canonical `TaskFailureCode` and `TaskFailureCategory`
+- `TaskFailureReason` remains supplementary human-readable context and is not canonical identity
+- `TaskFailureReference` remains a stable traceable reference and does not replace failure code
+- `TaskFailurePolicyReference` is consumed by reference only and must match the supplied task definition when present
+- No retry scheduling, recovery execution, backoff, persistence, stack-trace storage, or runtime execution behavior exists
+
+Outcome decisions and separation:
+
+- Completion and failure remain distinct from structural rejection
+- `TaskCompletionOutcome` and `TaskFailureOutcome` return accepted fact or deterministic rejection
+- `TaskOutcomeDecision` is mutually exclusive by type: `Completed`, `Failed`, or `Rejected`
+- Completion and failure validation do not mutate `TaskState`
+- Completion and failure validation do not call dependency control, readiness control, scheduler, worker dispatch, or persistence
+
+Important non-goals:
+
+- No execution engine
+- No retry runtime
+- No object or evidence storage
+- No file, network, or database access
+- No lifecycle mutation inside completion or failure validation
+
 ### Failure-And-Recovery Types
 
 Types:
@@ -938,6 +1061,9 @@ Public variants:
 - `DomainError::InvalidTaskDefinition(&'static str)`
 - `DomainError::InvalidTaskInstance(&'static str)`
 - `DomainError::InvalidTaskDependency(&'static str)`
+- `DomainError::InvalidTaskCompletion(&'static str)`
+- `DomainError::InvalidTaskFailure(&'static str)`
+- `DomainError::InvalidTaskEvidence(&'static str)`
 - `DomainError::InvalidTaskLifecycle(&'static str)`
 - `DomainError::InvalidTaskPriority(&'static str)`
 - `DomainError::InvalidTaskReadiness(&'static str)`

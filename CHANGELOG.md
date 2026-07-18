@@ -39,6 +39,7 @@ INTERNAL
 - Deterministic K7-005 task-priority and task-readiness model covering immutable task-priority binding, validated explicit priority class and value construction, pure readiness evaluation over explicit lifecycle, ownership, assignment, authorization, dependency, and evidence facts, and stable blocked or rejected outcomes without scheduler semantics
 - Deterministic K7-006 task-lifecycle and task-state model covering immutable lifecycle snapshots, sequence-aware transition requests, canonical transition map validation, readiness-gated start semantics, explicit completion and failure guard facts, and pure allowed, rejected, or no-op outcomes without runtime orchestration
 - Deterministic K7-007 task-dependency coordination model covering explicit dependency graph references, typed source and target edges, canonical completion, success, evidence, and output dependency rules, deterministic duplicate and cycle validation, and aggregate satisfied, unsatisfied, unresolved, or rejected coordination outcomes without runtime orchestration
+- Deterministic K7-008 task-completion, task-failure, and task-evidence model covering explicit completion results, typed output references and bindings, infrastructure-neutral evidence identity and metadata, stable failure references and recovery references, deterministic validation outcomes, and distinct completed, failed, or rejected outcome vocabulary without runtime execution or storage
 - Deterministic K7-001 unit coverage for immutable value semantics, identity separation, and reference preservation
 - Deterministic K7-002 unit coverage for definition construction, duplicate rejection, workflow-binding validation, field preservation, and immutable ordering
 - Deterministic K7-003 unit coverage for definition snapshot preservation, input validation, workflow and step binding validation, explicit initial state, and immutable instance creation
@@ -46,6 +47,7 @@ INTERNAL
 - Deterministic K7-005 unit coverage for priority ordering, readiness blockers, readiness-versus-lifecycle separation, readiness-versus-assignment separation, contradiction rejection, and non-scheduler guarantees
 - Deterministic K7-006 unit coverage for every approved lifecycle edge, sequence mismatch rejection, terminal-state protection, no-op semantics, readiness integration, and separation from assignment, ownership, priority, and runtime concerns
 - Deterministic K7-007 unit coverage for dependency construction, duplicate and cycle validation, satisfaction and unresolved outcomes, aggregate coordination, and separation from lifecycle mutation, readiness mutation, assignment, dispatch, and scheduler concerns
+- Deterministic K7-008 unit coverage for completion validation, failure validation, evidence identity and declaration validation, completion-versus-failure conflict rejection, and separation from lifecycle mutation, retry, and runtime infrastructure
 
 ### Boundaries
 

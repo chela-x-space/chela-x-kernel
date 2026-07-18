@@ -37,6 +37,9 @@ pub enum DomainError {
     InvalidTaskLifecycle(&'static str),
     InvalidTaskPriority(&'static str),
     InvalidTaskReadiness(&'static str),
+    InvalidTaskCompletion(&'static str),
+    InvalidTaskFailure(&'static str),
+    InvalidTaskEvidence(&'static str),
     InvalidTaskOwnership(&'static str),
     InvalidTaskAssignment(&'static str),
     InvalidWorkflowDefinition(&'static str),
@@ -138,6 +141,15 @@ impl fmt::Display for DomainError {
             }
             Self::InvalidTaskReadiness(message) => {
                 write!(formatter, "invalid task readiness: {message}")
+            }
+            Self::InvalidTaskCompletion(message) => {
+                write!(formatter, "invalid task completion: {message}")
+            }
+            Self::InvalidTaskFailure(message) => {
+                write!(formatter, "invalid task failure: {message}")
+            }
+            Self::InvalidTaskEvidence(message) => {
+                write!(formatter, "invalid task evidence: {message}")
             }
             Self::InvalidTaskOwnership(message) => {
                 write!(formatter, "invalid task ownership: {message}")

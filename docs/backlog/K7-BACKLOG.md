@@ -155,7 +155,7 @@ NOT ESTABLISHED
   - workflow-step ordering unchanged
 
 ### K7-008 Task Completion, Failure, And Evidence
-- Status: `READY FOR IMPLEMENTATION`
+- Status: `DONE — REVIEW PASSED`
 - Purpose: define explicit completion, failure, and evidence semantics
 - Source specification: `docs/specifications/K7.8-task-completion-failure-and-evidence.md`
 - Dependencies: K7-007
@@ -174,7 +174,7 @@ NOT ESTABLISHED
   - rejection distinct from declared failure
 
 ### K7-009 Task Integration And Conformance
-- Status: `BLOCKED BY K7-008`
+- Status: `READY FOR IMPLEMENTATION`
 - Purpose: prove K1-K6 compatibility and K7 conformance
 - Source specification: `docs/specifications/K7.9-task-integration-and-conformance.md`
 - Dependencies: K7-008
@@ -223,4 +223,5 @@ K7-004 is implemented, review-passed, and pending native validation in a linker-
 K7-005 is implemented, review-passed, and pending native validation in a linker-capable environment.
 K7-006 is implemented, review-passed, and pending native validation in a linker-capable environment.
 K7-007 is implemented, review-passed, and pending native validation in a linker-capable environment.
-K7-008 is the next authorized implementation slice.
+K7-008 is implemented, review-passed, and pending native validation in a linker-capable environment.
+K7-009 is the next authorized implementation slice.
