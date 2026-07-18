@@ -17,7 +17,7 @@ use super::{
 
 pub fn task_instance() -> TaskInstance {
     TaskInstance::new(
-        TaskInstanceId::new("task.instance.demo").expect("task instance id"),
+        task_instance_id(),
         task_definition(),
         TaskCreationContext::new(vec![TaskInputBinding::new(input_contract())], None)
             .expect("creation context"),
@@ -52,6 +52,10 @@ pub fn task_definition() -> TaskDefinition {
     .expect("task definition")
 }
 
+fn task_instance_id() -> TaskInstanceId {
+    TaskInstanceId::new("task.instance.demo").expect("task instance id")
+}
+
 pub fn state_snapshot(task_state: TaskState) -> TaskStateSnapshot {
     TaskStateSnapshot::new(
         task_instance_reference(),
@@ -61,7 +65,7 @@ pub fn state_snapshot(task_state: TaskState) -> TaskStateSnapshot {
 }
 
 pub fn task_instance_reference() -> TaskInstanceReference {
-    TaskInstanceReference::new(task_instance().task_instance_id().clone())
+    TaskInstanceReference::new(task_instance_id())
 }
 
 pub fn required_evidence_set(requirement: super::TaskEvidenceRequirement) -> TaskEvidenceSet {
