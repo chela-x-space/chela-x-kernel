@@ -8,8 +8,8 @@ IMPLEMENTATION COMPLETE
 - `K8 IMPLEMENTATION: COMPLETE`
 - `K8 ARCHITECTURE REVIEW: PASSED`
 - `K8 COMPILE VALIDATION: PASSED`
-- `K8 NATIVE VERIFICATION: BLOCKED — PRIMARY HOST RERUN REQUIRED`
-- `K8 API: NOT YET FROZEN`
+- `K8 NATIVE VERIFICATION: PASSED`
+- `K8 API: FROZEN FOR NEXT-MILESTONE CONSUMPTION`
 - `K9 IMPLEMENTATION: NOT AUTHORIZED`
 
 ## Backlog Items
@@ -103,6 +103,26 @@ IMPLEMENTATION COMPLETE
 - Validation method: architecture review
 - Acceptance criteria: explicit K8 requirement package exists and resolves remaining mapping ambiguity
 - Status: `DEFERRED`
+
+### K8-011
+- Title: `Native Host Verification And Final Validation Evidence`
+- Requirement source: host-native governance for completed K8 implementation
+- Dependencies: completed `K8-001` through `K8-008`, authoritative host rerun
+- Expected files: `docs/VALIDATION.md`, `docs/TRACEABILITY.md`, `docs/IMPLEMENTATION-PLAN.md`
+- Expected result: exact native verification totals and final validation evidence recorded
+- Validation method: authoritative primary-host result plus documentation review
+- Acceptance criteria: `cargo test --workspace --all-targets` recorded as `790 passed`, `0 failed`, `0 ignored`, `0 measured`, `0 filtered out`, exit code `0`
+- Status: `COMPLETE`
+
+### K8-012
+- Title: `Documentation Closure And API Freeze`
+- Requirement source: human authorization for K8 documentation closure and freeze
+- Dependencies: completed `K8-001` through `K8-011`
+- Expected files: `docs/API.md`, `docs/API-FREEZE.md`, `docs/TRACEABILITY.md`, `docs/VALIDATION.md`, `CHANGELOG.md`, `README.md`
+- Expected result: K8 status closure and additive API freeze recorded for next-milestone consumption
+- Validation method: documentation review and scope review
+- Acceptance criteria: K8 native verification marked `PASSED`, K8 API marked `FROZEN FOR NEXT-MILESTONE CONSUMPTION`, K9 remains not authorized
+- Status: `COMPLETE`
 
 ### K8-010
 - Title: `Operational Execution Infrastructure`

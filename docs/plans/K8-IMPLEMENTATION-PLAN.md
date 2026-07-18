@@ -10,7 +10,7 @@ Implementation Complete
 `K8 Execution Engine`
 
 ## Purpose
-Plan the bounded K8 execution-domain milestone that consumes frozen K1-K7 contracts additively without introducing runtime infrastructure or changing frozen public APIs.
+Record the bounded K8 execution-domain milestone that consumes frozen K1-K7 contracts additively without introducing runtime infrastructure or changing frozen public APIs.
 
 ## Authoritative CES Sources
 - `docs/kernel-architecture/01-kernel-overview.md`
@@ -217,15 +217,15 @@ Plan the bounded K8 execution-domain milestone that consumes frozen K1-K7 contra
 - Frozen K1-K7 public APIs unchanged
 - No runtime infrastructure introduced
 - CES mapping remains repository-local and non-fabricated
-- Native tests required on the primary machine before any K8 API freeze
+- Native tests passed on the primary machine before K8 API freeze
 
 ## Completion Criteria
 - K8 specification package approved
 - Architecture review passed
 - Planned K8 requirements implemented additively
 - Compile validation passed
-- Primary-host native rerun still required
-- K8 API not yet frozen
+- Primary-host native verification passed
+- K8 API frozen for next-milestone consumption
 - No ADR required unless scope changes
 
 ## Deferred Work
@@ -239,6 +239,6 @@ Plan the bounded K8 execution-domain milestone that consumes frozen K1-K7 contra
 - Current K8 architecture review status: `PASSED`
 - K8 implementation status: `COMPLETE`
 - K8 compile validation status: `PASSED`
-- K8 native verification status: `BLOCKED — PRIMARY HOST RERUN REQUIRED`
-- K8 API status: `NOT YET FROZEN`
+- K8 native verification status: `PASSED`
+- K8 API status: `FROZEN FOR NEXT-MILESTONE CONSUMPTION`
 - CES requirement mapping beyond repository-local inherited sources remains pending the authoritative K8 specification package and must not be fabricated

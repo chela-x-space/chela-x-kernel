@@ -27,27 +27,27 @@ Kernel Platform Team
 ## Classification
 INTERNAL
 
-## K8 Planning
+## K8 Execution Engine
 
 ### Added
 
-- Planning package for `K8 Execution Engine` based on the frozen execution architecture, roadmap, and traceability chapters
-- Repository-local K8 planning traceability over execution request, context, session, outcome, evidence, retry-eligibility, audit compatibility, and boundary conformance requirements
-- K8 backlog covering planned execution-domain contracts plus deferred CES specification packaging and explicit out-of-scope infrastructure exclusions
+- Additive `ExecutionSessionId`, `ExecutionRequest`, `ExecutionContext`, `ExecutionSession`, `ExecutionOutcome`, `ExecutionTermination`, `ExecutionEvidenceBinding`, `ExecutionRetryEligibilityDecision`, and `ExecutionAuditReference`
+- Deterministic K8 execution validation and conformance coverage over request, context, session, outcome, retry eligibility, and architecture boundaries
+- K8 documentation closure, native verification record, traceability closure, backlog closure, and API freeze for next-milestone consumption
 
 ### Validation
 
-- Authoritative K7 native baseline remains `765 passed`, `0 failed`, `0 ignored`, `0 measured`, `0 filtered out`, exit code `0`
-- Codex documentation-planning gates passed for `cargo fmt --all -- --check`, `cargo check --workspace --all-targets`, and `git diff --check`
-- Local native rerun remains blocked by missing linker `cc` and is classified as a non-repository environment limitation
+- Authoritative host-native verification passed with `790 passed`, `0 failed`, `0 ignored`, `0 measured`, `0 filtered out`, exit code `0`
+- Compile validation passed for `cargo fmt --all -- --check`, `cargo check --workspace --all-targets`, `cargo check --workspace --all-features --all-targets`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo clippy --workspace --all-features --all-targets -- -D warnings`, `cargo doc --workspace --no-deps`, `cargo test --doc`, and `git diff --check`
+- Historical Codex linker isolation remains non-authoritative environment context only
 
 ### Boundaries
 
-- No production Rust source changes
-- No test changes
-- No public API changes
+- K8 public API is additive only
 - No architecture change
-- No scheduler, worker, queue, transport, filesystem, network, or database planning inside `kernel-domain`
+- No scheduler, worker, queue, transport, filesystem, network, or database infrastructure inside `kernel-domain`
+- No lifecycle mutation introduced
+- No ADR required
 
 ## K7 Task Engine
 

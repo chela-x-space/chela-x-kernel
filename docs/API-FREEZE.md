@@ -142,3 +142,56 @@ The K7 task-domain API covers:
 - No task runtime facade
 - No event publication
 - No retry or timeout engine
+
+## K8 Execution Engine Domain API
+
+### Status Statement
+
+`FROZEN FOR NEXT-MILESTONE CONSUMPTION`
+
+### K8 Review State
+
+- Implementation status: `COMPLETE`
+- Architecture review: `PASSED`
+- Compile validation status: `PASSED`
+- Native verification status: `PASSED`
+- Public API inventory: `RECORDED`
+- Compatibility status: `K1-K7 PRESERVED; K8 ADDITIVE`
+- Architecture Freeze: `PRESERVED`
+
+### K8 Scope
+
+The frozen additive K8 execution-domain API covers:
+
+- `ExecutionSessionId`
+- `ExecutionRequest`
+- `ExecutionContext`
+- `ExecutionSession`
+- `ExecutionOutcome`
+- `ExecutionTermination`
+- `ExecutionEvidenceBinding`
+- `ExecutionRetryEligibilityDecision`
+- `ExecutionAuditReference`
+
+### K8 Freeze Conditions
+
+- K8 implementation is complete and ready for downstream consumption in the next milestone.
+- Public API inventory is recorded in `docs/API.md`.
+- Architecture review passed without redesign, dependency-direction change, or ADR requirement.
+- K1-K7 API compatibility is preserved and K8 public API is additive only.
+- Native verification passed on the primary machine on Saturday, July 18, 2026.
+- `cargo test --workspace --all-targets` result: `790 passed`, `0 failed`, `0 ignored`, `0 measured`, `0 filtered out`, exit code `0`.
+
+### K8 Non-Features
+
+- No scheduler
+- No worker dispatch
+- No queue
+- No process spawning
+- No network transport
+- No filesystem or database persistence
+- No event publication
+- No memory persistence
+- No automatic retry execution
+- No automatic timeout execution
+- No task lifecycle mutation

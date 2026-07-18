@@ -29,7 +29,7 @@ INTERNAL
 
 ## Purpose And Scope
 
-This document records the current public K6 workflow API and the additive K7.1 through K7.9 task-domain APIs exposed from `crates/kernel-domain/src/lib.rs`. K6 remains frozen. K7 implementation is complete, and the K7 task-domain API inventory is recorded for conditional freeze with native verification still blocked by the current environment.
+This document records the current public K6 workflow API, the frozen K7 task-domain API, and the additive frozen K8 execution-domain API exposed from `crates/kernel-domain/src/lib.rs`. K6 and K7 remain frozen. K8 native verification passed on the primary host and the additive K8 execution-domain API is now frozen for next-milestone consumption.
 
 ## K6 Public API Surface
 
@@ -326,7 +326,7 @@ Important non-goals:
 API status:
 
 - `IMPLEMENTED — REVIEW PASSED`
-- `NOT FROZEN`
+- `FROZEN FOR NEXT-MILESTONE CONSUMPTION`
 
 Types:
 
@@ -398,7 +398,7 @@ Important non-goals:
 API status:
 
 - `IMPLEMENTED — REVIEW PASSED`
-- `NOT FROZEN`
+- `FROZEN FOR NEXT-MILESTONE CONSUMPTION`
 
 Types:
 
@@ -472,7 +472,7 @@ Important non-goals:
 API status:
 
 - `IMPLEMENTED — REVIEW PASSED`
-- `NOT FROZEN`
+- `FROZEN FOR NEXT-MILESTONE CONSUMPTION`
 
 Types:
 
@@ -541,7 +541,7 @@ Important non-goals:
 API status:
 
 - `IMPLEMENTED — REVIEW PASSED`
-- `NOT FROZEN`
+- `FROZEN FOR NEXT-MILESTONE CONSUMPTION`
 
 Types:
 
@@ -618,7 +618,7 @@ Important non-goals:
 API status:
 
 - `IMPLEMENTED — REVIEW PASSED`
-- `NOT FROZEN`
+- `FROZEN FOR NEXT-MILESTONE CONSUMPTION`
 
 Types:
 
@@ -689,7 +689,7 @@ Important non-goals:
 API status:
 
 - `IMPLEMENTED — REVIEW PASSED`
-- `NOT FROZEN`
+- `FROZEN FOR NEXT-MILESTONE CONSUMPTION`
 
 Types:
 
@@ -781,7 +781,7 @@ Important non-goals:
 API status:
 
 - `IMPLEMENTED — REVIEW PASSED`
-- `NOT FROZEN`
+- `FROZEN FOR NEXT-MILESTONE CONSUMPTION`
 
 Types:
 
@@ -890,7 +890,7 @@ Important non-goals:
 API status:
 
 - `IMPLEMENTED — REVIEW PASSED`
-- `NOT FROZEN`
+- `FROZEN FOR NEXT-MILESTONE CONSUMPTION`
 
 Types:
 
@@ -978,6 +978,82 @@ Completion requirement and output validation:
 Evidence model and validation:
 
 - Evidence remains identity-bearing and infrastructure-neutral through `TaskEvidenceReference`, `TaskEvidenceType`, and typed metadata only
+
+## K8 Public API Surface
+
+### Execution Domain Types
+
+API status:
+
+- `IMPLEMENTED — REVIEW PASSED`
+- `FROZEN FOR NEXT-MILESTONE CONSUMPTION`
+
+Types:
+
+- `ExecutionSessionId`
+- `ExecutionRequest`
+- `ExecutionContext`
+- `ExecutionSession`
+- `ExecutionOutcome`
+- `ExecutionTermination`
+- `ExecutionEvidenceBinding`
+- `ExecutionRetryEligibilityDecision`
+- `ExecutionRetryIneligibilityReason`
+- `ExecutionAuditReference`
+- `ExecutionValidation`
+
+Construction and evaluation entry points:
+
+- `ExecutionSessionId::new(value: impl Into<String>) -> DomainResult<Self>`
+- `ExecutionEvidenceBinding::new(...) -> DomainResult<Self>`
+- `ExecutionAuditReference::new(...) -> DomainResult<Self>`
+- `ExecutionRequest::new(...) -> DomainResult<Self>`
+- `ExecutionContext::new(...) -> DomainResult<Self>`
+- `ExecutionSession::new(...) -> DomainResult<Self>`
+- `ExecutionOutcome::{succeeded, failed, terminated}`
+- `ExecutionRetryEligibilityDecision::evaluate(execution_outcome: &ExecutionOutcome, recovery_eligibility: Option<&RecoveryEligibility>) -> Self`
+- `ExecutionValidation::{validate_request, validate_context, validate_session, validate_failed_snapshot, validate_reference_only_audit}`
+
+Principal accessors:
+
+- `ExecutionSessionId::as_str(&self) -> &str`
+- `ExecutionEvidenceBinding::{execution_session_id, task_instance_reference, task_evidence_references, task_output_references, transition_evidence_references}`
+- `ExecutionAuditReference::{execution_session_id, correlation_id, audit_evidence_ids}`
+- `ExecutionRequest::{execution_session_id, task_instance_reference, task_state_snapshot, task_readiness_decision, authorization_decision_reference, requested_at}`
+- `ExecutionContext::{execution_session_id, task_instance_reference, runtime_state_snapshot, delegation_reference, task_workflow_reference, task_step_reference, task_input_bindings}`
+- `ExecutionSession::{execution_request, execution_context, execution_evidence_binding, execution_audit_reference, started_at}`
+- `ExecutionOutcome::execution_session(&self) -> &ExecutionSession`
+- `ExecutionTermination::as_str(&self) -> &'static str`
+
+Deterministic behavior:
+
+- K8 execution contracts remain pure, immutable, explicit, and side-effect free
+- Execution consumes frozen K1-K7 facts only and never performs runtime lookup
+- Outcomes are explicit and mutually exclusive
+- Retry eligibility is derived from explicit supplied failure and recovery facts only
+- No scheduler, worker, queue, process execution, network, filesystem, database, or event publication occurs
+
+Validation boundaries:
+
+- `ExecutionRequest` requires matching task identity across instance, snapshot, and readiness
+- `ExecutionRequest` requires supplied readiness `Ready`, supplied `InProgress` task snapshot, and allowed authorization decision
+- `ExecutionContext` rejects offline or retired runtime snapshots, invalid lease facts, and duplicate input bindings
+- `ExecutionSession` preserves identity continuity across request, context, evidence, and audit references
+- `ExecutionEvidenceBinding` rejects empty evidence or output sets and duplicate references
+- `ExecutionOutcome` rejects task mismatch between execution session and accepted completion or failure facts
+- `ExecutionAuditReference` is reference-only and rejects empty audit evidence
+
+Important non-goals:
+
+- No scheduler
+- No worker dispatch
+- No queue semantics
+- No process spawning
+- No network or filesystem access
+- No database or memory persistence
+- No automatic retry execution
+- No automatic timeout execution
+- No task lifecycle mutation
 - Evidence must bind an explicit subject `TaskInstanceReference`
 - Duplicate evidence identity is rejected where detectable
 - Evidence metadata may carry only declared `TaskEvidenceRequirement` and `TransitionEvidenceReference`
@@ -1097,7 +1173,7 @@ Review status:
 
 - `K7-009 IMPLEMENTED — REVIEW PASSED`
 - `K7 IMPLEMENTATION COMPLETE`
-- `K7 API FROZEN FOR NEXT-MILESTONE CONSUMPTION WITH NATIVE VERIFICATION BLOCKER`
+- `K7 API FROZEN FOR NEXT-MILESTONE CONSUMPTION`
 
 Public inventory groups:
 
@@ -1130,3 +1206,31 @@ Conformance guarantees:
 - No speculative runtime facade, scheduler, executor, repository, task manager, task engine, or orchestrator type is exported.
 - Concern vocabularies remain separate: `TaskState`, `TaskAssignmentStatus`, `TaskReadinessDecision`, `TaskDependencyStatus`, `TaskCompletionOutcome`, `TaskFailureOutcome`, and `TaskOutcomeDecision` are not collapsed into one status model.
 - Determinism, immutability, explicit-input-only behavior, and additive compatibility remain preserved across K7.1 through K7.9.
+
+## K8 Integration And Freeze Review
+
+Review status:
+
+- `K8-001 THROUGH K8-008 IMPLEMENTED`
+- `K8 IMPLEMENTATION COMPLETE`
+- `K8 API FROZEN FOR NEXT-MILESTONE CONSUMPTION`
+
+Public inventory groups:
+
+- Identity: `ExecutionSessionId`
+- Request: `ExecutionRequest`
+- Context: `ExecutionContext`
+- Session: `ExecutionSession`
+- Outcome: `ExecutionOutcome`, `ExecutionTermination`
+- Evidence: `ExecutionEvidenceBinding`
+- Retry: `ExecutionRetryEligibilityDecision`, `ExecutionRetryIneligibilityReason`
+- Audit: `ExecutionAuditReference`
+- Validation: `ExecutionValidation`
+
+Conformance guarantees:
+
+- K8 public API matches additive execution re-exports from `crates/kernel-domain/src/lib.rs`.
+- K1-K7 compatibility is preserved.
+- K8 public API is additive only.
+- No scheduler, worker dispatch, queue, process execution, network, filesystem, database, event publication, memory persistence, automatic retry execution, or automatic timeout execution is exposed.
+- No task lifecycle mutation is introduced.

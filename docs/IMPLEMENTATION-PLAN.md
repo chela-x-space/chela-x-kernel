@@ -110,8 +110,8 @@ K7 closure summary:
 - Milestone status: `IMPLEMENTATION COMPLETE`
 - Architecture review status: `PASSED`
 - Compile validation status: `PASSED`
-- Native verification status: `BLOCKED — PRIMARY HOST RERUN REQUIRED`
-- API status: `NOT YET FROZEN`
+- Native verification status: `PASSED`
+- API status: `FROZEN FOR NEXT-MILESTONE CONSUMPTION`
 - Planned crate: `crates/kernel-domain`
 - Scope: additive execution-domain contracts only
 - ADR status from current repository evidence: `NOT REQUIRED`

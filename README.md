@@ -1,7 +1,7 @@
 # CHELA-X Kernel
 
 ## Status
-Implementation (K6 Complete)
+Implementation (K8 Complete)
 
 ## Version
 0.5.0
@@ -10,7 +10,7 @@ Implementation (K6 Complete)
 Kernel Platform Team
 
 ## Last Updated
-2026-07-17
+2026-07-18
 
 ## Applies To
 CHELA-X Kernel repository baseline, bootstrap, and future implementation work.
@@ -53,26 +53,33 @@ AI Engineering OS -> CHELA-X CES -> CHELA-X Kernel -> CHELA-X Runtime -> CHELA-X
 | K5.4 Replay | PASS |
 | K5 Enterprise Event System | PASS / COMPLETE |
 | K6 Workflow Engine | PASS |
+| K7 Task Engine | PASS / COMPLETE |
+| K8 Execution Engine | PASS / COMPLETE |
 
 Canonical host validation:
 
-- **595 passed**
+- **790 passed**
 - **0 failed**
 
 ## Current Status
-`K6 Workflow Engine Domain Layer Complete`
+`K8 Execution Engine Domain Layer Complete`
 
 ## Constraints
 - Architecture is frozen.
 - No redesign may occur without an approved ADR.
-- K1 through K5 are complete and remain compatible with K6.
+- K1 through K7 are complete and remain compatible with K8.
 - K6 workflow implementation is additive in `crates/kernel-domain/src/workflow.rs`, `crates/kernel-domain/src/state.rs`, and existing `kernel-domain` re-exports.
-- Canonical host validation passed with `595 passed`, `0 failed`, `0 ignored`.
+- K7 task implementation remains frozen for next-milestone consumption.
+- K8 execution implementation is additive in `crates/kernel-domain/src/execution*.rs`, `crates/kernel-domain/src/errors.rs`, and existing `kernel-domain` re-exports.
+- Canonical host validation passed with `790 passed`, `0 failed`, `0 ignored`.
 - Codex sandbox linker isolation is historical environment evidence only and is not the authoritative project status.
 - K6 Workflow Engine domain layer is complete.
 - K6 is deterministic and side-effect free.
 - K6 public API is frozen for downstream consumption.
+- K7 public API is frozen for next-milestone consumption.
+- K8 execution-domain API is frozen for next-milestone consumption.
 - K6 preserves the architecture freeze.
+- K8 preserves the architecture freeze.
 - Runtime execution is not implemented.
 - Domain API is frozen for downstream consumption.
 - No business logic, persistence, networking, or workflow execution is introduced in K1.
@@ -91,6 +98,8 @@ Canonical host validation:
 - Deterministic authorization enforcement inputs, traces, results, and decision construction helpers
 - Deterministic runtime registry, capability indexing, heartbeat, freshness, lease, presence, runtime-health, runtime-snapshot, and supervisor primitives
 - Deterministic workflow foundation, definition, instance, transition-control, step-coordination, authorization-integration, event-integration, and failure-or-recovery primitives
+- Deterministic task foundation, definition, instance, ownership, assignment, priority, readiness, lifecycle, dependency, completion, failure, evidence, and integration primitives
+- Deterministic execution request, context, session, outcome, evidence-binding, retry-eligibility, and audit-reference primitives
 
 ## References
 - [AGENTS.md](./AGENTS.md)
