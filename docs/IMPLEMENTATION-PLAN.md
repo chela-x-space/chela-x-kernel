@@ -160,18 +160,20 @@ K9 implementation constraints preserved:
 
 - Exact title: `K10 API Gateway`
 - Planning status: `COMPLETE`
-- Architecture review status: `PENDING HUMAN REVIEW`
-- Implementation status: `NOT STARTED`
-- Implementation authorization status: `PENDING ARCHITECTURE REVIEW`
-- Planned repository scope: new additive gateway crate and planning evidence only
+- Architecture review status: `PASSED`
+- Implementation status: `COMPLETE`
+- Compile validation status: `PASSED`
+- Native verification status: `PENDING PRIMARY HOST`
+- API status: `NOT YET FROZEN`
+- Repository scope: new additive `kernel-gateway` crate plus implementation evidence
 - ADR status from current repository evidence: `NOT REQUIRED`
 
-K10 planning constraints preserved:
+K10 implementation constraints preserved:
 
 - K10 consumes frozen K1-K9 contracts additively.
 - K10 must not modify `kernel-domain` public APIs.
-- K10 must not introduce HTTP, WebSocket, gRPC, IPC, or other concrete transport infrastructure in its approved planning baseline.
-- K10 establishes gateway contracts, request validation, response mapping, and error translation only.
+- K10 does not introduce HTTP, WebSocket, gRPC, IPC, or other concrete transport infrastructure.
+- K10 establishes gateway contracts, request validation, response mapping, error translation, protocol references, and status snapshots only.
 - K11 planning remains unauthorized by this document.
 
 Before `K7-001` Rust implementation begins, the K7 specification package MUST receive an architecture review confirming:

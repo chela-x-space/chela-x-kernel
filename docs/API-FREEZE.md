@@ -264,3 +264,70 @@ Breaking K9 public API or semantic changes after freeze require:
 - No filesystem or database persistence
 - No search, vector, or embedding infrastructure
 - No API Gateway or Studio implementation
+
+## K10 API Gateway
+
+### Status Statement
+
+`NOT YET FROZEN`
+
+### K10 Review State
+
+- Planning status: `COMPLETE`
+- Architecture review: `PASSED`
+- Implementation status: `COMPLETE`
+- Compile validation status: `PASSED`
+- Native verification status: `PENDING PRIMARY HOST`
+- Public API inventory: `RECORDED`
+- Compatibility status: `K1-K9 PRESERVED; K10 ADDITIVE`
+- Architecture Freeze: `PRESERVED`
+
+### K10 Scope
+
+The additive K10 gateway API currently covers:
+
+- `GatewayApiVersion`
+- `GatewayOperationKind`
+- `GatewayOperationReference`
+- `GatewayAuthenticationContext`
+- `GatewayAuthorizationBinding`
+- `GatewayRequestContext`
+- `GatewayRequestEnvelope`
+- `GatewayCommandPayload`
+- `GatewayCommandRequest`
+- `GatewayCommandResponse`
+- `GatewayQueryPayload`
+- `GatewayQueryRequest`
+- `GatewayQueryResponse`
+- `GatewayResponseEnvelope`
+- `GatewayError`
+- `GatewayErrorCode`
+- `GatewayResult`
+- `GatewayProtocol`
+- `GatewayRateGovernanceReference`
+- `GatewayStatusSnapshot`
+- `GatewayAuditReference`
+
+### K10 Freeze Preconditions
+
+- K10 implementation is complete in `kernel-gateway`.
+- Public API inventory is recorded in `docs/API.md`.
+- Architecture review passed without redesign, dependency-direction change, or ADR requirement.
+- K1-K9 API compatibility is preserved and K10 public API is additive only.
+- Primary-host native verification must pass before K10 API freeze may be declared.
+
+### K10 Interim Change Policy
+
+Breaking K10 public API or semantic changes before freeze still require:
+
+- explicit compatibility review
+- architecture conformance to the approved K10 plan
+
+### K10 Non-Features
+
+- No HTTP, REST, WebSocket, gRPC, or IPC transport implementation
+- No authentication-provider integration
+- No session persistence
+- No network, filesystem, or database access
+- No scheduler, worker dispatch, queue, or runtime orchestration
+- No frontend, dashboard, or Studio implementation

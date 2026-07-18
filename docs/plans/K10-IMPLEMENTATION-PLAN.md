@@ -1,7 +1,7 @@
 # K10 Implementation Plan
 
 ## Status
-Planning Complete
+Implementation Complete
 
 ## Last Updated
 2026-07-18
@@ -12,10 +12,11 @@ Planning Complete
 ## Current Milestone State
 
 - `K10 PLANNING: COMPLETE`
-- `K10 ARCHITECTURE REVIEW: PENDING HUMAN REVIEW`
-- `K10 IMPLEMENTATION: NOT STARTED`
-- `K10 IMPLEMENTATION AUTHORIZATION: PENDING ARCHITECTURE REVIEW`
-- `K10 API: NOT YET IMPLEMENTED`
+- `K10 ARCHITECTURE REVIEW: PASSED`
+- `K10 IMPLEMENTATION: COMPLETE`
+- `K10 COMPILE VALIDATION: PASSED`
+- `K10 NATIVE VERIFICATION: PENDING PRIMARY HOST`
+- `K10 API: NOT YET FROZEN`
 
 ## Purpose
 Record the bounded K10 API Gateway milestone that follows the frozen K9 memory baseline by establishing governed external contracts and boundary validation without introducing transport servers, persistence, or frontend implementation.
@@ -110,6 +111,30 @@ Expose approved Kernel capabilities through versioned, governed, secure, and det
 - `GatewayResponseEnvelope`
 - `GatewayError`
 - `GatewayErrorCode`
+- `GatewayProtocol`
+- `GatewayRateGovernanceReference`
+- `GatewayStatusSnapshot`
+- `GatewayAuditReference`
+
+## Implemented Public Contracts
+
+- `GatewayApiVersion`
+- `GatewayOperationKind`
+- `GatewayOperationReference`
+- `GatewayAuthenticationContext`
+- `GatewayAuthorizationBinding`
+- `GatewayRequestContext`
+- `GatewayRequestEnvelope`
+- `GatewayCommandPayload`
+- `GatewayCommandRequest`
+- `GatewayCommandResponse`
+- `GatewayQueryPayload`
+- `GatewayQueryRequest`
+- `GatewayQueryResponse`
+- `GatewayResponseEnvelope`
+- `GatewayError`
+- `GatewayErrorCode`
+- `GatewayResult`
 - `GatewayProtocol`
 - `GatewayRateGovernanceReference`
 - `GatewayStatusSnapshot`
@@ -214,16 +239,16 @@ Still deferred beyond K10:
 ## Requirements Matrix
 | Requirement ID | Source | Planned contract or behavior | Validation method | Status |
 | --- | --- | --- | --- | --- |
-| `K10-001` | `11-api-gateway-architecture.md` §5, §11 | gateway contract identity and versioning | native tests, compile gates | `PLANNED` |
-| `K10-002` | `11-api-gateway-architecture.md` §6 | authentication context contracts | native tests, compile gates | `PLANNED` |
-| `K10-003` | `11-api-gateway-architecture.md` §7 | authorization integration contracts | native tests, compile gates | `PLANNED` |
-| `K10-004` | `11-api-gateway-architecture.md` §8 | request envelope and request-context validation | native tests, compile gates | `PLANNED` |
-| `K10-005` | `01-kernel-overview.md` §16, `13-data-flow.md` §4 | command request and response contracts | native tests, compile gates | `PLANNED` |
-| `K10-006` | `10-memory-architecture.md` §12, `12-studio-integration-architecture.md` §7-§12 | query and read-model contracts | native tests, compile gates | `PLANNED` |
-| `K10-007` | `11-api-gateway-architecture.md` §9 | response mapping contracts | native tests, compile gates | `PLANNED` |
-| `K10-008` | `11-api-gateway-architecture.md` §10 | error translation contracts | native tests, compile gates | `PLANNED` |
-| `K10-009` | `11-api-gateway-architecture.md` §3, §13 | rate-governance references and protocol-adaptation contracts | compile gates, static audits | `PLANNED` |
-| `K10-010` | `16-traceability.md` §4-§7 | boundary and frozen-API conformance | static audits, compile gates | `PLANNED` |
+| `K10-001` | `11-api-gateway-architecture.md` §5, §11 | gateway contract identity and versioning | native tests, compile gates | `IMPLEMENTED` |
+| `K10-002` | `11-api-gateway-architecture.md` §6 | authentication context contracts | native tests, compile gates | `IMPLEMENTED` |
+| `K10-003` | `11-api-gateway-architecture.md` §7 | authorization integration contracts | native tests, compile gates | `IMPLEMENTED` |
+| `K10-004` | `11-api-gateway-architecture.md` §8 | request envelope and request-context validation | native tests, compile gates | `IMPLEMENTED` |
+| `K10-005` | `01-kernel-overview.md` §16, `13-data-flow.md` §4 | command request and response contracts | native tests, compile gates | `IMPLEMENTED` |
+| `K10-006` | `10-memory-architecture.md` §12, `12-studio-integration-architecture.md` §7-§12 | query and read-model contracts | native tests, compile gates | `IMPLEMENTED` |
+| `K10-007` | `11-api-gateway-architecture.md` §9 | response mapping contracts | native tests, compile gates | `IMPLEMENTED` |
+| `K10-008` | `11-api-gateway-architecture.md` §10 | error translation contracts | native tests, compile gates | `IMPLEMENTED` |
+| `K10-009` | `11-api-gateway-architecture.md` §3, §13 | rate-governance references and protocol-adaptation contracts | compile gates, static audits | `IMPLEMENTED` |
+| `K10-010` | `16-traceability.md` §4-§7 | boundary and frozen-API conformance | static audits, compile gates | `IMPLEMENTED` |
 
 ## Planned Native Test Groups
 - contract identity and version construction

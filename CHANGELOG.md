@@ -31,20 +31,24 @@ INTERNAL
 
 ### Added
 
-- K10 planning package for API Gateway contract scope, boundary validation, and transport-neutral integration contracts
-- Repository-backed K10 backlog and traceability mapping over versioning, authentication context, authorization integration, request validation, command contracts, query contracts, response mapping, error translation, and protocol adaptation
+- Additive `kernel-gateway` crate with transport-neutral API Gateway contract identity and versioning
+- Additive `GatewayAuthenticationContext`, `GatewayAuthorizationBinding`, `GatewayRequestContext`, and `GatewayRequestEnvelope`
+- Additive `GatewayCommandRequest`, `GatewayCommandResponse`, `GatewayQueryRequest`, `GatewayQueryResponse`, and `GatewayResponseEnvelope`
+- Additive `GatewayError`, `GatewayErrorCode`, `GatewayProtocol`, `GatewayRateGovernanceReference`, `GatewayStatusSnapshot`, and `GatewayAuditReference`
+- Deterministic K10 unit coverage over contract versioning, authentication, authorization integration, request validation, command validation, query validation, response mapping, error translation, identity continuity, scope continuity, protocol neutrality, and side-effect separation
+- Repository-backed K10 implementation evidence, backlog updates, and traceability mapping over versioning, authentication context, authorization integration, request validation, command contracts, query contracts, response mapping, error translation, protocol adaptation, and frozen-boundary conformance
 
 ### Validation
 
-- Planning-safe validation passed for `cargo fmt --all -- --check`, `cargo check --workspace --all-targets`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo doc --workspace --no-deps`, and `git diff --check`
+- Codex implementation gates passed for `cargo fmt --all -- --check`, `cargo check --workspace --all-targets`, `cargo check --workspace --all-features --all-targets`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo clippy --workspace --all-features --all-targets -- -D warnings`, `cargo doc --workspace --no-deps`, `cargo test --doc`, and `git diff --check`
+- Native `cargo test --workspace --all-targets` remains pending the primary host because the Codex environment does not provide linker `cc`
 - Authoritative frozen K9 host-native baseline remains `827 passed`, `0 failed`, `0 ignored`, `0 measured`, `0 filtered out`, exit code `0`
 
 ### Boundaries
 
-- No production Rust code changed
-- No tests changed
-- No public API changed
-- No HTTP, WebSocket, gRPC, IPC, persistence, or frontend implementation introduced
+- K10 public API is additive only
+- No HTTP, WebSocket, gRPC, IPC, persistence, authentication-provider integration, or frontend implementation introduced
+- No network, database, filesystem, scheduler, worker dispatch, or runtime orchestration introduced
 - No ADR required from current repository evidence
 
 ## K9 Enterprise Memory

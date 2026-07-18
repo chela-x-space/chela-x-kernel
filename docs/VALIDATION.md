@@ -597,16 +597,20 @@ K9 closure assertions:
 - K10 planning status: `COMPLETE`
 - K10 implementation status: `NOT STARTED`
 
-## K10 Planning Validation
+## K10 Implementation Validation
 
 Validation date: `2026-07-18`
 
 - `cargo fmt --all -- --check`: `PASS`
 - `cargo check --workspace --all-targets`: `PASS`
+- `cargo check --workspace --all-features --all-targets`: `PASS`
 - `cargo clippy --workspace --all-targets -- -D warnings`: `PASS`
+- `cargo clippy --workspace --all-features --all-targets -- -D warnings`: `PASS`
 - `cargo doc --workspace --no-deps`: `PASS`
+- `cargo test --doc`: `PASS`
 - `git diff --check`: `PASS`
-- `git status --short`: `DOCS-ONLY CHANGES DURING PLANNING`
+- `cargo test --workspace --all-targets`: `BLOCKED IN CODEX ENVIRONMENT`
+- blocker: `linker cc not found (os error 2)`
 
 Authoritative project baseline retained:
 
@@ -618,14 +622,16 @@ Authoritative project baseline retained:
 - filtered out: `0`
 - exit code: `0`
 
-K10 planning assertions:
+K10 implementation assertions:
 
 - Planning status: `COMPLETE`
-- Architecture review status: `PENDING HUMAN REVIEW`
-- Implementation status: `NOT STARTED`
-- Implementation authorization status: `PENDING ARCHITECTURE REVIEW`
-- Production source changed: `NO`
-- Tests changed: `NO`
-- Public API changed: `NO`
+- Architecture review status: `PASSED`
+- Implementation status: `COMPLETE`
+- Compile validation status: `PASSED`
+- Native verification status: `PENDING PRIMARY HOST`
+- API status: `NOT YET FROZEN`
+- Production source changed: `YES — ADDITIVE GATEWAY CONTRACTS`
+- Tests changed: `YES — K10 GATEWAY TEST COVERAGE`
+- Public API changed: `YES — ADDITIVE K10 GATEWAY API`
 - Architecture changed: `NO`
 - ADR required: `NO`

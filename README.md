@@ -1,7 +1,7 @@
 # CHELA-X Kernel
 
 ## Status
-Implementation (K8 Closed, K9 Closed, K10 Planned)
+Implementation (K8 Closed, K9 Closed, K10 Implemented)
 
 ## Version
 0.5.0
@@ -56,7 +56,7 @@ AI Engineering OS -> CHELA-X CES -> CHELA-X Kernel -> CHELA-X Runtime -> CHELA-X
 | K7 Task Engine | PASS / COMPLETE |
 | K8 Execution Engine | PASS / COMPLETE |
 | K9 Enterprise Memory | PASS / COMPLETE |
-| K10 API Gateway | PLANNING COMPLETE |
+| K10 API Gateway | IMPLEMENTATION COMPLETE / NATIVE PENDING |
 
 Canonical host validation:
 
@@ -64,7 +64,7 @@ Canonical host validation:
 - **0 failed**
 
 ## Current Status
-`K8 Execution Engine Closed And Frozen; K9 Enterprise Memory Closed And Frozen; K10 API Gateway Planning Complete`
+`K8 Execution Engine Closed And Frozen; K9 Enterprise Memory Closed And Frozen; K10 API Gateway Implemented; K10 Native Verification Pending Primary Host`
 
 ## Constraints
 - Architecture is frozen.
@@ -80,9 +80,9 @@ Canonical host validation:
 - K7 public API is frozen for next-milestone consumption.
 - K8 execution-domain API is frozen for next-milestone consumption.
 - K9 implementation is complete, native verification passed, and K9 public API is frozen for K10 consumption.
-- K10 planning is complete and architecture review is pending human approval.
-- K10 implementation is not started and remains unauthorized.
-- K10 will establish API Gateway contracts without introducing transport infrastructure in the planning baseline.
+- K10 planning is complete and architecture review passed.
+- K10 implementation is complete, compile validation passed, and native verification is pending the primary host rerun.
+- K10 introduces additive transport-neutral API Gateway contracts in `crates/kernel-gateway` without transport infrastructure.
 - K6 preserves the architecture freeze.
 - K8 preserves the architecture freeze.
 - Runtime execution is not implemented.
@@ -106,6 +106,7 @@ Canonical host validation:
 - Deterministic task foundation, definition, instance, ownership, assignment, priority, readiness, lifecycle, dependency, completion, failure, evidence, and integration primitives
 - Deterministic execution request, context, session, outcome, evidence-binding, retry-eligibility, and audit-reference primitives
 - Deterministic enterprise-memory identity, provenance, classification, retention, retrieval, and read-only projection primitives
+- Deterministic API Gateway contract identity, authentication context, authorization binding, request validation, response mapping, error translation, status snapshot, and protocol-adaptation primitives
 
 ## References
 - [AGENTS.md](./AGENTS.md)
