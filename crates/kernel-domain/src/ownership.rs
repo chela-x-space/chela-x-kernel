@@ -84,10 +84,10 @@ impl OwnershipPath {
             .organizational_unit_id
             .as_ref()
             .map(OrganizationUnitId::as_str);
-        workspace == Some(enterprise)
-            || project == workspace
-            || unit == workspace
-            || unit == project
+        matches!(workspace, Some(value) if value == enterprise)
+            || matches!((project, workspace), (Some(left), Some(right)) if left == right)
+            || matches!((unit, workspace), (Some(left), Some(right)) if left == right)
+            || matches!((unit, project), (Some(left), Some(right)) if left == right)
     }
 }
 
@@ -129,6 +129,7 @@ mod tests {
         )
         .expect("valid enterprise root path");
         assert_eq!(path.enterprise_id().as_str(), "CX-ENT-000001");
+        assert!(!path.contains_repeated_elements());
     }
 
     #[test]
