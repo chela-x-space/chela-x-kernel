@@ -29,7 +29,7 @@ INTERNAL
 
 ## Purpose And Scope
 
-This document records the current public K6 workflow API and the additive K7.1 through K7.6 task-domain APIs exposed from `crates/kernel-domain/src/lib.rs`. K6 remains frozen. K7-001 through K7-006 are implemented and not frozen.
+This document records the current public K6 workflow API and the additive K7.1 through K7.7 task-domain APIs exposed from `crates/kernel-domain/src/lib.rs`. K6 remains frozen. K7-001 through K7-007 are implemented and not frozen.
 
 ## K6 Public API Surface
 
@@ -776,6 +776,115 @@ Important non-goals:
 - No failure record storage
 - No runtime orchestration or execution start
 
+### Task Dependency Coordination Types
+
+API status:
+
+- `IMPLEMENTED — REVIEW PASSED`
+- `NOT FROZEN`
+
+Types:
+
+- `TaskDependencyGraphReference`
+- `TaskDependencySource`
+- `TaskDependencyTarget`
+- `TaskDependencyType`
+- `TaskDependencyRequirement`
+- `TaskDependencyStatus`
+- `TaskDependency`
+- `TaskDependencyFact`
+- `TaskDependencySet`
+- `TaskDependencyValidationRequest`
+- `TaskDependencyCoordinationRequest`
+- `TaskDependencyBlocker`
+- `TaskDependencyUnresolvedReason`
+- `TaskDependencyRejectionReason`
+- `TaskDependencyValidationAccepted`
+- `TaskDependencyValidationNoOp`
+- `TaskDependencyValidationRejected`
+- `TaskDependencyValidation`
+- `TaskDependencyDecision`
+- `TaskDependencyCoordinationDecision`
+- `TaskDependencyControl`
+
+Construction and evaluation entry points:
+
+- `TaskDependencyGraphReference::new(value: impl Into<String>) -> DomainResult<Self>`
+- `TaskDependencySource::new(task_instance_reference: TaskInstanceReference) -> Self`
+- `TaskDependencyTarget::new(task_instance_reference: TaskInstanceReference) -> Self`
+- `TaskDependency::new(...) -> DomainResult<Self>`
+- `TaskDependencyFact::new(...) -> DomainResult<Self>`
+- `TaskDependencySet::new(task_dependency_graph_reference: TaskDependencyGraphReference, task_dependencies: Vec<TaskDependency>) -> Self`
+- `TaskDependencyValidationRequest::new(current_task_dependency_set: TaskDependencySet, requested_task_dependency: TaskDependency) -> Self`
+- `TaskDependencyCoordinationRequest::new(task_dependency_set: TaskDependencySet, task_dependency_facts: Vec<TaskDependencyFact>) -> DomainResult<Self>`
+- `TaskDependencyControl::validate(request: &TaskDependencyValidationRequest) -> TaskDependencyValidation`
+- `TaskDependencyControl::evaluate(request: &TaskDependencyCoordinationRequest) -> TaskDependencyCoordinationDecision`
+
+Principal accessors:
+
+- `TaskDependencyGraphReference::as_str(&self) -> &str`
+- `TaskDependencySource::task_instance_reference(&self) -> &TaskInstanceReference`
+- `TaskDependencyTarget::task_instance_reference(&self) -> &TaskInstanceReference`
+- `TaskDependency::{task_dependency_reference, task_dependency_source, task_dependency_target, task_dependency_type, task_dependency_requirement}`
+- `TaskDependencyFact::{task_state_snapshot, task_evidence_references, task_output_contracts}`
+- `TaskDependencySet::{task_dependency_graph_reference, task_dependencies}`
+- `TaskDependencyValidationRequest::{current_task_dependency_set, requested_task_dependency}`
+- `TaskDependencyCoordinationRequest::{task_dependency_set, task_dependency_facts}`
+- `TaskDependencyValidationAccepted::task_dependency_set(&self) -> &TaskDependencySet`
+- `TaskDependencyValidationNoOp::task_dependency_set(&self) -> &TaskDependencySet`
+- `TaskDependencyValidationRejected::{task_dependency_set, requested_task_dependency, reason}`
+- `TaskDependencyDecision::{task_dependency, task_dependency_status, task_dependency_blocker, task_dependency_unresolved_reason}`
+- `TaskDependencyCoordinationDecision::{task_dependency_graph_reference, task_dependency_status, task_dependency_decisions, task_dependency_rejection_reason}`
+
+Dependency types:
+
+- `Completion`
+- `Success`
+- `Evidence`
+- `Output`
+
+Satisfaction and coordination behavior:
+
+- Validation request returns `Accepted`, `Rejected`, or `NoOp`
+- Coordination evaluation returns aggregate `Satisfied`, `Unsatisfied`, `Unresolved`, or `Rejected`
+- Same semantic edge plus same `TaskDependencyId` returns `NoOp`
+- Same semantic edge plus different `TaskDependencyId` returns `Rejected`
+- Same `TaskDependencyId` reused for different semantic edge also returns `Rejected`
+- Aggregate dependency status preserves dependency ordering from the supplied set
+
+Cycle validation:
+
+- Detects direct cycle through rejected self-edge construction
+- Detects two-node and longer detectable cycles in the explicit supplied dependency set
+- Accepts acyclic chains and disconnected acyclic groups
+- Performs in-memory validation only over the supplied immutable set
+
+Deterministic behavior:
+
+- Dependency direction remains explicit through `TaskDependencySource` and `TaskDependencyTarget`
+- Dependency validation and evaluation are side-effect free
+- Readiness contribution is returned as explicit dependency status only
+- No lifecycle mutation, readiness mutation, assignment mutation, execution start, event publication, persistence, clock lookup, or randomness occurs
+
+Validation boundaries:
+
+- Self-dependency is rejected at construction
+- Dependency type and requirement pairing must match
+- Duplicate evidence and output facts are rejected at fact construction
+- Duplicate predecessor facts are rejected at coordination-request construction
+- Missing predecessor fact produces `Unresolved`
+- Completion, success, evidence, and output requirements are evaluated only from explicit supplied facts
+- Cross-workflow orchestration remains deferred and is not inferred
+
+Important non-goals:
+
+- No generic graph framework
+- No scheduler or execution ordering runtime
+- No worker dispatch or queue management
+- No repository or database graph lookup
+- No automatic downstream mutation or propagation
+- No readiness evaluation invocation from dependency control
+
 ### Failure-And-Recovery Types
 
 Types:
@@ -828,6 +937,7 @@ Public variants:
 
 - `DomainError::InvalidTaskDefinition(&'static str)`
 - `DomainError::InvalidTaskInstance(&'static str)`
+- `DomainError::InvalidTaskDependency(&'static str)`
 - `DomainError::InvalidTaskLifecycle(&'static str)`
 - `DomainError::InvalidTaskPriority(&'static str)`
 - `DomainError::InvalidTaskReadiness(&'static str)`

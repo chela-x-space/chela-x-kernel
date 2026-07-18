@@ -5,6 +5,14 @@ mod assignment_validation;
 mod definition;
 mod definition_validation;
 mod definition_value;
+mod dependency;
+mod dependency_coordination;
+mod dependency_cycle;
+mod dependency_decision;
+mod dependency_evaluation;
+mod dependency_fact;
+mod dependency_set;
+mod dependency_validation;
 mod identity;
 mod instance;
 mod instance_binding;
@@ -40,6 +48,21 @@ pub use definition_value::{
     TaskDefinitionVersion, TaskDescription, TaskEvidenceRequirement, TaskFailurePolicyReference,
     TaskInputContract, TaskKind, TaskOutputContract, TaskRequirement,
 };
+pub use dependency::{
+    TaskDependency, TaskDependencyGraphReference, TaskDependencyRequirement, TaskDependencySource,
+    TaskDependencyStatus, TaskDependencyTarget, TaskDependencyType,
+};
+pub use dependency_coordination::{TaskDependencyCoordinationDecision, TaskDependencyDecision};
+pub use dependency_decision::{
+    TaskDependencyBlocker, TaskDependencyRejectionReason, TaskDependencyUnresolvedReason,
+    TaskDependencyValidation, TaskDependencyValidationAccepted, TaskDependencyValidationNoOp,
+    TaskDependencyValidationRejected,
+};
+pub use dependency_fact::TaskDependencyFact;
+pub use dependency_set::{
+    TaskDependencyCoordinationRequest, TaskDependencySet, TaskDependencyValidationRequest,
+};
+pub use dependency_validation::TaskDependencyControl;
 pub use identity::{TaskDefinitionId, TaskDependencyId, TaskEvidenceId, TaskInstanceId};
 pub use instance::TaskInstance;
 pub use instance_binding::{TaskCreationContext, TaskWorkflowBinding};
@@ -80,6 +103,18 @@ mod assignment_eligibility_tests;
 mod assignment_tests;
 #[cfg(test)]
 mod definition_tests;
+#[cfg(test)]
+mod dependency_construction_tests;
+#[cfg(test)]
+mod dependency_coordination_tests;
+#[cfg(test)]
+mod dependency_cycle_tests;
+#[cfg(test)]
+mod dependency_satisfaction_tests;
+#[cfg(test)]
+mod dependency_separation_tests;
+#[cfg(test)]
+mod dependency_test_support;
 #[cfg(test)]
 mod instance_tests;
 #[cfg(test)]

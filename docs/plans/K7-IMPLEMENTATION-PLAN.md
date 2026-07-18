@@ -142,7 +142,7 @@ The architecture review MUST verify:
 - Traceability requirement: architecture traceability plus pending CES mapping
 - Completion criteria: explicit dependency semantics with same-identity duplicate no-op and different-identity duplicate conflict rejection
 - Commit boundary: `feat(task): add dependency coordination`
-- Current status: `READY FOR IMPLEMENTATION`
+- Current status: `IMPLEMENTED — REVIEW PASSED`
 
 ### K7-008 Task Completion, Failure, And Evidence
 - Objective: define completion, failure, and evidence domain contracts
@@ -156,7 +156,7 @@ The architecture review MUST verify:
 - Traceability requirement: architecture traceability plus pending CES mapping
 - Completion criteria: explicit completion, failure, and evidence validation with deterministic distinction between failure, rejection, and dependency blockage
 - Commit boundary: `feat(task): add completion failure and evidence model`
-- Current status: `BLOCKED BY K7-007`
+- Current status: `READY FOR IMPLEMENTATION`
 
 ### K7-009 Task Integration And Conformance
 - Objective: add cross-layer compatibility and conformance coverage
@@ -188,4 +188,4 @@ The architecture review MUST verify:
 
 ## Final Determination
 
-K7 planning is complete at the documentation-package level. The architecture review is recorded, K7-001 through K7-006 are implemented, and K7-007 is ready for implementation without architectural redesign.
+K7 planning is complete at the documentation-package level. The architecture review is recorded, K7-001 through K7-007 are implemented, and K7-008 is ready for implementation without architectural redesign.

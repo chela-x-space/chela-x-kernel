@@ -135,7 +135,7 @@ NOT ESTABLISHED
   - K2 workflow semantics unchanged
 
 ### K7-007 Task Dependency Coordination
-- Status: `READY FOR IMPLEMENTATION`
+- Status: `DONE — REVIEW PASSED`
 - Purpose: define deterministic task-to-task dependency coordination
 - Source specification: `docs/specifications/K7.7-task-dependency-coordination.md`
 - Dependencies: K7-006
@@ -155,7 +155,7 @@ NOT ESTABLISHED
   - workflow-step ordering unchanged
 
 ### K7-008 Task Completion, Failure, And Evidence
-- Status: `BLOCKED BY K7-007`
+- Status: `READY FOR IMPLEMENTATION`
 - Purpose: define explicit completion, failure, and evidence semantics
 - Source specification: `docs/specifications/K7.8-task-completion-failure-and-evidence.md`
 - Dependencies: K7-007
@@ -222,4 +222,5 @@ K7-003 is implemented, review-passed, and pending native validation in a linker-
 K7-004 is implemented, review-passed, and pending native validation in a linker-capable environment.
 K7-005 is implemented, review-passed, and pending native validation in a linker-capable environment.
 K7-006 is implemented, review-passed, and pending native validation in a linker-capable environment.
-K7-007 is the next authorized implementation slice.
+K7-007 is implemented, review-passed, and pending native validation in a linker-capable environment.
+K7-008 is the next authorized implementation slice.

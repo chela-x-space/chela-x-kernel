@@ -83,7 +83,8 @@ This breakdown is an implementation tracking document only. It does not create a
 - K7-004: `IMPLEMENTED — REVIEW PASSED`
 - K7-005: `IMPLEMENTED — REVIEW PASSED`
 - K7-006: `IMPLEMENTED — REVIEW PASSED`
-- K7-007: `READY FOR IMPLEMENTATION`
+- K7-007: `IMPLEMENTED — REVIEW PASSED`
+- K7-008: `READY FOR IMPLEMENTATION`
 
 Before `K7-001` Rust implementation begins, the K7 specification package MUST receive an architecture review confirming:
 
