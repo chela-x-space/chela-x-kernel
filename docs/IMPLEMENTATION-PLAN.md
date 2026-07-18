@@ -68,7 +68,7 @@ This breakdown is an implementation tracking document only. It does not create a
 
 ## Next Approved Milestone
 
-`K8 Execution Engine`
+`K9 Enterprise Memory`
 
 ## K7 Current Milestone State
 
@@ -134,6 +134,24 @@ K8 implementation constraints preserved:
 - K8 remains pure, immutable, deterministic, explicit, and side-effect free.
 - K9 implementation remains unauthorized.
 
+## K9 Planning State
+
+- Exact title: `K9 Enterprise Memory`
+- Planning status: `COMPLETE`
+- Architecture review status: `PENDING HUMAN REVIEW`
+- Implementation status: `NOT AUTHORIZED`
+- Planned crate: `crates/kernel-domain`
+- Planned scope: additive memory-domain contracts, retrieval contracts, and read-only projections only
+- Planned public API status: `NOT STARTED`
+- ADR status from current repository evidence: `NOT REQUIRED`
+
+K9 planning constraints:
+
+- K9 must consume frozen K1-K8 contracts additively.
+- K9 must remain in `kernel-domain`; no application-service, runtime, API, or frontend crate is introduced in this milestone.
+- K9 must not create runtime orchestration, storage, transport, dashboard UI, or API Gateway behavior.
+- K10 implementation remains unauthorized.
+
 Before `K7-001` Rust implementation begins, the K7 specification package MUST receive an architecture review confirming:
 
 - K7 remains `Task Engine`
@@ -155,6 +173,8 @@ Before `K7-001` Rust implementation begins, the K7 specification package MUST re
 - [plans/K6-IMPLEMENTATION-PLAN.md](./plans/K6-IMPLEMENTATION-PLAN.md)
 - [plans/K7-IMPLEMENTATION-PLAN.md](./plans/K7-IMPLEMENTATION-PLAN.md)
 - [plans/K8-IMPLEMENTATION-PLAN.md](./plans/K8-IMPLEMENTATION-PLAN.md)
+- [plans/K9-IMPLEMENTATION-PLAN.md](./plans/K9-IMPLEMENTATION-PLAN.md)
 - [backlog/K6-BACKLOG.md](./backlog/K6-BACKLOG.md)
 - [backlog/K7-BACKLOG.md](./backlog/K7-BACKLOG.md)
 - [backlog/K8-BACKLOG.md](./backlog/K8-BACKLOG.md)
+- [backlog/K9-BACKLOG.md](./backlog/K9-BACKLOG.md)

@@ -27,6 +27,28 @@ Kernel Platform Team
 ## Classification
 INTERNAL
 
+## K9 Planning
+
+### Added
+
+- Planning package for `K9 Enterprise Memory` derived from the frozen Memory, Roadmap, Traceability, API Gateway, and Studio architecture chapters
+- Repository-local K9 planning traceability over memory identity, records, provenance, classification, relationships, retention, retrieval, projection readiness, and boundary conformance requirements
+- K9 backlog covering planned memory-domain contracts plus deferred direct CES package work and explicit out-of-scope infrastructure exclusions
+
+### Validation
+
+- Authoritative K8 native baseline remains `790 passed`, `0 failed`, `0 ignored`, `0 measured`, `0 filtered out`, exit code `0`
+- Codex planning-safe gates passed for `cargo fmt --all -- --check`, `cargo check --workspace --all-targets`, and `git diff --check`
+- No native rerun was required for this planning-only change set
+
+### Boundaries
+
+- No production Rust source changes
+- No test changes
+- No public API changes
+- No architecture change
+- No runtime, API Gateway, dashboard, transport, persistence, or frontend implementation introduced
+
 ## K8 Execution Engine
 
 ### Added

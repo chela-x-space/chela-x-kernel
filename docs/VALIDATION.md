@@ -523,3 +523,34 @@ K8 implementation closure assertions:
 - K8 implementation status: `COMPLETE`
 - K8 native verification status: `PASSED`
 - K8 API status: `FROZEN FOR NEXT-MILESTONE CONSUMPTION`
+
+## K9 Planning Validation
+
+Validation date: `2026-07-18`
+
+Authoritative frozen baseline:
+
+- K8 implementation commit: `fc447f2`
+- K8 closure commit: `10bdd2c`
+- authoritative host-native baseline: `790 passed`, `0 failed`, `0 ignored`, `0 measured`, `0 filtered out`, exit code `0`
+
+Codex planning validation:
+
+- `cargo fmt --all -- --check`: `PASS`
+- `cargo check --workspace --all-targets`: `PASS`
+- `git diff --check`: `PASS`
+- `git diff --name-only`: `PASS`
+- documentation static review: `PASS`
+- working-tree scope review: `PASS`
+
+Planning assertions:
+
+- K7 remains closed and frozen.
+- K8 remains closed and frozen.
+- K9 planning is documentation-only in this change set.
+- Production source changed: `NO`
+- Tests changed: `NO`
+- Public API changed: `NO`
+- Architecture changed: `NO`
+- ADR required: `NO`
+- K9 implementation authorized: `NO`
