@@ -10,7 +10,7 @@ Current
 Kernel Platform Team
 
 ## Last Updated
-2026-07-17
+2026-07-18
 
 ## Applies To
 Public API review and consumption guidance for `kernel-domain`, including the frozen K6 workflow API.
@@ -29,7 +29,7 @@ INTERNAL
 
 ## Purpose And Scope
 
-This document records the current public K6 workflow API and the additive K7.1 through K7.4 task-domain APIs exposed from `crates/kernel-domain/src/lib.rs`. K6 remains frozen. K7-001 through K7-004 are implemented and not frozen.
+This document records the current public K6 workflow API and the additive K7.1 through K7.5 task-domain APIs exposed from `crates/kernel-domain/src/lib.rs`. K6 remains frozen. K7-001 through K7-005 are implemented and not frozen.
 
 ## K6 Public API Surface
 
@@ -613,6 +613,77 @@ Important non-goals:
 - No task execution or worker dispatch
 - No policy redefinition, persistence, event publication, scheduler, executor, or network integration
 
+### Task Priority And Readiness Types
+
+API status:
+
+- `IMPLEMENTED — REVIEW PASSED`
+- `NOT FROZEN`
+
+Types:
+
+- `TaskPriority`
+- `TaskPriorityClass`
+- `TaskPriorityValue`
+- `TaskReadiness`
+- `TaskReadinessRequirement`
+- `TaskReadinessEvidence`
+- `TaskReadinessBlocker`
+- `TaskReadinessRejectionReason`
+- `TaskReadinessInput`
+- `TaskReadinessReady`
+- `TaskReadinessBlocked`
+- `TaskReadinessRejection`
+- `TaskReadinessDecision`
+- `TaskReadinessControl`
+
+Construction and evaluation entry points:
+
+- `TaskPriorityClass::new(value: &str) -> DomainResult<Self>`
+- `TaskPriorityValue::new(value: u8) -> DomainResult<Self>`
+- `TaskPriority::new(task_instance_reference: TaskInstanceReference, task_priority_class: TaskPriorityClass, task_priority_value: TaskPriorityValue) -> Self`
+- `TaskReadinessInput::new(...) -> Self`
+- `TaskReadinessControl::evaluate(input: &TaskReadinessInput) -> TaskReadinessDecision`
+
+Principal accessors:
+
+- `TaskPriority::{task_instance_reference, task_priority_class, task_priority_value}`
+- `TaskPriorityClass::as_str(self) -> &'static str`
+- `TaskPriorityValue::value(self) -> u8`
+- `TaskReadinessInput::{task_instance_reference, task_state, task_priority, task_ownership, task_assignment, task_readiness_requirements, task_readiness_evidence, authorization_outcome}`
+- `TaskReadinessReady::{task_instance_reference, task_readiness, validated_evidence}`
+- `TaskReadinessBlocked::{task_instance_reference, task_readiness, blockers}`
+- `TaskReadinessRejection::{task_instance_reference, reason}`
+
+Deterministic behavior:
+
+- Priority is explicit immutable governance metadata bound to `TaskInstanceReference`
+- Priority comparison uses validated `TaskPriorityValue` ordering only
+- Equal priority remains valid and stable
+- Readiness consumes explicit lifecycle, ownership, assignment, authorization, and evidence facts only
+- Readiness returns only derived `Ready`, `Blocked`, or structural `Rejected` outcomes
+- Same input produces the same readiness decision
+- No lifecycle mutation, assignment mutation, scheduling, execution, resource reservation, wall-clock lookup, or randomness occurs
+
+Validation boundaries:
+
+- Only canonical priority class `Explicit` is accepted
+- Priority value must be greater than zero
+- Contradictory readiness requirements are rejected deterministically
+- Terminal task states are blocked, not promoted to lifecycle `Ready`
+- Missing required owner, assignment, required input, dependency completion, authorization allowance, or evidence prerequisites yield stable readiness blockers
+- Accepted assignment remains distinct from readiness; assignment status is read but never changed
+- High priority remains distinct from readiness; supplied priority is preserved but never interpreted as scheduler authorization
+
+Important non-goals:
+
+- No scheduler queue
+- No execution dispatch
+- No dependency graph traversal or mutation
+- No authorization service lookup
+- No worker, executor, or capacity semantics
+- No lifecycle transition engine
+
 ### Failure-And-Recovery Types
 
 Types:
@@ -659,11 +730,16 @@ Important non-goals:
 - No backoff calculation
 - No workflow transition execution
 
-### Workflow-Related Domain Errors
+### Task-And-Workflow Domain Errors
 
 Public variants:
 
 - `DomainError::InvalidTaskDefinition(&'static str)`
+- `DomainError::InvalidTaskInstance(&'static str)`
+- `DomainError::InvalidTaskPriority(&'static str)`
+- `DomainError::InvalidTaskReadiness(&'static str)`
+- `DomainError::InvalidTaskOwnership(&'static str)`
+- `DomainError::InvalidTaskAssignment(&'static str)`
 - `DomainError::InvalidWorkflowReference(&'static str)`
 - `DomainError::InvalidWorkflowDefinition(&'static str)`
 - `DomainError::InvalidWorkflowInstance(&'static str)`

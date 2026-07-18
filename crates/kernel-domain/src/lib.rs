@@ -132,8 +132,11 @@ pub use task::{
     TaskEvidenceReference, TaskEvidenceRequirement, TaskFailurePolicyReference, TaskInputBinding,
     TaskInputContract, TaskInstance, TaskInstanceId, TaskInstanceReference, TaskKind,
     TaskOutputBinding, TaskOutputContract, TaskOwner, TaskOwnership, TaskOwnershipAuthority,
-    TaskOwnershipScope, TaskRequirement, TaskState, TaskStepBinding, TaskStepReference,
-    TaskWorkflowBinding, TaskWorkflowReference,
+    TaskOwnershipScope, TaskPriority, TaskPriorityClass, TaskPriorityValue, TaskReadiness,
+    TaskReadinessBlocked, TaskReadinessBlocker, TaskReadinessControl, TaskReadinessDecision,
+    TaskReadinessEvidence, TaskReadinessInput, TaskReadinessReady, TaskReadinessRejection,
+    TaskReadinessRejectionReason, TaskReadinessRequirement, TaskRequirement, TaskState,
+    TaskStepBinding, TaskStepReference, TaskWorkflowBinding, TaskWorkflowReference,
 };
 pub use workflow::{
     WorkflowAuditEvidenceReference, WorkflowAuthorizationContext, WorkflowAuthorizationControl,

@@ -96,7 +96,7 @@ NOT ESTABLISHED
   - no unsupported multi-assignee behavior
 
 ### K7-005 Task Priority And Readiness
-- Status: `READY FOR IMPLEMENTATION`
+- Status: `DONE — REVIEW PASSED`
 - Purpose: define explicit priority and side-effect-free readiness evaluation
 - Source specification: `docs/specifications/K7.5-task-priority-and-readiness.md`
 - Dependencies: K7-004
@@ -116,7 +116,7 @@ NOT ESTABLISHED
   - no agent-capacity claims
 
 ### K7-006 Task Lifecycle And State
-- Status: `BLOCKED BY K7-005`
+- Status: `READY FOR IMPLEMENTATION`
 - Purpose: define canonical task lifecycle and deterministic transition control
 - Source specification: `docs/specifications/K7.6-task-lifecycle-and-state.md`
 - Dependencies: K7-005
@@ -220,4 +220,5 @@ K7-001 is implemented, API-reviewed, and pending native validation in a linker-c
 K7-002 is implemented, review-passed, and pending native validation in a linker-capable environment.
 K7-003 is implemented, review-passed, and pending native validation in a linker-capable environment.
 K7-004 is implemented, review-passed, and pending native validation in a linker-capable environment.
-K7-005 is the next authorized implementation slice.
+K7-005 is implemented, review-passed, and pending native validation in a linker-capable environment.
+K7-006 is the next authorized implementation slice.

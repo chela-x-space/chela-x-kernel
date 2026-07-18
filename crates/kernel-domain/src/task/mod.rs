@@ -11,6 +11,11 @@ mod instance_binding;
 mod instance_validation;
 mod instance_value;
 mod ownership;
+mod priority;
+mod readiness;
+mod readiness_decision;
+mod readiness_input;
+mod readiness_validation;
 mod reference;
 mod subject;
 
@@ -37,6 +42,16 @@ pub use instance_value::{
     TaskStepBinding,
 };
 pub use ownership::{TaskOwnership, TaskOwnershipAuthority, TaskOwnershipScope};
+pub use priority::{TaskPriority, TaskPriorityClass, TaskPriorityValue};
+pub use readiness::{
+    TaskReadiness, TaskReadinessBlocker, TaskReadinessEvidence, TaskReadinessRejectionReason,
+    TaskReadinessRequirement,
+};
+pub use readiness_decision::{
+    TaskReadinessBlocked, TaskReadinessDecision, TaskReadinessReady, TaskReadinessRejection,
+};
+pub use readiness_input::TaskReadinessInput;
+pub use readiness_validation::TaskReadinessControl;
 pub use reference::{
     TaskDefinitionReference, TaskDependencyReference, TaskEvidenceReference, TaskInstanceReference,
     TaskStepReference, TaskWorkflowReference,
@@ -55,5 +70,13 @@ mod definition_tests;
 mod instance_tests;
 #[cfg(test)]
 mod ownership_tests;
+#[cfg(test)]
+mod priority_tests;
+#[cfg(test)]
+mod readiness_separation_tests;
+#[cfg(test)]
+mod readiness_test_support;
+#[cfg(test)]
+mod readiness_tests;
 #[cfg(test)]
 mod tests;
