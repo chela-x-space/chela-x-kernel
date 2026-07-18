@@ -1,7 +1,7 @@
 # CHELA-X Kernel
 
 ## Status
-Implementation (K8 Closed, K9 Complete)
+Implementation (K8 Closed, K9 Closed)
 
 ## Version
 0.5.0
@@ -55,15 +55,15 @@ AI Engineering OS -> CHELA-X CES -> CHELA-X Kernel -> CHELA-X Runtime -> CHELA-X
 | K6 Workflow Engine | PASS |
 | K7 Task Engine | PASS / COMPLETE |
 | K8 Execution Engine | PASS / COMPLETE |
-| K9 Enterprise Memory | IMPLEMENTATION COMPLETE / HOST RERUN REQUIRED |
+| K9 Enterprise Memory | PASS / COMPLETE |
 
 Canonical host validation:
 
-- **790 passed**
+- **827 passed**
 - **0 failed**
 
 ## Current Status
-`K8 Execution Engine Closed And Frozen; K9 Enterprise Memory Implementation Complete`
+`K8 Execution Engine Closed And Frozen; K9 Enterprise Memory Closed And Frozen`
 
 ## Constraints
 - Architecture is frozen.
@@ -72,16 +72,15 @@ Canonical host validation:
 - K6 workflow implementation is additive in `crates/kernel-domain/src/workflow.rs`, `crates/kernel-domain/src/state.rs`, and existing `kernel-domain` re-exports.
 - K7 task implementation remains frozen for next-milestone consumption.
 - K8 execution implementation is additive in `crates/kernel-domain/src/execution*.rs`, `crates/kernel-domain/src/errors.rs`, and existing `kernel-domain` re-exports.
-- Canonical host validation passed with `790 passed`, `0 failed`, `0 ignored`.
-- Codex sandbox linker isolation is historical environment evidence only and is not the authoritative project status.
+- Canonical host validation passed with `827 passed`, `0 failed`, `0 ignored`.
 - K6 Workflow Engine domain layer is complete.
 - K6 is deterministic and side-effect free.
 - K6 public API is frozen for downstream consumption.
 - K7 public API is frozen for next-milestone consumption.
 - K8 execution-domain API is frozen for next-milestone consumption.
-- K9 implementation is complete, compile validation passed, and primary-host native rerun is still required before K9 freeze.
-- K9 public API is additive and not yet frozen.
-- K10 implementation remains unauthorized.
+- K9 implementation is complete, native verification passed, and K9 public API is frozen for K10 consumption.
+- K10 planning is authorized.
+- K10 implementation is not started.
 - K6 preserves the architecture freeze.
 - K8 preserves the architecture freeze.
 - Runtime execution is not implemented.

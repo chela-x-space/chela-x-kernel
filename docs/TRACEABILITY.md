@@ -178,8 +178,8 @@ INTERNAL
 - Architecture review status: `PASSED`
 - Implementation status: `COMPLETE`
 - Compile validation status: `PASSED`
-- Native verification status: `BLOCKED — PRIMARY HOST RERUN REQUIRED`
-- API status: `NOT YET FROZEN`
+- Native verification status: `PASSED`
+- API status: `FROZEN FOR K10 CONSUMPTION`
 - Implementation crate: `crates/kernel-domain`
 - Repository-local CES mapping status: `PARTIAL / INHERITED — DO NOT FABRICATE NEW CES IDS`
 
@@ -187,14 +187,14 @@ INTERNAL
 
 | Kernel requirement | Requirement summary | Repository-local source | Supporting CES-traceable source | Planned contract or type | Frozen dependency | Validation method | Test category | Classification | Planning status |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `K9-001` | Memory identity and references remain canonical and storage-independent. | `docs/kernel-architecture/10-memory-architecture.md` §5 | `docs/kernel-architecture/16-traceability.md` §4 | `MemoryRecordId`, `MemoryRecordReference`, `MemoryAuditReference` | K1 identifiers | native tests | construction and identity | `NATIVE_TESTED` | `IMPLEMENTED — PRIMARY HOST RERUN REQUIRED` |
-| `K9-002` | Memory records preserve explicit provenance over accepted enterprise facts. | `docs/kernel-architecture/10-memory-architecture.md` §6 | inherited K5-K8 traceability | `MemoryRecord`, `MemoryProvenance`, `MemoryCaptureRequest`, `MemoryCaptureDecision` | K5 events, K6 workflows, K7 tasks, K8 execution | native tests | provenance and continuity | `NATIVE_TESTED` | `IMPLEMENTED — PRIMARY HOST RERUN REQUIRED` |
-| `K9-003` | Memory classification remains explicit and governed. | `docs/kernel-architecture/10-memory-architecture.md` §7 | `docs/kernel-architecture/01-kernel-overview.md` §6 | `MemoryClassification`, `MemoryRejectionReason` | K1-K3 governance vocabulary | native tests | classification invariants | `NATIVE_TESTED` | `IMPLEMENTED — PRIMARY HOST RERUN REQUIRED` |
-| `K9-004` | Memory relationships remain explicit and non-hidden. | `docs/kernel-architecture/10-memory-architecture.md` §8 | `docs/kernel-architecture/16-traceability.md` §4 | `MemoryRelationship`, `MemoryRelationshipRequest` | K5-K8 references | native tests | relationship validation | `NATIVE_TESTED` | `IMPLEMENTED — PRIMARY HOST RERUN REQUIRED` |
-| `K9-005` | Retention remains explicit and audit-compatible. | `docs/kernel-architecture/10-memory-architecture.md` §9 | `docs/kernel-architecture/01-kernel-overview.md` §6 | `MemoryRetentionPolicyReference`, `MemoryRetentionDecision` | K1 value contracts, K3 governance | native tests | retention validation | `NATIVE_TESTED` | `IMPLEMENTED — PRIMARY HOST RERUN REQUIRED` |
-| `K9-006` | Retrieval remains deterministic and authorization-aware. | `docs/kernel-architecture/10-memory-architecture.md` §10 | `docs/kernel-architecture/11-api-gateway-architecture.md` §8-§9 | `MemoryRetrievalRequest`, `MemoryRetrievalResult`, `MemoryQuery`, `MemoryQueryResult` | K3 authorization context, K5-K8 provenance references | native tests | retrieval determinism | `NATIVE_TESTED` | `IMPLEMENTED — PRIMARY HOST RERUN REQUIRED` |
-| `K9-007` | Memory prepares read-only outputs for later API and Studio consumption. | `docs/kernel-architecture/10-memory-architecture.md` §12-§13 | `docs/kernel-architecture/12-studio-integration-architecture.md` §7-§10 | `MemoryProjection`, `WorkflowMemoryProjection`, `TaskMemoryProjection`, `ExecutionMemoryProjection`, `RuntimeMemoryProjection` | K4-K8 frozen APIs | compile gates | projection compatibility | `COMPILE_GATED` | `VERIFIED BY COMPILE GATES` |
-| `K9-008` | K9 preserves frozen boundaries and remains infrastructure-free. | `docs/kernel-architecture/01-kernel-overview.md` §6-§9 | `docs/kernel-architecture/16-traceability.md` §5-§7 | conformance coverage only | K1-K8 frozen APIs | static audit | no infrastructure leakage | `STATIC_AUDIT` | `VERIFIED BY STATIC AUDIT` |
+| `K9-001` | Memory identity and references remain canonical and storage-independent. | `docs/kernel-architecture/10-memory-architecture.md` §5 | `docs/kernel-architecture/16-traceability.md` §4 | `MemoryRecordId`, `MemoryRecordReference`, `MemoryAuditReference` | K1 identifiers | native tests | construction and identity | `NATIVE_TESTED` | `VERIFIED` |
+| `K9-002` | Memory records preserve explicit provenance over accepted enterprise facts. | `docs/kernel-architecture/10-memory-architecture.md` §6 | inherited K5-K8 traceability | `MemoryRecord`, `MemoryProvenance`, `MemoryCaptureRequest`, `MemoryCaptureDecision` | K5 events, K6 workflows, K7 tasks, K8 execution | native tests | provenance and continuity | `NATIVE_TESTED` | `VERIFIED` |
+| `K9-003` | Memory classification remains explicit and governed. | `docs/kernel-architecture/10-memory-architecture.md` §7 | `docs/kernel-architecture/01-kernel-overview.md` §6 | `MemoryClassification`, `MemoryRejectionReason` | K1-K3 governance vocabulary | native tests | classification invariants | `NATIVE_TESTED` | `VERIFIED` |
+| `K9-004` | Memory relationships remain explicit and non-hidden. | `docs/kernel-architecture/10-memory-architecture.md` §8 | `docs/kernel-architecture/16-traceability.md` §4 | `MemoryRelationship`, `MemoryRelationshipRequest` | K5-K8 references | native tests | relationship validation | `NATIVE_TESTED` | `VERIFIED` |
+| `K9-005` | Retention remains explicit and audit-compatible. | `docs/kernel-architecture/10-memory-architecture.md` §9 | `docs/kernel-architecture/01-kernel-overview.md` §6 | `MemoryRetentionPolicyReference`, `MemoryRetentionDecision` | K1 value contracts, K3 governance | native tests | retention validation | `NATIVE_TESTED` | `VERIFIED` |
+| `K9-006` | Retrieval remains deterministic and authorization-aware. | `docs/kernel-architecture/10-memory-architecture.md` §10 | `docs/kernel-architecture/11-api-gateway-architecture.md` §8-§9 | `MemoryRetrievalRequest`, `MemoryRetrievalResult`, `MemoryQuery`, `MemoryQueryResult` | K3 authorization context, K5-K8 provenance references | native tests | retrieval determinism | `NATIVE_TESTED` | `VERIFIED` |
+| `K9-007` | Memory prepares read-only outputs for later API and Studio consumption. | `docs/kernel-architecture/10-memory-architecture.md` §12-§13 | `docs/kernel-architecture/12-studio-integration-architecture.md` §7-§10 | `MemoryProjection`, `WorkflowMemoryProjection`, `TaskMemoryProjection`, `ExecutionMemoryProjection`, `RuntimeMemoryProjection` | K4-K8 frozen APIs | compile gates | projection compatibility | `COMPILE_GATED` | `VERIFIED` |
+| `K9-008` | K9 preserves frozen boundaries and remains infrastructure-free. | `docs/kernel-architecture/01-kernel-overview.md` §6-§9 | `docs/kernel-architecture/16-traceability.md` §5-§7 | conformance coverage only | K1-K8 frozen APIs | static audit | no infrastructure leakage | `STATIC_AUDIT` | `VERIFIED` |
 
 ## K9 Implementation Assertions
 
@@ -203,3 +203,10 @@ INTERNAL
 - Public API changed: `YES — ADDITIVE K9 API ONLY`
 - Architecture changed: `NO`
 - ADR required: `NO`
+
+## K9 Deferred Requirements
+
+| Kernel requirement | Status | Notes |
+| --- | --- | --- |
+| `K9-009` | `DEFERRED` | Direct K9 CES specification package remains repository-local partial / inherited only. |
+| `K9-010` | `DEFERRED` | Operational memory infrastructure remains outside K9 domain scope. |

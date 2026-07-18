@@ -36,13 +36,13 @@ INTERNAL
 - Additive `MemoryRetrievalRequest`, `MemoryRetrievalResult`, `MemoryQuery`, and `MemoryQueryResult`
 - Additive `MemoryProjection`, `WorkflowMemoryProjection`, `TaskMemoryProjection`, `ExecutionMemoryProjection`, and `RuntimeMemoryProjection`
 - Deterministic K9 unit coverage over identity, provenance, classification, relationships, retention, retrieval, projections, and architecture boundaries
-- K9 implementation evidence recorded with compile validation passed and API freeze deferred pending authoritative host-native rerun
+- K9 documentation closure, authoritative native verification record, backlog closure, and API freeze for K10 consumption
 
 ### Validation
 
-- Authoritative K8 native baseline remains `790 passed`, `0 failed`, `0 ignored`, `0 measured`, `0 filtered out`, exit code `0`
+- Authoritative K9 host-native verification passed with `827 passed`, `0 failed`, `0 ignored`, `0 measured`, `0 filtered out`, exit code `0`
 - Codex implementation gates passed for `cargo fmt --all -- --check`, `cargo check --workspace --all-targets`, `cargo check --workspace --all-features --all-targets`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo clippy --workspace --all-features --all-targets -- -D warnings`, `cargo doc --workspace --no-deps`, `cargo test --doc`, and `git diff --check`
-- Native `cargo test --workspace --all-targets` is blocked in Codex by `linker cc not found (os error 2)`
+- Canonical host-native `cargo test --workspace --all-targets` is authoritative for K9 closure
 
 ### Boundaries
 
@@ -63,7 +63,6 @@ INTERNAL
 
 - Authoritative host-native verification passed with `790 passed`, `0 failed`, `0 ignored`, `0 measured`, `0 filtered out`, exit code `0`
 - Compile validation passed for `cargo fmt --all -- --check`, `cargo check --workspace --all-targets`, `cargo check --workspace --all-features --all-targets`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo clippy --workspace --all-features --all-targets -- -D warnings`, `cargo doc --workspace --no-deps`, `cargo test --doc`, and `git diff --check`
-- Historical Codex linker isolation remains non-authoritative environment context only
 
 ### Boundaries
 

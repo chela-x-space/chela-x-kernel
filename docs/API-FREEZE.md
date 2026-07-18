@@ -200,14 +200,14 @@ The frozen additive K8 execution-domain API covers:
 
 ### Status Statement
 
-`NOT YET FROZEN`
+`FROZEN FOR K10 CONSUMPTION`
 
 ### K9 Review State
 
 - Implementation status: `COMPLETE`
 - Architecture review: `PASSED`
 - Compile validation status: `PASSED`
-- Native verification status: `BLOCKED — PRIMARY HOST RERUN REQUIRED`
+- Native verification status: `PASSED`
 - Public API inventory: `RECORDED`
 - Compatibility status: `K1-K8 PRESERVED; K9 ADDITIVE`
 - Architecture Freeze: `PRESERVED`
@@ -245,7 +245,15 @@ The additive K9 memory-domain API currently covers:
 - Public API inventory is recorded in `docs/API.md`.
 - Architecture review passed without redesign, dependency-direction change, or ADR requirement.
 - K1-K8 API compatibility is preserved and K9 public API is additive only.
-- Native host verification has not yet been rerun for K9 in this Codex change set.
+- Native verification passed on the primary host on Saturday, July 18, 2026.
+- `cargo test --workspace --all-targets` result: `827 passed`, `0 failed`, `0 ignored`, `0 measured`, `0 filtered out`, exit code `0`.
+
+### K9 Change Policy
+
+Breaking K9 public API or semantic changes after freeze require:
+
+- Approved ADR
+- Compatibility Review
 
 ### K9 Non-Features
 

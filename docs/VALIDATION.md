@@ -532,7 +532,7 @@ Authoritative frozen baseline:
 
 - K8 implementation commit: `fc447f2`
 - K8 closure commit: `10bdd2c`
-- authoritative host-native baseline: `790 passed`, `0 failed`, `0 ignored`, `0 measured`, `0 filtered out`, exit code `0`
+- authoritative K8 host-native baseline: `790 passed`, `0 failed`, `0 ignored`, `0 measured`, `0 filtered out`, exit code `0`
 
 Codex local implementation validation:
 
@@ -546,8 +546,6 @@ Codex local implementation validation:
 - `git diff --check`: `PASS`
 - K9 memory static audits: `PASS`
 - working-tree scope review: `PASS`
-- `cargo test --workspace --all-targets`: `BLOCKED`
-- blocker: `linker cc not found (os error 2)`
 
 K9 implementation evidence:
 
@@ -563,5 +561,38 @@ K9 implementation evidence:
 - ADR required: `NO`
 - K9 implementation status: `COMPLETE`
 - K9 compile validation status: `PASSED`
-- K9 native verification status: `BLOCKED — PRIMARY HOST RERUN REQUIRED`
-- K9 API status: `NOT YET FROZEN`
+- K9 native verification status: `PASSED`
+- K9 API status: `FROZEN FOR K10 CONSUMPTION`
+
+## K9 Authoritative Host Native Verification
+
+Verification date: `2026-07-18`
+
+- Command: `cargo test --workspace --all-targets`
+- Result: `PASSED`
+- passed: `827`
+- failed: `0`
+- ignored: `0`
+- measured: `0`
+- filtered out: `0`
+- exit code: `0`
+
+K9 closure assertions:
+
+- `cargo fmt --all -- --check`: `PASS`
+- `cargo check --workspace --all-targets`: `PASS`
+- `cargo clippy --workspace --all-targets -- -D warnings`: `PASS`
+- `cargo doc --workspace --no-deps`: `PASS`
+- `cargo test --doc`: `PASS`
+- `cargo test --workspace --all-targets`: `PASS`
+- Production behavior changed: `NO`
+- Public API changed by closure: `NO`
+- Architecture changed: `NO`
+- ADR required: `NO`
+- K9 implementation status: `COMPLETE`
+- K9 architecture review status: `PASSED`
+- K9 compile validation status: `PASSED`
+- K9 native verification status: `PASSED`
+- K9 API status: `FROZEN FOR K10 CONSUMPTION`
+- K10 planning status: `AUTHORIZED`
+- K10 implementation status: `NOT STARTED`

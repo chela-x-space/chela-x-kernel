@@ -8,9 +8,10 @@ IMPLEMENTATION COMPLETE
 - `K9 ARCHITECTURE REVIEW: PASSED`
 - `K9 IMPLEMENTATION: COMPLETE`
 - `K9 COMPILE VALIDATION: PASSED`
-- `K9 NATIVE VERIFICATION: BLOCKED — PRIMARY HOST RERUN REQUIRED`
-- `K9 API: NOT YET FROZEN`
-- `K10 IMPLEMENTATION: NOT AUTHORIZED`
+- `K9 NATIVE VERIFICATION: PASSED`
+- `K9 API: FROZEN FOR K10 CONSUMPTION`
+- `K10 PLANNING: AUTHORIZED`
+- `K10 IMPLEMENTATION: NOT STARTED`
 
 ## Backlog Items
 
@@ -22,7 +23,7 @@ IMPLEMENTATION COMPLETE
 - Expected result: canonical memory identity and reference vocabulary
 - Validation method: native tests, compile gates, static identity audit
 - Acceptance criteria: stable identity, deterministic equality, no storage coupling
-- Status: `COMPLETE`
+- Status: `VERIFIED`
 
 ### K9-002
 - Title: `Memory Record And Provenance Model`
@@ -32,7 +33,7 @@ IMPLEMENTATION COMPLETE
 - Expected result: immutable memory record preserving provenance
 - Validation method: native tests, compile gates
 - Acceptance criteria: provenance mandatory, identity continuity preserved, no hidden lookup
-- Status: `COMPLETE`
+- Status: `VERIFIED`
 
 ### K9-003
 - Title: `Memory Classification Contracts`
@@ -42,7 +43,7 @@ IMPLEMENTATION COMPLETE
 - Expected result: explicit classification and visibility metadata
 - Validation method: native tests, compile gates
 - Acceptance criteria: classification mandatory, deterministic rejection for missing or contradictory classification
-- Status: `COMPLETE`
+- Status: `VERIFIED`
 
 ### K9-004
 - Title: `Memory Relationship Contracts`
@@ -52,7 +53,7 @@ IMPLEMENTATION COMPLETE
 - Expected result: explicit record-to-entity relationships
 - Validation method: native tests, static audits
 - Acceptance criteria: relationships explicit, no hidden references, no graph runtime
-- Status: `COMPLETE`
+- Status: `VERIFIED`
 
 ### K9-005
 - Title: `Memory Retention Contracts`
@@ -62,7 +63,7 @@ IMPLEMENTATION COMPLETE
 - Expected result: explicit retention references and validation rules
 - Validation method: native tests, compile gates
 - Acceptance criteria: retention present where required, deterministic rejection for invalid retention combinations
-- Status: `COMPLETE`
+- Status: `VERIFIED`
 
 ### K9-006
 - Title: `Memory Retrieval Query Contracts`
@@ -72,7 +73,7 @@ IMPLEMENTATION COMPLETE
 - Expected result: deterministic retrieval request and result contracts
 - Validation method: native tests, compile gates
 - Acceptance criteria: equivalent inputs produce equivalent outputs, no storage or transport implementation
-- Status: `COMPLETE`
+- Status: `VERIFIED`
 
 ### K9-007
 - Title: `Memory Projection And Dashboard Readiness`
@@ -82,7 +83,7 @@ IMPLEMENTATION COMPLETE
 - Expected result: read-only memory projections for later API and Studio consumption
 - Validation method: compile gates, static audits
 - Acceptance criteria: projection contracts remain read-only, dashboard-facing outputs derived from canonical records only
-- Status: `COMPLETE`
+- Status: `VERIFIED`
 
 ### K9-008
 - Title: `Boundary And Compatibility Conformance`
@@ -92,7 +93,7 @@ IMPLEMENTATION COMPLETE
 - Expected result: K9 remains additive and infrastructure-free
 - Validation method: native tests, compile gates, static audits
 - Acceptance criteria: no runtime orchestration, no transport, no persistence, no K1-K8 breakage
-- Status: `COMPLETE`
+- Status: `VERIFIED`
 
 ### K9-009
 - Title: `Authoritative Direct K9 CES Specification Package`
@@ -112,4 +113,4 @@ IMPLEMENTATION COMPLETE
 - Expected result: none; persistence, transport, search, and runtime services remain excluded
 - Validation method: static audit ensuring absence
 - Acceptance criteria: not planned inside K9 domain milestone
-- Status: `OUT_OF_SCOPE`
+- Status: `DEFERRED`

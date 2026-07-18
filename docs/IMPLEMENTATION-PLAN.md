@@ -141,8 +141,8 @@ K8 implementation constraints preserved:
 - Architecture review status: `PASSED`
 - Implementation status: `COMPLETE`
 - Compile validation status: `PASSED`
-- Native verification status: `BLOCKED — PRIMARY HOST RERUN REQUIRED`
-- API status: `NOT YET FROZEN`
+- Native verification status: `PASSED`
+- API status: `FROZEN FOR K10 CONSUMPTION`
 - Implementation crate: `crates/kernel-domain`
 - Implemented scope: additive memory-domain contracts, retrieval contracts, and read-only projections only
 - ADR status from current repository evidence: `NOT REQUIRED`
@@ -152,7 +152,8 @@ K9 implementation constraints preserved:
 - K9 consumes frozen K1-K8 contracts additively.
 - K9 remains in `kernel-domain`; no application-service, runtime, API, or frontend crate is introduced in this milestone.
 - K9 does not create runtime orchestration, storage, transport, dashboard UI, or API Gateway behavior.
-- K10 implementation remains unauthorized.
+- K10 planning is authorized.
+- K10 implementation is not started.
 
 Before `K7-001` Rust implementation begins, the K7 specification package MUST receive an architecture review confirming:
 
