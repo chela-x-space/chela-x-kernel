@@ -68,7 +68,7 @@ This breakdown is an implementation tracking document only. It does not create a
 
 ## Next Approved Milestone
 
-`No subsequent milestone is authorized in this plan revision`
+`K8 Planning Only`
 
 ## K7 Current Milestone State
 
@@ -102,7 +102,24 @@ K7 closure summary:
 - K7 implementation status: `COMPLETE`
 - K7 architecture review status: `PASSED`
 - K7 native verification status: `PASSED`
-- K8 authorized: `NO`
+- K8 implementation authorized: `NO`
+
+## K8 Planning State
+
+- Exact title: `K8 Execution Engine`
+- Planning status: `AUTHORIZED`
+- Architecture review status: `PENDING HUMAN REVIEW`
+- Implementation status: `NOT AUTHORIZED`
+- Planned crate: `crates/kernel-domain`
+- Planned scope: additive execution-domain contracts only
+- Planned public API status: `NOT STARTED`
+- ADR status from current repository evidence: `NOT REQUIRED`
+
+K8 planning constraints:
+
+- K8 must consume frozen K1-K7 contracts additively.
+- K8 must not create runtime infrastructure, scheduler, worker, queue, transport, filesystem, network, or database behavior.
+- K8 planning may update documentation only until explicit implementation authorization is granted.
 
 Before `K7-001` Rust implementation begins, the K7 specification package MUST receive an architecture review confirming:
 
@@ -124,5 +141,7 @@ Before `K7-001` Rust implementation begins, the K7 specification package MUST re
 - [API-FREEZE.md](./API-FREEZE.md)
 - [plans/K6-IMPLEMENTATION-PLAN.md](./plans/K6-IMPLEMENTATION-PLAN.md)
 - [plans/K7-IMPLEMENTATION-PLAN.md](./plans/K7-IMPLEMENTATION-PLAN.md)
+- [plans/K8-IMPLEMENTATION-PLAN.md](./plans/K8-IMPLEMENTATION-PLAN.md)
 - [backlog/K6-BACKLOG.md](./backlog/K6-BACKLOG.md)
 - [backlog/K7-BACKLOG.md](./backlog/K7-BACKLOG.md)
+- [backlog/K8-BACKLOG.md](./backlog/K8-BACKLOG.md)

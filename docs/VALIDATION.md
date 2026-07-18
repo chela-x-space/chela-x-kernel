@@ -453,3 +453,44 @@ Audit date: `2026-07-18`
 - Duplicate lifecycle vocabulary audit over `crates/kernel-domain/src/task`: `PASS`
 - Runtime facade audit over `crates/kernel-domain/src/task`: `PASS`
 - Cross-concern mutation audit over `crates/kernel-domain/src/task`: `PASS`
+
+## K8 Planning Validation
+
+Validation date: `2026-07-18`
+
+Authoritative K7 native baseline from the primary machine:
+
+- `cargo test --workspace --all-targets`: `PASSED`
+- passed: `765`
+- failed: `0`
+- ignored: `0`
+- measured: `0`
+- filtered out: `0`
+- exit code: `0`
+
+Codex documentation-planning validation:
+
+- `cargo fmt --all -- --check`: `PASS`
+- `cargo check --workspace --all-targets`: `PASS`
+- `git diff --check`: `PASS`
+- documentation static review: `PASS`
+- working-tree scope review: `PASS`
+- `cargo test --workspace --all-targets`: `NOT AVAILABLE`
+- blocker: `linker cc not found (os error 2)`
+
+Environment classification:
+
+- `CODEX ENVIRONMENT LIMITATION: CONFIRMED`
+- `REPOSITORY BASELINE FAILURE: NO`
+- `K7 NATIVE VERIFICATION REGRESSION: NO`
+
+K8 planning closure assertions:
+
+- K7 remains closed and frozen on the authoritative host baseline.
+- K8 planning is documentation-only in this change set.
+- Production source changed: `NO`
+- Tests changed: `NO`
+- Public API changed: `NO`
+- Architecture changed: `NO`
+- ADR required: `NO`
+- K8 implementation authorized: `NO`

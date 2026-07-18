@@ -27,6 +27,28 @@ Kernel Platform Team
 ## Classification
 INTERNAL
 
+## K8 Planning
+
+### Added
+
+- Planning package for `K8 Execution Engine` based on the frozen execution architecture, roadmap, and traceability chapters
+- Repository-local K8 planning traceability over execution request, context, session, outcome, evidence, retry-eligibility, audit compatibility, and boundary conformance requirements
+- K8 backlog covering planned execution-domain contracts plus deferred CES specification packaging and explicit out-of-scope infrastructure exclusions
+
+### Validation
+
+- Authoritative K7 native baseline remains `765 passed`, `0 failed`, `0 ignored`, `0 measured`, `0 filtered out`, exit code `0`
+- Codex documentation-planning gates passed for `cargo fmt --all -- --check`, `cargo check --workspace --all-targets`, and `git diff --check`
+- Local native rerun remains blocked by missing linker `cc` and is classified as a non-repository environment limitation
+
+### Boundaries
+
+- No production Rust source changes
+- No test changes
+- No public API changes
+- No architecture change
+- No scheduler, worker, queue, transport, filesystem, network, or database planning inside `kernel-domain`
+
 ## K7 Task Engine
 
 ### Added
