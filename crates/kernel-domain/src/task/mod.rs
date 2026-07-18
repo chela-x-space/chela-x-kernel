@@ -10,6 +10,12 @@ mod instance;
 mod instance_binding;
 mod instance_validation;
 mod instance_value;
+mod lifecycle;
+mod lifecycle_decision;
+mod lifecycle_guard;
+mod lifecycle_request;
+mod lifecycle_transition;
+mod lifecycle_validation;
 mod ownership;
 mod priority;
 mod readiness;
@@ -41,6 +47,14 @@ pub use instance_value::{
     TaskDefinitionSnapshotReference, TaskInputBinding, TaskOutputBinding, TaskState,
     TaskStepBinding,
 };
+pub use lifecycle::{TaskFailureCategory, TaskFailureCode, TaskStateSnapshot};
+pub use lifecycle_decision::{
+    TaskAllowedTransition, TaskNoOpTransition, TaskRejectedTransition, TaskTransitionDecision,
+    TaskTransitionRejectionReason,
+};
+pub use lifecycle_guard::TaskLifecycleGuards;
+pub use lifecycle_request::TaskTransitionRequest;
+pub use lifecycle_validation::TaskTransitionControl;
 pub use ownership::{TaskOwnership, TaskOwnershipAuthority, TaskOwnershipScope};
 pub use priority::{TaskPriority, TaskPriorityClass, TaskPriorityValue};
 pub use readiness::{
@@ -68,6 +82,16 @@ mod assignment_tests;
 mod definition_tests;
 #[cfg(test)]
 mod instance_tests;
+#[cfg(test)]
+mod lifecycle_allowed_tests;
+#[cfg(test)]
+mod lifecycle_noop_tests;
+#[cfg(test)]
+mod lifecycle_rejected_tests;
+#[cfg(test)]
+mod lifecycle_separation_tests;
+#[cfg(test)]
+mod lifecycle_test_support;
 #[cfg(test)]
 mod ownership_tests;
 #[cfg(test)]

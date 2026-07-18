@@ -37,11 +37,13 @@ INTERNAL
 - Immutable K7-003 task-instance model covering definition snapshot binding, explicit creation context, validated input and output bindings, optional workflow and step bindings, and explicit initial `Pending` state representation
 - Deterministic K7-004 task-ownership and task-assignment model covering explicit accountable owner binding, explicit assignee binding, authority-scoped assignment requests, no-op or rejection outcomes, and K3 or K4 fact consumption without execution behavior
 - Deterministic K7-005 task-priority and task-readiness model covering immutable task-priority binding, validated explicit priority class and value construction, pure readiness evaluation over explicit lifecycle, ownership, assignment, authorization, dependency, and evidence facts, and stable blocked or rejected outcomes without scheduler semantics
+- Deterministic K7-006 task-lifecycle and task-state model covering immutable lifecycle snapshots, sequence-aware transition requests, canonical transition map validation, readiness-gated start semantics, explicit completion and failure guard facts, and pure allowed, rejected, or no-op outcomes without runtime orchestration
 - Deterministic K7-001 unit coverage for immutable value semantics, identity separation, and reference preservation
 - Deterministic K7-002 unit coverage for definition construction, duplicate rejection, workflow-binding validation, field preservation, and immutable ordering
 - Deterministic K7-003 unit coverage for definition snapshot preservation, input validation, workflow and step binding validation, explicit initial state, and immutable instance creation
 - Deterministic K7-004 unit coverage for ownership preservation, assignment no-op or rejection outcomes, reassignment history preservation, explicit authority handling, and lifecycle separation
 - Deterministic K7-005 unit coverage for priority ordering, readiness blockers, readiness-versus-lifecycle separation, readiness-versus-assignment separation, contradiction rejection, and non-scheduler guarantees
+- Deterministic K7-006 unit coverage for every approved lifecycle edge, sequence mismatch rejection, terminal-state protection, no-op semantics, readiness integration, and separation from assignment, ownership, priority, and runtime concerns
 
 ### Boundaries
 

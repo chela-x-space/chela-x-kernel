@@ -116,7 +116,7 @@ NOT ESTABLISHED
   - no agent-capacity claims
 
 ### K7-006 Task Lifecycle And State
-- Status: `READY FOR IMPLEMENTATION`
+- Status: `DONE — REVIEW PASSED`
 - Purpose: define canonical task lifecycle and deterministic transition control
 - Source specification: `docs/specifications/K7.6-task-lifecycle-and-state.md`
 - Dependencies: K7-005
@@ -135,7 +135,7 @@ NOT ESTABLISHED
   - K2 workflow semantics unchanged
 
 ### K7-007 Task Dependency Coordination
-- Status: `BLOCKED BY K7-006`
+- Status: `READY FOR IMPLEMENTATION`
 - Purpose: define deterministic task-to-task dependency coordination
 - Source specification: `docs/specifications/K7.7-task-dependency-coordination.md`
 - Dependencies: K7-006
@@ -221,4 +221,5 @@ K7-002 is implemented, review-passed, and pending native validation in a linker-
 K7-003 is implemented, review-passed, and pending native validation in a linker-capable environment.
 K7-004 is implemented, review-passed, and pending native validation in a linker-capable environment.
 K7-005 is implemented, review-passed, and pending native validation in a linker-capable environment.
-K7-006 is the next authorized implementation slice.
+K7-006 is implemented, review-passed, and pending native validation in a linker-capable environment.
+K7-007 is the next authorized implementation slice.

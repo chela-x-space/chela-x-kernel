@@ -29,7 +29,7 @@ INTERNAL
 
 ## Purpose And Scope
 
-This document records the current public K6 workflow API and the additive K7.1 through K7.5 task-domain APIs exposed from `crates/kernel-domain/src/lib.rs`. K6 remains frozen. K7-001 through K7-005 are implemented and not frozen.
+This document records the current public K6 workflow API and the additive K7.1 through K7.6 task-domain APIs exposed from `crates/kernel-domain/src/lib.rs`. K6 remains frozen. K7-001 through K7-006 are implemented and not frozen.
 
 ## K6 Public API Surface
 
@@ -684,6 +684,98 @@ Important non-goals:
 - No worker, executor, or capacity semantics
 - No lifecycle transition engine
 
+### Task Lifecycle And State Types
+
+API status:
+
+- `IMPLEMENTED — REVIEW PASSED`
+- `NOT FROZEN`
+
+Types:
+
+- `TaskStateSnapshot`
+- `TaskFailureCode`
+- `TaskFailureCategory`
+- `TaskLifecycleGuards`
+- `TaskTransitionRequest`
+- `TaskTransitionRejectionReason`
+- `TaskAllowedTransition`
+- `TaskRejectedTransition`
+- `TaskNoOpTransition`
+- `TaskTransitionDecision`
+- `TaskTransitionControl`
+
+Construction and evaluation entry points:
+
+- `TaskStateSnapshot::new(task_instance_reference: TaskInstanceReference, task_state: TaskState, state_sequence: StateSequence) -> Self`
+- `TaskFailureCode::new(value: impl Into<String>) -> DomainResult<Self>`
+- `TaskFailureCategory::new(value: impl Into<String>) -> DomainResult<Self>`
+- `TaskLifecycleGuards::new(...) -> Self`
+- `TaskTransitionRequest::new(...) -> DomainResult<Self>`
+- `TaskTransitionControl::evaluate(request: &TaskTransitionRequest) -> TaskTransitionDecision`
+
+Principal accessors:
+
+- `TaskStateSnapshot::{task_instance_reference, task_state, state_sequence}`
+- `TaskFailureCode::as_str(&self) -> &str`
+- `TaskFailureCategory::as_str(&self) -> &str`
+- `TaskLifecycleGuards::{expected_current_sequence, assignment_required, authorization_allowed, dependencies_satisfied, completion_conditions_met, required_outputs_present, required_completion_evidence_present, required_failure_evidence_present, failure_code, failure_category}`
+- `TaskTransitionRequest::{current_task_state_snapshot, requested_target_task_state, transition_reason_reference, transition_authority_reference, transition_evidence_references, task_readiness_decision, task_assignment, task_lifecycle_guards}`
+- `TaskAllowedTransition::{previous_task_state_snapshot, current_task_state_snapshot, transition_reason_reference, transition_authority_reference, transition_evidence_references}`
+- `TaskRejectedTransition::{current_task_state_snapshot, requested_target_task_state, reason}`
+- `TaskNoOpTransition::current_task_state_snapshot(&self) -> &TaskStateSnapshot`
+
+Allowed transitions:
+
+- `Pending -> InProgress`
+- `Pending -> Cancelled`
+- `InProgress -> Completed`
+- `InProgress -> Failed`
+- `InProgress -> Cancelled`
+- `Completed -> Archived`
+- `Failed -> Archived`
+- `Cancelled -> Archived`
+
+Rejected transitions:
+
+- Illegal edges return `TaskTransitionRejectionReason::IllegalTransition`
+- `Archived -> *` returns `TaskTransitionRejectionReason::TerminalState`
+- Operational transitions from `Completed`, `Failed`, or `Cancelled` return `TaskTransitionRejectionReason::TerminalState`
+- Sequence mismatch returns `TaskTransitionRejectionReason::SequenceMismatch`
+- Missing cancellation authority or archival authority returns `TaskTransitionRejectionReason::MissingAuthority`
+- Missing cancellation reason returns `TaskTransitionRejectionReason::MissingReason`
+- Missing completion or failure evidence returns `TaskTransitionRejectionReason::MissingEvidence`
+- Start without supplied `Ready` readiness returns `TaskTransitionRejectionReason::ReadinessNotSatisfied`
+
+Deterministic behavior:
+
+- Lifecycle snapshot preserves explicit `TaskInstanceReference`, `TaskState`, and `StateSequence`
+- Same-state requests return `NoOp`
+- Allowed transitions advance sequence exactly once
+- Rejected transitions preserve the supplied snapshot and requested target state
+- Transition control consumes explicit readiness, assignment, and lifecycle facts only
+- No hidden lookup, scheduling, execution, persistence, publication, clock access, or randomness occurs
+
+Validation boundaries:
+
+- Duplicate transition evidence references are rejected at request construction
+- Start requires explicit supplied readiness `Ready`
+- Start requires accepted assignment only when assignment is explicitly required by the supplied lifecycle guards
+- Start requires explicit authorization and dependency satisfaction facts from the supplied lifecycle guards
+- Completion requires explicit completion conditions, outputs, and evidence facts
+- Failure requires explicit stable failure code, deterministic failure category, and failure evidence fact
+- Cancellation requires explicit authority and reason
+- Archival requires explicit authority
+
+Important non-goals:
+
+- No dependency coordination or graph traversal
+- No readiness evaluation inside transition control
+- No assignment mutation or ownership mutation
+- No completion record storage
+- No failure record storage
+- No runtime orchestration or execution start
+
 ### Failure-And-Recovery Types
 
 Types:
@@ -736,6 +828,7 @@ Public variants:
 
 - `DomainError::InvalidTaskDefinition(&'static str)`
 - `DomainError::InvalidTaskInstance(&'static str)`
+- `DomainError::InvalidTaskLifecycle(&'static str)`
 - `DomainError::InvalidTaskPriority(&'static str)`
 - `DomainError::InvalidTaskReadiness(&'static str)`
 - `DomainError::InvalidTaskOwnership(&'static str)`
