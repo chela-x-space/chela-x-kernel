@@ -1,0 +1,20 @@
+[package]
+name = "kernel-adapter"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+kernel-service = { path = "../kernel-service" }
+
+# Test-only lower-layer fixtures are required because kernel-adapter stays
+# above kernel-service and cannot reuse lower crates' private test support.
+[dev-dependencies]
+kernel-domain = { path = "../kernel-domain" }
+kernel-gateway = { path = "../kernel-gateway" }
+kernel-studio = { path = "../kernel-studio" }
+kernel-application = { path = "../kernel-application" }
+

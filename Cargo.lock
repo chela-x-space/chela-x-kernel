@@ -3,6 +3,17 @@
 version = 4
 
 [[package]]
+name = "kernel-adapter"
+version = "0.1.0"
+dependencies = [
+ "kernel-application",
+ "kernel-domain",
+ "kernel-gateway",
+ "kernel-service",
+ "kernel-studio",
+]
+
+[[package]]
 name = "kernel-application"
 version = "0.1.0"
 dependencies = [
