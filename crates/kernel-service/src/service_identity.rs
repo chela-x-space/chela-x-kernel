@@ -1,6 +1,8 @@
 use crate::service_capability::ServiceCapabilityReference;
 use crate::service_error::{ServiceErrorCode, ServiceResult};
-use crate::service_validation::{reject_duplicates, validate_namespaced_identifier, validate_version_reference};
+use crate::service_validation::{
+    reject_duplicates, validate_namespaced_identifier, validate_version_reference,
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ServiceIdentityKind {

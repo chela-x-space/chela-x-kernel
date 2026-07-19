@@ -1,9 +1,7 @@
 use crate::service_test_support::{
     service_api_version, service_command_capability, service_query_capability,
 };
-use crate::{
-    ServiceCapabilityDeclaration, ServiceErrorCode, ServiceIdentity, ServiceIdentityKind,
-};
+use crate::{ServiceCapabilityDeclaration, ServiceErrorCode, ServiceIdentity, ServiceIdentityKind};
 
 #[test]
 fn service_identity_constructs_valid_namespaced_contract_k13_002() {

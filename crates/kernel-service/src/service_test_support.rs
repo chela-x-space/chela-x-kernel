@@ -12,24 +12,24 @@ use kernel_domain::{
     AuthorizationPrincipalReference, AuthorizationPrincipalType, AuthorizationRequestId,
     AuthorizationRequestRecord, AuthorizationSubject, AuthorizationTarget, CorrelationId,
     CredentialStatusReference, EnterpriseId, EventTraceReference, ExecutionSessionId,
-    MatchedPolicyEvidenceReference, MemoryAuditReference,
-    MemoryCaptureRequest, MemoryClassification, MemoryProvenance, MemoryRecord, MemoryRecordId,
-    MemoryRecordReference, MemoryRetentionPolicyReference, PermissionEffectIntent, PermissionId,
-    PermissionReference, PolicyId, PrincipalId, PrincipalLifecycleStateReference, ProjectId,
-    ResourceType, ScopeId, ScopeLevel, ScopeReference, TimeReference, WorkflowId, WorkspaceId,
+    MatchedPolicyEvidenceReference, MemoryAuditReference, MemoryCaptureRequest,
+    MemoryClassification, MemoryProvenance, MemoryRecord, MemoryRecordId, MemoryRecordReference,
+    MemoryRetentionPolicyReference, PermissionEffectIntent, PermissionId, PermissionReference,
+    PolicyId, PrincipalId, PrincipalLifecycleStateReference, ProjectId, ResourceType, ScopeId,
+    ScopeLevel, ScopeReference, TimeReference, WorkflowId, WorkspaceId,
 };
 use kernel_gateway::{
     GatewayApiVersion, GatewayAuditReference, GatewayAuthenticationContext,
     GatewayAuthorizationBinding, GatewayCommandPayload, GatewayCommandRequest,
-    GatewayOperationKind, GatewayOperationReference, GatewayProtocol,
-    GatewayQueryPayload, GatewayQueryRequest, GatewayQueryResponse, GatewayRequestContext,
-    GatewayRequestEnvelope, GatewayResponseEnvelope, GatewayStatusSnapshot,
+    GatewayOperationKind, GatewayOperationReference, GatewayProtocol, GatewayQueryPayload,
+    GatewayQueryRequest, GatewayQueryResponse, GatewayRequestContext, GatewayRequestEnvelope,
+    GatewayResponseEnvelope, GatewayStatusSnapshot,
 };
 use kernel_studio::{
     StudioApiVersion, StudioAttentionState, StudioAuditReference, StudioCommandRequest,
-    StudioFilterContext, StudioNavigationReference, StudioSelectionContext, StudioTopViewProjection,
-    StudioViewKind, StudioViewProjection, StudioViewReference, StudioViewRequest,
-    StudioViewResponse,
+    StudioFilterContext, StudioNavigationReference, StudioSelectionContext,
+    StudioTopViewProjection, StudioViewKind, StudioViewProjection, StudioViewReference,
+    StudioViewRequest, StudioViewResponse,
 };
 
 use crate::{
@@ -473,6 +473,10 @@ pub fn application_request_id() -> ApplicationRequestId {
     ApplicationRequestId::new("application.request.000001").expect("request id")
 }
 
+pub fn other_application_request_id() -> ApplicationRequestId {
+    ApplicationRequestId::new("application.request.000002").expect("request id")
+}
+
 pub fn application_command_capability() -> ApplicationCapabilityReference {
     ApplicationCapabilityReference::new("application.command").expect("capability")
 }
@@ -487,7 +491,10 @@ pub fn application_identity() -> ApplicationIdentity {
         ApplicationIdentityKind::ExternalApplication,
         "application.integration",
         "2026.07.19",
-        vec![application_command_capability(), application_query_capability()],
+        vec![
+            application_command_capability(),
+            application_query_capability(),
+        ],
         Some("application.environment.primary".to_owned()),
     )
     .expect("identity")
@@ -496,7 +503,10 @@ pub fn application_identity() -> ApplicationIdentity {
 pub fn application_capability_declaration() -> ApplicationCapabilityDeclaration {
     ApplicationCapabilityDeclaration::new(
         application_api_version(),
-        vec![application_command_capability(), application_query_capability()],
+        vec![
+            application_command_capability(),
+            application_query_capability(),
+        ],
         vec![studio_view_reference(StudioViewKind::TopView)],
         true,
         true,
@@ -592,6 +602,35 @@ pub fn application_query_intent() -> ApplicationQueryIntent {
     .expect("query intent")
 }
 
+pub fn alternate_application_query_intent() -> ApplicationQueryIntent {
+    ApplicationQueryIntent::new(
+        ApplicationRequestContext::new(
+            application_api_version(),
+            other_application_request_id(),
+            application_identity(),
+            application_capability_declaration(),
+            gateway_authentication_context(),
+            authorization_binding(
+                "gateway",
+                "gateway.status",
+                ownership_path(),
+                AuthorizationDecisionOutcome::Allow,
+            ),
+            studio_selection_context(),
+            Some(application_session_reference()),
+            correlation_id(),
+            Some(EventTraceReference::new("application.cause.trace.000001").expect("cause")),
+            time_reference(),
+            application_audit_reference(),
+        )
+        .expect("context"),
+        application_query_capability(),
+        application_view_intent(),
+        studio_view_request(),
+    )
+    .expect("query intent")
+}
+
 pub fn application_command_intent() -> ApplicationCommandIntent {
     ApplicationCommandIntent::new(
         command_application_request_context(),
@@ -608,6 +647,17 @@ pub fn application_query_request_envelope() -> ApplicationRequestEnvelope {
 pub fn application_query_response_envelope() -> ApplicationResponseEnvelope {
     ApplicationResponseEnvelope::new(
         &application_query_request_envelope(),
+        ApplicationResponsePayload::View(Box::new(studio_view_response())),
+        ApplicationResponseStatusReference::new("application.response.complete").expect("status"),
+        application_audit_reference(),
+        later_time_reference(),
+    )
+    .expect("response")
+}
+
+pub fn alternate_application_query_response_envelope() -> ApplicationResponseEnvelope {
+    ApplicationResponseEnvelope::new(
+        &ApplicationRequestEnvelope::query(alternate_application_query_intent()),
         ApplicationResponsePayload::View(Box::new(studio_view_response())),
         ApplicationResponseStatusReference::new("application.response.complete").expect("status"),
         application_audit_reference(),

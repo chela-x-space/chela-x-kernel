@@ -1,9 +1,7 @@
 use crate::service_test_support::{
     application_api_version, service_api_version, service_capability_declaration, service_identity,
 };
-use crate::{
-    ServiceErrorCode, ServiceIntentKind, ServiceStatusSnapshot, ServiceValidationStatus,
-};
+use crate::{ServiceErrorCode, ServiceIntentKind, ServiceStatusSnapshot, ServiceValidationStatus};
 use kernel_application::ApplicationValidationStatus;
 
 #[test]

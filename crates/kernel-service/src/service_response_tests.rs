@@ -1,7 +1,9 @@
 use crate::service_test_support::{
-    application_query_response_envelope, command_service_request_context,
+    alternate_application_query_response_envelope, query_service_request_context,
 };
-use crate::{ServiceErrorCode, ServiceResponseEnvelope, ServiceResponseKind, ServiceResponseStatusReference};
+use crate::{
+    ServiceErrorCode, ServiceResponseEnvelope, ServiceResponseKind, ServiceResponseStatusReference,
+};
 
 #[test]
 fn service_response_envelope_preserves_application_response_k13_007() {
@@ -12,8 +14,8 @@ fn service_response_envelope_preserves_application_response_k13_007() {
 #[test]
 fn service_response_envelope_rejects_request_response_mismatch_k13_010() {
     let error = ServiceResponseEnvelope::new(
-        &command_service_request_context(),
-        application_query_response_envelope(),
+        &query_service_request_context(),
+        alternate_application_query_response_envelope(),
         ServiceResponseStatusReference::new("service.response.complete").expect("status"),
         "2026-07-19T00:10:00Z",
     )

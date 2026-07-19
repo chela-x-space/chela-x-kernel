@@ -1,6 +1,6 @@
 use kernel_application::ApplicationCommandIntent;
 
-use crate::service::{ServiceIntentKind};
+use crate::service::ServiceIntentKind;
 use crate::service_capability::ServiceCapabilityReference;
 use crate::service_context::ServiceRequestContext;
 use crate::service_error::ServiceResult;

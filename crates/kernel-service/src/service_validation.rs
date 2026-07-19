@@ -12,9 +12,9 @@ pub fn validate_namespaced_identifier(
     if trimmed.is_empty()
         || trimmed.contains('/')
         || !trimmed.contains('.')
-        || !trimmed
-            .chars()
-            .all(|character| character.is_ascii_alphanumeric() || matches!(character, '.' | '_' | '-'))
+        || !trimmed.chars().all(|character| {
+            character.is_ascii_alphanumeric() || matches!(character, '.' | '_' | '-')
+        })
     {
         return Err(ServiceError::new(code, detail)?);
     }
@@ -30,9 +30,9 @@ pub fn validate_version_reference(
     let trimmed = value.trim();
     if trimmed.is_empty()
         || trimmed.contains('/')
-        || !trimmed
-            .chars()
-            .all(|character| character.is_ascii_alphanumeric() || matches!(character, '.' | '_' | '-'))
+        || !trimmed.chars().all(|character| {
+            character.is_ascii_alphanumeric() || matches!(character, '.' | '_' | '-')
+        })
     {
         return Err(ServiceError::new(code, detail)?);
     }

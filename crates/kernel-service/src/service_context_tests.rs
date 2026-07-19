@@ -16,7 +16,10 @@ fn service_request_context_accepts_valid_application_context_k13_006() {
     )
     .expect("context");
     assert_eq!(
-        context.application_request_context().application_request_id().as_str(),
+        context
+            .application_request_context()
+            .application_request_id()
+            .as_str(),
         "application.request.000001"
     );
 }

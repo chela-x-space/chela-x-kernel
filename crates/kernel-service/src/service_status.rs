@@ -4,7 +4,9 @@ use crate::service::{ServiceApiVersion, ServiceIntentKind};
 use crate::service_capability::ServiceCapabilityDeclaration;
 use crate::service_error::{ServiceError, ServiceErrorCode, ServiceResult};
 use crate::service_identity::ServiceIdentity;
-use crate::service_validation::{reject_duplicates, validate_namespaced_identifier, validate_non_empty_text};
+use crate::service_validation::{
+    reject_duplicates, validate_namespaced_identifier, validate_non_empty_text,
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ServiceValidationStatus {
