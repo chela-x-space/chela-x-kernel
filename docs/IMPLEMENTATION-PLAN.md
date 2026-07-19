@@ -153,8 +153,8 @@ K9 implementation constraints preserved:
 - K9 remains in `kernel-domain`; no application-service, runtime, API, or frontend crate is introduced in this milestone.
 - K9 does not create runtime orchestration, storage, transport, dashboard UI, or API Gateway behavior.
 - K10 planning is complete.
-- K10 architecture review is pending human review.
-- K10 implementation is not started.
+- K10 architecture review passed.
+- K10 implementation and compile validation are complete; native verification remains pending the primary host.
 
 ## K10 Current Milestone State
 
