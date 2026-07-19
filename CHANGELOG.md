@@ -70,10 +70,32 @@ INTERNAL
 
 ### Boundaries
 
-- K11 implementation is not started
-- K11 implementation authorization remains pending human review
+- Historical planning record only; current K11 implementation status is recorded below
+- Historical planning authorization record only; current K11 implementation authority has been exercised in the additive K11 contract layer
 - No Rust production code, tests, or Cargo files changed
 - No frontend framework, browser app, desktop app, REST runtime, WebSocket runtime, database, persistence, scheduler, or authentication-provider implementation introduced
+
+## K11 Studio Integration
+
+### Added
+
+- Additive `kernel-studio` crate in `crates/kernel-studio`
+- Technology-neutral Studio contracts for identity, versioning, view references, request and response envelopes, selection and filter contexts, navigation references, audit references, status snapshots, errors, and deterministic validation
+- Technology-neutral Studio projections for Top View, Digital Twin, Runtime, Workflow, Task, Event Timeline, Memory, Audit, and Revenue reference views
+- Technology-neutral Studio command-console request and response contracts that compose frozen K10 gateway command contracts without bypassing K10
+- Native test coverage for K11 contract identity and versioning, projection semantics, gateway mapping, scope continuity, correlation continuity, side-effect separation, technology neutrality, and K1-K10 compatibility boundaries
+
+### Validation
+
+- Codex validation gates passed for `cargo fmt --all -- --check`, `cargo check --workspace --all-targets`, `cargo check --workspace --all-features --all-targets`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo clippy --workspace --all-features --all-targets -- -D warnings`, `cargo doc --workspace --no-deps`, `cargo test --doc --workspace`, and `git diff --check`
+- Local `cargo test --workspace --all-targets` remains blocked in the Codex environment by missing native linker `cc`; K11 native verification is pending primary-host execution
+
+### Boundaries
+
+- K11 implementation is additive only
+- K11 preserves frozen K1-K10 public APIs and consumes Studio traffic through K10 gateway contracts only
+- No frontend framework, browser runtime, desktop runtime, HTTP, REST, WebSocket, gRPC, IPC, persistence, scheduler, worker runtime, or authentication-provider integration introduced
+- K11 API is not yet frozen pending authoritative primary-host native verification
 
 ## K9 Enterprise Memory
 

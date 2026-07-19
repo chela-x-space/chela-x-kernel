@@ -308,6 +308,59 @@ The additive K10 gateway API currently covers:
 - `GatewayStatusSnapshot`
 - `GatewayAuditReference`
 
+## K11 Studio Integration
+
+### Status Statement
+
+`NOT YET FROZEN`
+
+### K11 Review State
+
+- Planning status: `COMPLETE`
+- Architecture review: `PASSED`
+- Implementation status: `COMPLETE`
+- Compile validation status: `PASSED`
+- Native verification status: `PENDING PRIMARY HOST`
+- Public API inventory: `RECORDED`
+- Compatibility status: `K1-K10 PRESERVED; K11 ADDITIVE`
+- Architecture Freeze: `PRESERVED`
+
+### K11 Scope
+
+The additive K11 Studio API currently covers:
+
+- `StudioApiVersion`
+- `StudioViewKind`
+- `StudioViewReference`
+- `StudioNavigationReference`
+- `StudioFilterReference`
+- `StudioSortReference`
+- `StudioTimeRange`
+- `StudioFilterContext`
+- `StudioSelectionContext`
+- `StudioAuditReference`
+- `StudioStatusSnapshot`
+- `StudioError`
+- `StudioErrorCode`
+- `StudioResult`
+- `StudioViewProjection`
+- `StudioViewRequest`
+- `StudioViewResponse`
+- `StudioRequestEnvelope`
+- `StudioResponseEnvelope`
+- `StudioTopViewProjection`
+- `StudioAttentionState`
+- `StudioDigitalTwinProjection`
+- `StudioRuntimeProjection`
+- `StudioWorkflowProjection`
+- `StudioTaskProjection`
+- `StudioEventTimelineProjection`
+- `StudioMemoryProjection`
+- `StudioAuditProjection`
+- `StudioRevenueReferenceProjection`
+- `StudioCommandRequest`
+- `StudioCommandResponse`
+
 ### K10 Freeze Conditions
 
 - K10 implementation is complete in `kernel-gateway`.

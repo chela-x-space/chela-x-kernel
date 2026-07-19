@@ -174,27 +174,32 @@ K10 implementation constraints preserved:
 - K10 must not modify `kernel-domain` public APIs.
 - K10 does not introduce HTTP, WebSocket, gRPC, IPC, or other concrete transport infrastructure.
 - K10 establishes gateway contracts, request validation, response mapping, error translation, protocol references, and status snapshots only.
-- K11 planning is complete.
-- K11 implementation remains unauthorized by this document.
+- K11 planning is complete and architecture review passed.
+- K11 implementation is complete and compile validation passed.
+- K11 native verification remains pending primary-host execution.
+- K11 API is not yet frozen.
 
 ## K11 Current Milestone State
 
 - Exact title: `K11 Studio Integration`
 - Planning status: `COMPLETE`
 - Architecture review status: `PASSED`
-- Implementation status: `NOT STARTED`
-- Implementation authorization: `PENDING HUMAN REVIEW`
-- Repository scope: planning artifacts only
+- Implementation status: `COMPLETE`
+- Implementation authorization: `AUTHORIZED`
+- Compile validation status: `PASSED`
+- Native verification status: `PENDING PRIMARY HOST`
+- API status: `NOT YET FROZEN`
+- Repository scope: additive Studio contract layer only
 - ADR status from current repository evidence: `NOT REQUIRED`
 
-K11 planning constraints preserved:
+K11 implementation constraints preserved:
 
-- K11 planning consumes frozen K10 gateway contracts and frozen K4-K9 read models by reference only.
-- K11 planning must not modify `kernel-domain` or `kernel-gateway` public APIs.
-- K11 planning does not authorize frontend framework selection, browser or desktop implementation, HTTP or WebSocket runtime, persistence, scheduler, database, or authentication-provider integration.
-- K11 planning preserves the API Gateway as the only approved Studio boundary.
+- K11 consumes frozen K10 gateway contracts and frozen K4-K9 read models by reference only.
+- K11 does not modify `kernel-domain` or `kernel-gateway` public APIs.
+- K11 does not introduce frontend framework selection, browser or desktop implementation, HTTP or WebSocket runtime, persistence, scheduler, database, or authentication-provider integration.
+- K11 preserves the API Gateway as the only approved Studio boundary.
 
-Before `K7-001` Rust implementation begins, the K7 specification package MUST receive an architecture review confirming:
+Before future milestone implementation begins that changes repository architecture, the specification package MUST receive an architecture review confirming:
 
 - K7 remains `Task Engine`
 - task semantics align with `docs/kernel-architecture/08-task-architecture.md`
