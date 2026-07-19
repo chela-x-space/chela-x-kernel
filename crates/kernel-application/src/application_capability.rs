@@ -141,6 +141,22 @@ impl ApplicationCapabilityDeclaration {
             )?);
         }
         match intent_kind {
+            ApplicationIntentKind::Command
+                if capability_reference.as_str() != APPLICATION_COMMAND_CAPABILITY =>
+            {
+                return Err(ApplicationError::new(
+                    ApplicationErrorCode::CapabilityMismatch,
+                    "application command intent requires the canonical application command capability",
+                )?);
+            }
+            ApplicationIntentKind::Query
+                if capability_reference.as_str() != APPLICATION_QUERY_CAPABILITY =>
+            {
+                return Err(ApplicationError::new(
+                    ApplicationErrorCode::CapabilityMismatch,
+                    "application query intent requires the canonical application query capability",
+                )?);
+            }
             ApplicationIntentKind::Command if !self.supports_commands => {
                 return Err(ApplicationError::new(
                     ApplicationErrorCode::CapabilityMismatch,

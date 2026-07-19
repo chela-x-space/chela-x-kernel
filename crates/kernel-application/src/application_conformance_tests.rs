@@ -1,10 +1,11 @@
 use crate::application_test_support::{
     application_api_version, application_audit_reference, application_capability_declaration,
     application_identity, application_query_intent, application_request_id,
-    application_status_snapshot, correlation_id, gateway_authentication_context, ownership_path,
+    application_status_snapshot, command_application_request_context, correlation_id,
+    gateway_authentication_context, ownership_path, query_capability, studio_command_request,
     studio_selection_context, time_reference,
 };
-use crate::{ApplicationErrorCode, ApplicationRequestContext};
+use crate::{ApplicationCommandIntent, ApplicationErrorCode, ApplicationRequestContext};
 use kernel_domain::{AuthorizationDecisionOutcome, EventTraceReference};
 
 #[test]
@@ -52,4 +53,40 @@ fn application_request_context_rejects_correlation_mismatch_k12_007() {
         ApplicationErrorCode::SessionCorrelationMismatch
     );
     let _ = application_status_snapshot();
+}
+
+#[test]
+fn application_equivalent_invalid_inputs_return_equivalent_errors_k12_003() {
+    let left = ApplicationCommandIntent::new(
+        command_application_request_context(),
+        query_capability(),
+        studio_command_request(),
+    )
+    .expect_err("query capability must not satisfy command intent");
+    let right = ApplicationCommandIntent::new(
+        command_application_request_context(),
+        query_capability(),
+        studio_command_request(),
+    )
+    .expect_err("query capability must not satisfy command intent");
+    assert_eq!(left, right);
+}
+
+#[test]
+fn application_rejected_cases_remain_side_effect_free_k12_003() {
+    let request_context = command_application_request_context();
+    let studio_request = studio_command_request();
+    let request_context_before = request_context.clone();
+    let studio_request_before = studio_request.clone();
+
+    let error = ApplicationCommandIntent::new(
+        request_context.clone(),
+        query_capability(),
+        studio_request.clone(),
+    )
+    .expect_err("query capability must not satisfy command intent");
+
+    assert_eq!(error.code(), ApplicationErrorCode::CapabilityMismatch);
+    assert_eq!(request_context, request_context_before);
+    assert_eq!(studio_request, studio_request_before);
 }

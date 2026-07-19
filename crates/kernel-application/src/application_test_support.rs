@@ -564,10 +564,18 @@ pub fn application_identity() -> ApplicationIdentity {
 }
 
 pub fn application_capability_declaration() -> ApplicationCapabilityDeclaration {
+    application_capability_declaration_with_views(vec![studio_view_reference(
+        StudioViewKind::TopView,
+    )])
+}
+
+pub fn application_capability_declaration_with_views(
+    supported_views: Vec<StudioViewReference>,
+) -> ApplicationCapabilityDeclaration {
     ApplicationCapabilityDeclaration::new(
         application_api_version(),
         vec![command_capability(), query_capability()],
-        vec![studio_view_reference(StudioViewKind::TopView)],
+        supported_views,
         true,
         true,
     )
@@ -575,11 +583,19 @@ pub fn application_capability_declaration() -> ApplicationCapabilityDeclaration 
 }
 
 pub fn query_application_request_context() -> ApplicationRequestContext {
+    query_application_request_context_with_views(vec![studio_view_reference(
+        StudioViewKind::TopView,
+    )])
+}
+
+pub fn query_application_request_context_with_views(
+    supported_views: Vec<StudioViewReference>,
+) -> ApplicationRequestContext {
     ApplicationRequestContext::new(
         application_api_version(),
         application_request_id(),
         application_identity(),
-        application_capability_declaration(),
+        application_capability_declaration_with_views(supported_views),
         gateway_authentication_context(),
         authorization_binding(
             "gateway",
