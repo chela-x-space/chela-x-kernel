@@ -511,7 +511,7 @@ pub fn runtime_state_snapshot() -> RuntimeStateSnapshot {
     registry
         .runtime_snapshot(
             &agent_id,
-            &time_reference(),
+            &TimeReference::new("2026-07-19T00:30:00Z").expect("now"),
             &HeartbeatFreshnessPolicy::new(
                 TimeReference::new("2026-07-19T00:20:00Z").expect("late"),
                 TimeReference::new("2026-07-19T00:10:00Z").expect("stale"),
