@@ -1411,3 +1411,38 @@ Freeze guarantees:
 
 - K13 public API is frozen for K14 consumption.
 - Any incompatible K13 public API change requires an approved ADR.
+
+## K14 External Adapter Boundary Implementation Review
+
+Review status:
+
+- `K14-001 THROUGH K14-010 IMPLEMENTED`
+- `K14 IMPLEMENTATION COMPLETE`
+- `K14 COMPILE VALIDATION PASSED`
+- `K14 NATIVE VERIFICATION BLOCKED IN CURRENT CODEX ENVIRONMENT`
+- `K14 API NOT FROZEN`
+- `K14 STATUS AWAITING HUMAN REVIEW`
+
+Public inventory groups:
+
+- Identity and Version: `AdapterApiVersion`, `AdapterIdentity`, `AdapterIdentityKind`, `AdapterKind`
+- Capability and Admission: `AdapterCapabilityReference`, `AdapterCapabilityDeclaration`, `ADAPTER_COMMAND_CAPABILITY`, `ADAPTER_QUERY_CAPABILITY`
+- Request and Intent: `AdapterIntentKind`, `AdapterRequestId`, `AdapterRequestContext`, `AdapterCommandIntent`, `AdapterQueryIntent`, `AdapterRequestEnvelope`
+- Response and Error: `AdapterResponseKind`, `AdapterResponseStatusReference`, `AdapterResponseEnvelope`, `AdapterError`, `AdapterErrorCode`, `AdapterResult`
+- Status and Compatibility: `AdapterCompatibilityReference`, `AdapterStatusSnapshot`, `AdapterValidationStatus`
+
+Conformance guarantees:
+
+- K14 public API matches additive `kernel-adapter` re-exports from `crates/kernel-adapter/src/lib.rs`.
+- K1-K13 compatibility is preserved.
+- K14 public API is additive only.
+- Adapter contracts remain technology-neutral, transport-neutral, runtime-free, infrastructure-free, immutable, and side-effect free.
+- `kernel-adapter -> kernel-service` remains the primary production dependency direction.
+- Lower-layer `kernel-domain`, `kernel-gateway`, `kernel-studio`, and `kernel-application` dependencies are limited to test-only `dev-dependencies` for adapter fixtures.
+- K14 does not bypass `kernel-service`, `kernel-application`, `kernel-studio`, or `kernel-gateway`, and does not mutate `kernel-domain` directly.
+- No runtime, Tokio, networking, transport, persistence, database, scheduler, queue, filesystem behavior, cache, plugin loader, AI model execution, or infrastructure is exposed.
+
+Review guarantees:
+
+- K14 public API is not frozen.
+- Any incompatible K14 public API change before freeze still requires human review and must remain within accepted `ADR-0003`.

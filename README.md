@@ -1,7 +1,7 @@
 # CHELA-X Kernel
 
 ## Status
-Implementation (K8 Closed, K9 Closed, K10 Closed, K11 Closed, K12 Closed, K13 Closed, K14 Planned)
+Implementation (K8 Closed, K9 Closed, K10 Closed, K11 Closed, K12 Closed, K13 Closed, K14 Implemented)
 
 ## Version
 0.5.0
@@ -60,7 +60,7 @@ AI Engineering OS -> CHELA-X CES -> CHELA-X Kernel -> CHELA-X Runtime -> CHELA-X
 | K11 Studio Integration | PASS / COMPLETE |
 | K12 Application Integration | PASS / COMPLETE |
 | K13 Service Integration | PASS / COMPLETE |
-| K14 External Adapter Boundary | PASS / AUTHORIZED |
+| K14 External Adapter Boundary | PASS / IMPLEMENTED |
 
 Canonical host validation:
 
@@ -68,7 +68,7 @@ Canonical host validation:
 - **0 failed**
 
 ## Current Status
-`K8 Execution Engine Closed And Frozen; K9 Enterprise Memory Closed And Frozen; K10 API Gateway Closed And Frozen For K11 Consumption; K11 Studio Integration Closed And Frozen For K12 Consumption; K12 Application Integration Closed And Frozen For K13 Consumption; K13 Service Integration Closed And Frozen For K14 Consumption; K14 External Adapter Boundary Planning Complete, Architecture Review Passed, Implementation Authorized`
+`K8 Execution Engine Closed And Frozen; K9 Enterprise Memory Closed And Frozen; K10 API Gateway Closed And Frozen For K11 Consumption; K11 Studio Integration Closed And Frozen For K12 Consumption; K12 Application Integration Closed And Frozen For K13 Consumption; K13 Service Integration Closed And Frozen For K14 Consumption; K14 External Adapter Boundary Implementation Complete, Compile Validation Passed, Native Verification Blocked In Current Codex Environment, API Not Frozen, Awaiting Human Review`
 
 ## Constraints
 - Architecture is frozen.
@@ -115,7 +115,13 @@ Canonical host validation:
 - K14 planning is complete as a documentation-only milestone.
 - K14 represents the accepted external-adapter contract boundary above `kernel-service`.
 - ADR-0003 is accepted and K14 implementation is authorized within the accepted contract-boundary scope only.
-- K14 planning does not introduce runtime, transport, networking, persistence, hosting, deployment, or other infrastructure.
+- K14 introduces additive external-adapter contracts in `crates/kernel-adapter`.
+- `kernel-adapter -> kernel-service` is the primary production dependency direction.
+- Lower-layer `kernel-domain`, `kernel-gateway`, `kernel-studio`, and `kernel-application` dependencies are limited to test-only `dev-dependencies` for adapter fixtures.
+- K14 compile validation passed in the repository workspace on Sunday, July 19, 2026.
+- K14 native verification is blocked in the current Codex environment because linker `cc` is unavailable.
+- K14 API is not frozen and K14 status remains awaiting human review.
+- K14 introduces no runtime, transport, networking, persistence, hosting, deployment, or other infrastructure.
 - K6 preserves the architecture freeze.
 - K8 preserves the architecture freeze.
 - Runtime execution is not implemented.

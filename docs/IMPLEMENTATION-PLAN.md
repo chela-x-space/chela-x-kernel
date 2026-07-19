@@ -261,17 +261,24 @@ K13 implementation constraints preserved:
 - Planning status: `COMPLETE`
 - Architecture review status: `PASSED`
 - Implementation authorization: `APPROVED`
-- Implementation status: `AUTHORIZED`
-- Repository scope: proposed additive `kernel-adapter` contract boundary only
+- Implementation status: `COMPLETE`
+- Compile validation status: `PASSED`
+- Native verification status: `BLOCKED IN CURRENT CODEX ENVIRONMENT`
+- API status: `NOT FROZEN`
+- Milestone status: `AWAITING HUMAN REVIEW`
+- Repository scope: additive `kernel-adapter` contract boundary only
 - ADR status from current repository evidence: `ACCEPTED AS ADR-0003`
 
-K14 planning constraints preserved:
+K14 implementation constraints preserved:
 
-- K14 is proposed as the smallest external-adapter contract boundary above frozen K13 only.
+- K14 is the smallest accepted external-adapter contract boundary above frozen K13 only.
 - K14 must consume frozen K13 contracts and must not bypass K13, K12, K11, or K10.
 - K14 must not modify `kernel-domain`, `kernel-gateway`, `kernel-studio`, `kernel-application`, or `kernel-service` public APIs.
-- K14 planning introduces no runtime, persistence, networking, transport, hosting, deployment, or infrastructure.
-- K14 implementation is authorized within the accepted ADR-0003 boundary only.
+- K14 introduces additive `kernel-adapter` contracts only.
+- `kernel-adapter -> kernel-service` is the primary production dependency direction.
+- Lower-layer `kernel-domain`, `kernel-gateway`, `kernel-studio`, and `kernel-application` dependencies remain test-only `dev-dependencies` for adapter fixtures.
+- K14 introduces no runtime, persistence, networking, transport, hosting, deployment, or infrastructure.
+- K14 native tests are blocked in the current Codex environment because linker `cc` is unavailable.
 
 Before future milestone implementation begins that changes repository architecture, the specification package MUST receive an architecture review confirming:
 

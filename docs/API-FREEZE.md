@@ -487,3 +487,58 @@ Breaking K13 public API or semantic changes after freeze require:
 - approved ADR
 - compatibility review
 - explicit human authorization
+
+## K14 External Adapter Boundary
+
+### Status Statement
+
+`NOT FROZEN`
+
+### K14 Review State
+
+- Planning status: `COMPLETE`
+- ADR status: `ACCEPTED`
+- Architecture review: `PASSED`
+- Implementation status: `COMPLETE`
+- Compile validation status: `PASSED`
+- Native verification status: `BLOCKED IN CURRENT CODEX ENVIRONMENT`
+- Public API inventory: `RECORDED`
+- Compatibility status: `K1-K13 PRESERVED; K14 ADDITIVE`
+- Architecture Freeze: `PRESERVED`
+
+### K14 Scope
+
+The additive K14 External Adapter Boundary API currently covers:
+
+- `AdapterApiVersion`
+- `AdapterIdentity`
+- `AdapterIdentityKind`
+- `AdapterKind`
+- `AdapterCapabilityReference`
+- `AdapterCapabilityDeclaration`
+- `AdapterIntentKind`
+- `AdapterRequestId`
+- `AdapterRequestContext`
+- `AdapterCommandIntent`
+- `AdapterQueryIntent`
+- `AdapterRequestEnvelope`
+- `AdapterResponseKind`
+- `AdapterResponseStatusReference`
+- `AdapterResponseEnvelope`
+- `AdapterError`
+- `AdapterErrorCode`
+- `AdapterResult`
+- `AdapterCompatibilityReference`
+- `AdapterStatusSnapshot`
+- `AdapterValidationStatus`
+- `ADAPTER_COMMAND_CAPABILITY`
+- `ADAPTER_QUERY_CAPABILITY`
+
+### K14 Review Conditions
+
+- K14 implementation is complete in `kernel-adapter`.
+- Public API inventory is recorded in `docs/API.md`.
+- Architecture review passed under accepted `ADR-0003`.
+- K1-K13 compatibility is preserved and K14 public API is additive only.
+- Current Codex-environment native verification is blocked because linker `cc` is unavailable.
+- K14 API remains unfrozen and awaits human freeze review after native verification on a capable host.

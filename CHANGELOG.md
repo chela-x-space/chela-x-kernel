@@ -179,22 +179,27 @@ INTERNAL
 - Preserved production validation semantics while changing the fixture to mismatch only `application_request_id`
 - Recorded root workspace authority through commits `1d76314` and `70b51a6`
 
-## K14 External Adapter Boundary Planning
+## K14 External Adapter Boundary
 
 ### Added
 
 - Repository-backed K14 planning artifacts in `docs/plans/K14-IMPLEMENTATION-PLAN.md` and `docs/backlog/K14-BACKLOG.md`
-- Proposed smallest external-adapter contract boundary above frozen `kernel-service`
+- Additive crate `crates/kernel-adapter`
+- Smallest external-adapter contract boundary above frozen `kernel-service`
 - Repository-backed K14 traceability and governance planning over frozen K10-K13 boundaries
-- Explicit ADR assessment that K14 requires architecture authority before implementation
+- Accepted ADR-0003 governance alignment for K14 implementation
+- Additive adapter contracts covering API version, identity, capability admission, command intent, query intent, request context, request envelope, response envelope, compatibility references, status snapshots, and centralized validation
 
 ### Boundaries
 
 - K14 planning is complete
 - ADR-0003 is accepted
 - K14 architecture review passed
-- K14 implementation is authorized
-- No Rust production code, tests, or Cargo files changed
+- K14 implementation is complete
+- K14 compile validation passed
+- K14 native verification is blocked in the current Codex environment by missing linker `cc`
+- K14 API is not frozen
+- K14 status is awaiting human review
 - No runtime, transport, persistence, hosting, deployment, or infrastructure introduced
 
 ## K9 Enterprise Memory

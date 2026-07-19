@@ -1,13 +1,17 @@
 # K14 Backlog
 
 ## Status
-PLANNING COMPLETE
+IMPLEMENTATION COMPLETE
 
 ## Milestone State
 - `K14 PLANNING: COMPLETE`
 - `K14 ARCHITECTURE REVIEW: PASSED`
 - `K14 IMPLEMENTATION AUTHORIZATION: APPROVED`
-- `K14 IMPLEMENTATION: AUTHORIZED`
+- `K14 IMPLEMENTATION: COMPLETE`
+- `K14 COMPILE VALIDATION: PASSED`
+- `K14 NATIVE VERIFICATION: BLOCKED IN CURRENT CODEX ENVIRONMENT`
+- `K14 API: NOT FROZEN`
+- `K14 STATUS: AWAITING HUMAN REVIEW`
 - `ADR REQUIRED: YES`
 
 ## Backlog Items
@@ -50,7 +54,7 @@ PLANNING COMPLETE
 - Expected result: additive K14 traceability with `PARTIAL / INHERITED` mapping unless stronger authority exists
 - Validation method: documentation review
 - Acceptance criteria: no fabricated CES identifiers
-- Status: `PLANNED`
+- Status: `IMPLEMENTED; COMPILE VERIFIED; NATIVE VERIFICATION BLOCKED`
 
 ### K14-005
 - Title: `Adapter Identity And Capability Preservation`
@@ -90,7 +94,7 @@ PLANNING COMPLETE
 - Expected result: compile, documentation, static-audit, and future native-test gates for K14
 - Validation method: documentation review
 - Acceptance criteria: no implementation implied by planning-only validation
-- Status: `PLANNED`
+- Status: `IMPLEMENTED; COMPILE VERIFIED; NATIVE VERIFICATION BLOCKED`
 
 ### K14-009
 - Title: `Transport, Runtime, And Host Deferral`
@@ -100,7 +104,7 @@ PLANNING COMPLETE
 - Expected result: transport, runtime, persistence, hosting, deployment, and observability remain outside K14 planning
 - Validation method: governance review
 - Acceptance criteria: K14 planning remains infrastructure-free
-- Status: `PLANNED`
+- Status: `IMPLEMENTED; COMPILE VERIFIED; NATIVE VERIFICATION BLOCKED`
 
 ### K14-010
 - Title: `Compatibility And Reverse-Dependency Preservation`

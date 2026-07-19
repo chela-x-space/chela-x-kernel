@@ -730,28 +730,38 @@ K13 implementation assertions:
 - Runtime, persistence, networking, scheduling, transport, and infrastructure introduced: `NO`
 - Fixture defect correction `service_response_envelope_rejects_request_response_mismatch_k13_010` preserved production semantics and changed only the test fixture in commit `51f6158`
 
-## K14 Planning Validation
+## K14 Implementation Validation
 
 Validation date: `2026-07-19`
 
 - `cargo fmt --all -- --check`: `PASS`
 - `cargo check --workspace --all-targets`: `PASS`
 - `cargo check --workspace --all-features --all-targets`: `PASS`
+- `cargo check -p kernel-adapter --all-targets`: `PASS`
+- `cargo metadata --no-deps --format-version 1`: `PASS`
 - `cargo clippy --workspace --all-targets -- -D warnings`: `PASS`
 - `cargo clippy --workspace --all-features --all-targets -- -D warnings`: `PASS`
+- `cargo clippy -p kernel-adapter --all-targets -- -D warnings`: `PASS`
+- `cargo tree -p kernel-adapter`: `PASS`
+- `cargo test -p kernel-adapter --all-targets`: `BLOCKED — linker cc not found (os error 2)`
+- `cargo test --workspace --all-targets`: `BLOCKED — linker cc not found (os error 2)`
 - `cargo doc --workspace --no-deps`: `PASS`
 - `cargo test --doc --workspace`: `PASS`
 - `git diff --check`: `PASS`
-- `git status --short`: `CLEAN`
+- static architecture grep audit over `crates/kernel-adapter` and root `Cargo.toml`: `PASS`
 
-K14 planning assertions:
+K14 implementation assertions:
 
 - Planning status: `COMPLETE`
 - Architecture review status: `PASSED`
 - Implementation authorization: `APPROVED`
-- Implementation status: `AUTHORIZED`
-- Production source changed: `NO`
-- Tests changed: `NO`
-- Cargo files changed: `NO`
+- Implementation status: `COMPLETE`
+- Compile validation status: `PASSED`
+- Native verification status: `BLOCKED IN CURRENT CODEX ENVIRONMENT`
+- API status: `NOT FROZEN`
+- Milestone status: `AWAITING HUMAN REVIEW`
+- Production source changed: `YES — ADDITIVE K14 ADAPTER CONTRACTS`
+- Tests changed: `YES — K14 ADAPTER VERIFICATION`
+- Cargo files changed: `YES — ROOT WORKSPACE REGISTRATION ONLY`
 - Frozen K1-K13 APIs changed: `NO`
 - Runtime, transport, persistence, hosting, deployment, and infrastructure introduced: `NO`
