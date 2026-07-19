@@ -97,6 +97,21 @@ INTERNAL
 - No frontend framework, browser runtime, desktop runtime, HTTP, REST, WebSocket, gRPC, IPC, persistence, scheduler, worker runtime, or authentication-provider integration introduced
 - K11 API is frozen for K12 consumption
 
+## K12 Planning
+
+### Added
+
+- Repository-backed K12 planning artifacts in `docs/plans/K12-IMPLEMENTATION-PLAN.md` and `docs/backlog/K12-BACKLOG.md`
+- Evidence-backed finding that the frozen repository baseline defines milestones through K11 only and does not provide an official K12 title, crate boundary, runtime model, or implementation scope
+- Explicit ADR recommendation for any post-K11 architectural expansion above frozen K11 Studio contracts
+
+### Boundaries
+
+- K12 implementation is not started
+- K12 implementation is not authorized
+- No Rust production code, tests, or Cargo files changed
+- No frontend framework, browser runtime, desktop runtime, HTTP, REST, WebSocket, SSE, IPC, persistence, session management, scheduler, worker runtime, cache, or authentication-provider implementation introduced
+
 ## K9 Enterprise Memory
 
 ### Added

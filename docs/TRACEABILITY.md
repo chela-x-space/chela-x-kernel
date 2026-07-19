@@ -280,3 +280,29 @@ INTERNAL
 | `K11-008` | Command console reuses frozen K10 gateway request and response contracts. | `crates/kernel-studio/src/studio_command.rs` | `docs/kernel-architecture/12-studio-integration-architecture.md` §12 | Studio command coordination over frozen gateway command envelopes | K10 frozen contracts | compile validation, native validation, tests | `IMPLEMENTED` | `VERIFIED` |
 | `K11-009` | Studio flow never bypasses the API Gateway or modifies Kernel state directly. | `crates/kernel-studio/src/studio.rs`, `crates/kernel-studio/src/studio_validation.rs` | `docs/kernel-architecture/13-data-flow.md` §10 | typed Studio request and response coordination over frozen K10 query and command contracts only | K10 gateway boundary | compile validation, native validation, static audit, tests | `IMPLEMENTED` | `VERIFIED` |
 | `K11-010` | K11 preserves frozen traceability and compatibility boundaries. | `crates/kernel-studio/src/lib.rs`, `crates/kernel-studio/src/studio_validation.rs` | `docs/kernel-architecture/16-traceability.md` §4-§7 | additive crate boundary with centralized validation and frozen lower-layer compatibility | K1-K10 frozen APIs | compile validation, native validation, static audit, tests | `IMPLEMENTED` | `VERIFIED` |
+
+## K12 Planning Summary
+
+- Milestone: `K12`
+- Official title: `UNRESOLVED IN CURRENT REPOSITORY BASELINE`
+- Planning status: `COMPLETE`
+- Architecture review status: `BLOCKED PENDING ADR`
+- Implementation authorization: `BLOCKED`
+- Implementation status: `NOT STARTED`
+- Repository scope: `PLANNING ARTIFACTS ONLY`
+- Repository-local CES mapping status: `PARTIAL / INHERITED — DO NOT FABRICATE NEW CES IDS`
+
+## K12 Planning Matrix
+
+| Kernel requirement | Requirement summary | Repository-local source | Supporting CES-traceable source | Planned contract or behavior | Frozen dependency | Validation method | Classification | Planning status |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `K12-001` | Official K12 title and architectural role must be approved explicitly before implementation. | `docs/plans/K12-IMPLEMENTATION-PLAN.md` | `docs/kernel-architecture/15-roadmap.md`, `docs/kernel-architecture/16-traceability.md` | milestone-definition closure | human architecture authority | architecture review | `PLANNING_ONLY` | `BLOCKED PENDING ADR` |
+| `K12-002` | Any future K12 capability must consume frozen K11 Studio contracts without modifying them. | `docs/plans/K12-IMPLEMENTATION-PLAN.md` | `docs/kernel-architecture/12-studio-integration-architecture.md` §1-§14 | frozen Studio boundary preservation | K11 frozen contracts | static dependency audit | `PLANNING_ONLY` | `PLANNED` |
+| `K12-003` | Any future K12 flow must preserve the `external -> K12 -> K11 -> K10 -> Kernel` dependency direction. | `docs/plans/K12-IMPLEMENTATION-PLAN.md` | `docs/kernel-architecture/13-data-flow.md` §3-§10, `docs/kernel-architecture/14-sequence-diagrams.md` §6 | gateway and Studio boundary preservation | K10 and K11 frozen boundaries | architecture conformance audit | `PLANNING_ONLY` | `PLANNED` |
+| `K12-004` | K12 must not embed UI rendering or presentation concerns into frozen Kernel layers. | `docs/plans/K12-IMPLEMENTATION-PLAN.md` | `docs/kernel-architecture/01-kernel-overview.md` §6-§8 | lower-layer boundary preservation | K1-K11 frozen APIs | static dependency audit | `PLANNING_ONLY` | `PLANNED` |
+| `K12-005` | Concrete frontend or presentation runtime selection requires approved architecture first. | `docs/plans/K12-IMPLEMENTATION-PLAN.md` | `docs/plans/K11-IMPLEMENTATION-PLAN.md`, `docs/backlog/K11-BACKLOG.md` | framework-selection blocker | architecture freeze | architecture review | `PLANNING_ONLY` | `BLOCKED PENDING ADR` |
+| `K12-006` | K12 must preserve K10 authentication, authorization, error, and rate-governance semantics without reinterpretation. | `docs/plans/K12-IMPLEMENTATION-PLAN.md` | `docs/kernel-architecture/11-api-gateway-architecture.md` §6-§13 | trust-boundary preservation | K10 frozen API | contract and security tests | `PLANNING_ONLY` | `PLANNED` |
+| `K12-007` | K12 must preserve K11 scope, correlation, audit, and view-intent continuity. | `docs/plans/K12-IMPLEMENTATION-PLAN.md` | `docs/kernel-architecture/12-studio-integration-architecture.md` §12, `docs/kernel-architecture/13-data-flow.md` §10 | request and response continuity | K11 frozen API | contract and failure-path tests | `PLANNING_ONLY` | `PLANNED` |
+| `K12-008` | Any K12 runtime, transport, persistence, session, or provider boundary requires approved ADR before implementation. | `docs/plans/K12-IMPLEMENTATION-PLAN.md` | `ARCHITECTURE.md`, `docs/kernel-architecture/02-design-principles.md` §13-§16 | architecture-expansion gate | approved ADR | architecture review | `PLANNING_ONLY` | `BLOCKED PENDING ADR` |
+| `K12-009` | K12 must maintain traceability without fabricated direct CES identifiers. | `docs/plans/K12-IMPLEMENTATION-PLAN.md` | `docs/kernel-architecture/16-traceability.md`, `docs/TRACEABILITY.md` | additive traceability | inherited traceability baseline | documentation review | `PLANNING_ONLY` | `PLANNED` |
+| `K12-010` | Implementation remains blocked until architecture review resolves official K12 definition and component boundary. | `docs/plans/K12-IMPLEMENTATION-PLAN.md` | inherited governance baseline | governance gate | human review and ADR | governance review | `PLANNING_ONLY` | `BLOCKED PENDING ADR` |
