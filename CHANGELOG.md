@@ -144,26 +144,40 @@ INTERNAL
 
 - K12 implementation status: `COMPLETE`
 - K12 compile validation status: `PASSED`
-- K12 native verification status: `PENDING PRIMARY HOST`
-- K12 API status: `NOT YET FROZEN`
+- K12 native verification status: `PASSED`
+- K12 API status: `FROZEN FOR K13 CONSUMPTION`
 - No HTTP, REST, WebSocket, SSE, IPC, async runtime, scheduler, worker runtime, persistence, session storage, authentication provider, frontend framework, browser runtime, desktop runtime, or deployment infrastructure introduced
 
-## K13 Service Integration Planning
+## K13 Service Integration Closure
 
 ### Added
 
-- Repository-backed K13 planning artifacts in `docs/plans/K13-IMPLEMENTATION-PLAN.md` and `docs/backlog/K13-BACKLOG.md`
-- Proposed smallest service-facing coordination boundary above frozen `kernel-application`
-- Repository-backed K13 traceability and governance planning over frozen K10-K12 boundaries
-- Explicit ADR recommendation that K13 requires new architecture authority before implementation
+- Additive crate `crates/kernel-service`
+- Additive K13 service contracts covering API version, identity, capability admission, command intent, query intent, request context, response continuity, status snapshots, and centralized validation
+- Root workspace registration for `crates/kernel-service`
+- Authoritative K13 documentation closure, traceability closure, backlog closure, native-verification record, and API freeze for K14 consumption
+- Freeze inventory aligned to `crates/kernel-service/src/lib.rs`
 
 ### Boundaries
 
-- K13 planning is complete
-- K13 architecture review is blocked pending ADR
-- K13 implementation is not authorized
-- No Rust production code, tests, or Cargo files changed
+- K13 implementation is complete
+- K13 workspace integration passed
+- K13 compile validation passed
+- K13 native verification passed on the primary host
+- K13 public API is frozen for K14 consumption
 - No runtime, persistence, networking, scheduling, transport, or infrastructure introduced
+- K1-K12 compatibility is preserved and no frozen lower-layer public API changed
+
+### Validation
+
+- Authoritative K13 host-native verification passed with `kernel-domain: 827 passed`, `kernel-gateway: 34 passed`, `kernel-studio: 16 passed`, `kernel-application: 23 passed`, `kernel-service: 17 passed`, `TOTAL: 917 passed`, `FAILED: 0`
+- Validation gates passed for `cargo fmt --all -- --check`, `cargo check --workspace --all-targets`, `cargo check --workspace --all-features --all-targets`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo clippy --workspace --all-features --all-targets -- -D warnings`, `cargo test --workspace --all-targets`, `cargo test --doc --workspace`, `cargo doc --workspace --no-deps`, and `git diff --check`
+
+### Fixes
+
+- Corrected `service_response_envelope_rejects_request_response_mismatch_k13_010` fixture isolation in commit `51f6158`
+- Preserved production validation semantics while changing the fixture to mismatch only `application_request_id`
+- Recorded root workspace authority through commits `1d76314` and `70b51a6`
 
 ## K9 Enterprise Memory
 

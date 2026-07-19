@@ -204,8 +204,8 @@ K11 implementation constraints preserved:
 - K12 implementation is authorized within the ADR-0001 boundary.
 - K12 implementation is complete.
 - K12 compile validation passed in the repository workspace.
-- K12 native verification is pending the primary host because `cargo test -p kernel-application --all-targets` is blocked locally by missing linker `cc`.
-- K12 API is not yet frozen.
+- K12 native verification passed on the primary host.
+- K12 API is frozen for K13 consumption.
 
 ## K12 Current Milestone State
 
@@ -216,8 +216,8 @@ K11 implementation constraints preserved:
 - Implementation authorization: `AUTHORIZED WITHIN ADR-0001 BOUNDARY`
 - Implementation status: `COMPLETE`
 - Compile validation status: `PASSED`
-- Native verification status: `PENDING PRIMARY HOST`
-- API status: `NOT YET FROZEN`
+- Native verification status: `PASSED`
+- API status: `FROZEN FOR K13 CONSUMPTION`
 - Repository scope: additive `kernel-application` crate plus implementation evidence
 - ADR status from current repository evidence: `SATISFIED BY ADR-0001`
 
@@ -234,20 +234,26 @@ K12 planning constraints preserved:
 ## K13 Current Milestone State
 
 - Exact title: `K13 Service Integration`
+- ADR status: `ACCEPTED`
 - Planning status: `COMPLETE`
-- Architecture review status: `BLOCKED PENDING ADR`
-- Implementation authorization: `BLOCKED`
-- Implementation status: `NOT STARTED`
-- Repository scope: proposed additive `kernel-service` contract layer only
-- ADR status from current repository evidence: `REQUIRED`
+- Architecture review status: `PASSED`
+- Implementation authorization: `AUTHORIZED WITHIN ADR-0002 BOUNDARY`
+- Workspace integration status: `PASSED`
+- Implementation status: `COMPLETE`
+- Compile validation status: `PASSED`
+- Native verification status: `PASSED`
+- API status: `FROZEN FOR K14 CONSUMPTION`
+- Repository scope: additive `kernel-service` crate plus implementation evidence
+- ADR status from current repository evidence: `SATISFIED BY ADR-0002`
 
-K13 planning constraints preserved:
+K13 implementation constraints preserved:
 
-- K13 is planned as the smallest service-facing coordination boundary above frozen K12 only
-- K13 must consume frozen K12 contracts and must not bypass K12, K11, or K10
-- K13 must not modify `kernel-domain`, `kernel-gateway`, `kernel-studio`, or `kernel-application` public APIs
-- K13 planning introduces no runtime, persistence, networking, scheduling, transport, or infrastructure
-- K13 implementation remains blocked until a new ADR explicitly approves the title, crate boundary, and dependency direction
+- K13 consumes frozen K12 contracts and does not bypass K12, K11, or K10.
+- K13 does not modify `kernel-domain`, `kernel-gateway`, `kernel-studio`, or `kernel-application` public APIs.
+- `kernel-service -> kernel-application` is the primary production dependency direction.
+- Lower-layer `kernel-domain`, `kernel-gateway`, and `kernel-studio` dependencies remain test-only `dev-dependencies` for service fixtures.
+- K13 introduces no runtime, persistence, networking, scheduling, transport, or infrastructure.
+- K13 preserves a replaceable and technology-neutral service boundary.
 
 Before future milestone implementation begins that changes repository architecture, the specification package MUST receive an architecture review confirming:
 

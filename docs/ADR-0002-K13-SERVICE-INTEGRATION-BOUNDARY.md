@@ -1,7 +1,7 @@
 # ADR-0002: K13 Service Integration Boundary
 
 ## Status
-PROPOSED
+ACCEPTED
 
 ## Date
 2026-07-19
@@ -18,8 +18,8 @@ Define the smallest architecture-preserving service-facing boundary above
 frozen `K12 Application Integration` without introducing runtime,
 transport, persistence, scheduler, or other infrastructure.
 
-This ADR exists to decide what K13 is before any K13 implementation,
-crate creation, or dependency expansion is attempted.
+This ADR defines what K13 is before any K13 implementation, crate
+creation, or dependency expansion is attempted.
 
 ## Context
 The frozen CHELA-X Kernel architecture baseline currently defines
@@ -38,7 +38,7 @@ preserving:
 - zero runtime or infrastructure ownership
 
 ## Layering
-The proposed K13 layer position is:
+The accepted K13 layer position is:
 
 ```text
 External Service Adapter
@@ -60,15 +60,15 @@ K13 is above `kernel-application` and below any concrete service adapter
 or host.
 
 ## Decision
-The proposed official K13 title is:
+The accepted official K13 title is:
 
 `K13 Service Integration`
 
-The proposed architectural role is:
+The accepted architectural role is:
 
 `Technology-neutral service coordination boundary above K12 Application Integration`
 
-K13 is proposed as a contract-oriented service boundary only.
+K13 is a contract-oriented service boundary only.
 
 K13 is not:
 
@@ -81,7 +81,7 @@ K13 is not:
 - a deployment topology
 
 ## Dependency Direction
-The proposed dependency direction is:
+The accepted dependency direction is:
 
 ```text
 kernel-service
@@ -100,10 +100,9 @@ Primary allowed dependency:
 
 - `kernel-application`
 
-Planning-only exceptions, still requiring explicit future approval if
-ever requested:
+Exceptions still requiring explicit future approval if ever requested:
 
-- none approved in this ADR proposal
+- none approved in this ADR
 
 This ADR intentionally does not authorize direct K13 dependencies on
 `kernel-studio`, `kernel-gateway`, or `kernel-domain`.
@@ -233,13 +232,13 @@ Positive consequences:
 
 Negative consequences:
 
-- K13 implementation remains blocked until this ADR is accepted
+- K13 implementation may proceed within this accepted ADR boundary
 - no concrete service host or transport is authorized by this ADR
 - later ADRs will still be required for transport, runtime, persistence,
   deployment, or observability concerns
 
 ## Repository Architecture Preservation
-This ADR proposal does not:
+This ADR did not:
 
 - implement K13
 - create `crates/kernel-service`
@@ -247,5 +246,6 @@ This ADR proposal does not:
 - modify frozen APIs
 - change dependency direction in code
 
-Repository architecture remains identical unless and until this ADR is
-explicitly accepted and later implementation authority is granted.
+Repository architecture remained identical at acceptance time; later K13
+implementation still had to preserve the accepted dependency direction,
+frozen lower-layer APIs, and infrastructure-free contract scope.

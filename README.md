@@ -1,7 +1,7 @@
 # CHELA-X Kernel
 
 ## Status
-Implementation (K8 Closed, K9 Closed, K10 Closed, K11 Closed, K12 Implemented, K13 Planned)
+Implementation (K8 Closed, K9 Closed, K10 Closed, K11 Closed, K12 Closed, K13 Closed)
 
 ## Version
 0.5.0
@@ -59,14 +59,15 @@ AI Engineering OS -> CHELA-X CES -> CHELA-X Kernel -> CHELA-X Runtime -> CHELA-X
 | K10 API Gateway | PASS / COMPLETE |
 | K11 Studio Integration | PASS / COMPLETE |
 | K12 Application Integration | PASS / COMPLETE |
+| K13 Service Integration | PASS / COMPLETE |
 
 Canonical host validation:
 
-- **877 passed**
+- **917 passed**
 - **0 failed**
 
 ## Current Status
-`K8 Execution Engine Closed And Frozen; K9 Enterprise Memory Closed And Frozen; K10 API Gateway Closed And Frozen For K11 Consumption; K11 Studio Integration Closed And Frozen For K12 Consumption; K12 Application Integration Implemented, Compile-Verified, Native Verification Pending Primary Host; K13 Service Integration Planning Complete, Architecture Review Blocked Pending ADR`
+`K8 Execution Engine Closed And Frozen; K9 Enterprise Memory Closed And Frozen; K10 API Gateway Closed And Frozen For K11 Consumption; K11 Studio Integration Closed And Frozen For K12 Consumption; K12 Application Integration Closed And Frozen For K13 Consumption; K13 Service Integration Closed And Frozen For K14 Consumption`
 
 ## Constraints
 - Architecture is frozen.
@@ -75,7 +76,7 @@ Canonical host validation:
 - K6 workflow implementation is additive in `crates/kernel-domain/src/workflow.rs`, `crates/kernel-domain/src/state.rs`, and existing `kernel-domain` re-exports.
 - K7 task implementation remains frozen for next-milestone consumption.
 - K8 execution implementation is additive in `crates/kernel-domain/src/execution*.rs`, `crates/kernel-domain/src/errors.rs`, and existing `kernel-domain` re-exports.
-- Canonical host validation passed with `877 passed`, `0 failed`, `0 ignored`.
+- Canonical host validation passed with `917 passed`, `0 failed`, `0 ignored`.
 - K6 Workflow Engine domain layer is complete.
 - K6 is deterministic and side-effect free.
 - K6 public API is frozen for downstream consumption.
@@ -97,15 +98,19 @@ Canonical host validation:
 - K12 implementation is authorized within the ADR-0001 boundary only.
 - K12 implementation is complete.
 - K12 compile validation passed in the repository workspace.
-- K12 native verification is pending the primary host because local `cargo test -p kernel-application --all-targets` is blocked by missing linker `cc`.
-- K12 public API is not yet frozen.
+- K12 native verification passed on the primary host.
+- K12 public API is frozen for K13 consumption.
 - K12 introduces additive application-integration contracts in `crates/kernel-application`.
 - K12 primarily depends on frozen `kernel-studio`.
 - Direct `kernel-gateway` and `kernel-domain` dependencies are exceptional and are limited to frozen K10 authentication and authorization references plus frozen correlation, time, audit, and ownership value types that are not re-exported by `kernel-studio`.
-- K13 planning is complete as a documentation-only milestone.
-- K13 currently represents the smallest proposed service-facing coordination boundary above `kernel-application`.
-- K13 implementation is blocked pending a new ADR because the frozen architecture baseline does not define a K13 title, crate boundary, or dependency direction.
-- K13 planning does not introduce runtime, persistence, networking, scheduling, transport, or other infrastructure.
+- K13 ADR-0002 is accepted and K13 implementation is complete.
+- K13 introduces additive service-integration contracts in `crates/kernel-service`.
+- `kernel-service -> kernel-application` remains the primary production dependency direction.
+- Lower-layer `kernel-domain`, `kernel-gateway`, and `kernel-studio` dependencies remain test-only `dev-dependencies` for service fixtures.
+- K13 workspace integration passed through root workspace registration, crate-local `[workspace]` removal, crate-local `Cargo.lock` removal, and authoritative `cargo metadata` discovery of `kernel-service`.
+- K13 native verification passed on the primary host with `kernel-service: 17 passed` and `917 passed` total across the workspace.
+- K13 public API is frozen for K14 consumption.
+- K13 preserves a technology-neutral and replaceable service boundary with no runtime, Tokio, networking, transport, persistence, database, scheduler, queue, filesystem behavior, cache, plugin loading, AI model execution, infrastructure, direct `kernel-domain` mutation, `kernel-application` bypass, or reverse dependency from frozen lower crates.
 - K6 preserves the architecture freeze.
 - K8 preserves the architecture freeze.
 - Runtime execution is not implemented.
@@ -131,6 +136,7 @@ Canonical host validation:
 - Deterministic enterprise-memory identity, provenance, classification, retention, retrieval, and read-only projection primitives
 - Deterministic API Gateway contract identity, authentication context, authorization binding, request validation, response mapping, error translation, status snapshot, and protocol-adaptation primitives
 - Deterministic Studio Integration contract identity, view coordination, projection intent, command-console mapping, validation, and K10 boundary-conformance primitives
+- Deterministic Service Integration contract identity, capability admission, command and query coordination, response continuity, status snapshot, validation, and K12 boundary-conformance primitives
 
 ## References
 - [AGENTS.md](./AGENTS.md)

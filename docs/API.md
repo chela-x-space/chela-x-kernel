@@ -1349,8 +1349,8 @@ Review status:
 - `K12-001 K12-002 K12-003 K12-004 K12-006 K12-007 K12-009 K12-010 IMPLEMENTED`
 - `K12 IMPLEMENTATION COMPLETE`
 - `K12 COMPILE VALIDATION PASSED`
-- `K12 NATIVE VERIFICATION PENDING PRIMARY HOST`
-- `K12 API NOT YET FROZEN`
+- `K12 NATIVE VERIFICATION PASSED`
+- `K12 API FROZEN FOR K13 CONSUMPTION`
 
 Public inventory groups:
 
@@ -1374,5 +1374,40 @@ Conformance guarantees:
 
 Freeze guarantees:
 
-- K12 public API is not yet frozen.
-- Breaking changes before K12 freeze remain governed by `ADR-0001` and explicit human authorization.
+- K12 public API is frozen for K13 consumption.
+- Breaking changes after K12 freeze require approved ADR, compatibility review, and explicit human authorization.
+
+## K13 Service Integration Implementation Review
+
+Review status:
+
+- `K13-001 THROUGH K13-010 IMPLEMENTED`
+- `K13 IMPLEMENTATION COMPLETE`
+- `K13 WORKSPACE INTEGRATION PASSED`
+- `K13 COMPILE VALIDATION PASSED`
+- `K13 NATIVE VERIFICATION PASSED`
+- `K13 API FROZEN FOR K14 CONSUMPTION`
+
+Public inventory groups:
+
+- Identity and Version: `ServiceApiVersion`, `ServiceIdentity`, `ServiceIdentityKind`
+- Capability and Admission: `ServiceCapabilityReference`, `ServiceCapabilityDeclaration`, `SERVICE_COMMAND_CAPABILITY`, `SERVICE_QUERY_CAPABILITY`
+- Request and Intent: `ServiceIntentKind`, `ServiceRequestId`, `ServiceRequestContext`, `ServiceCommandIntent`, `ServiceQueryIntent`
+- Response and Error: `ServiceResponseKind`, `ServiceResponseStatusReference`, `ServiceResponseEnvelope`, `ServiceError`, `ServiceErrorCode`, `ServiceResult`
+- Status and Compatibility: `ServiceDependencyCompatibilityReference`, `ServiceStatusSnapshot`, `ServiceValidationStatus`
+
+Conformance guarantees:
+
+- K13 public API matches additive `kernel-service` re-exports from `crates/kernel-service/src/lib.rs`.
+- K1-K12 compatibility is preserved.
+- K13 public API is additive only.
+- Service contracts remain technology-neutral, transport-neutral, runtime-free, infrastructure-free, immutable, and side-effect free.
+- `kernel-service -> kernel-application` remains the primary production dependency direction.
+- Lower-layer `kernel-domain`, `kernel-gateway`, and `kernel-studio` dependencies are limited to test-only `dev-dependencies` for service fixtures.
+- K13 does not bypass `kernel-application`, `kernel-studio`, or `kernel-gateway`, and does not mutate `kernel-domain` directly.
+- No runtime, Tokio, networking, transport, persistence, database, scheduler, queue, filesystem behavior, cache, plugin loader, AI model execution, or infrastructure is exposed.
+
+Freeze guarantees:
+
+- K13 public API is frozen for K14 consumption.
+- Any incompatible K13 public API change requires an approved ADR.

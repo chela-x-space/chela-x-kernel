@@ -683,16 +683,15 @@ K12 implementation assertions:
 - Implementation authorization: `AUTHORIZED WITHIN ADR-0001 BOUNDARY`
 - Implementation status: `COMPLETE`
 - Compile validation status: `PASSED`
-- Native verification status: `PENDING PRIMARY HOST`
-- API status: `NOT YET FROZEN`
-- `cargo test -p kernel-application --all-targets`: `BLOCKED - linker cc not found (os error 2)`
+- Native verification status: `PASSED`
+- API status: `FROZEN FOR K13 CONSUMPTION`
 - Production source changed: `YES — ADDITIVE K12 APPLICATION API`
 - Tests changed: `YES — ADDITIVE K12 APPLICATION VERIFICATION`
 - Cargo files changed: `YES — ADDITIVE K12 WORKSPACE MEMBER`
 - Frozen K1-K11 APIs changed: `NO`
 - Infrastructure introduced: `NO`
 
-## K13 Planning Validation
+## K13 Implementation Validation
 
 Validation date: `2026-07-19`
 
@@ -703,18 +702,30 @@ Validation date: `2026-07-19`
 - `cargo clippy --workspace --all-features --all-targets -- -D warnings`: `PASS`
 - `cargo doc --workspace --no-deps`: `PASS`
 - `cargo test --doc --workspace`: `PASS`
-- `cargo test --workspace --all-targets`: `BLOCKED - linker cc not found (os error 2)`
+- `cargo test --workspace --all-targets`: `PASS`
+- `kernel-domain`: `827 passed`
+- `kernel-gateway`: `34 passed`
+- `kernel-studio`: `16 passed`
+- `kernel-application`: `23 passed`
+- `kernel-service`: `17 passed`
+- `TOTAL`: `917 passed`
+- `FAILED`: `0`
 - `git diff --check`: `PASS`
 - `git status --short`: `CLEAN`
 
-K13 planning assertions:
+K13 implementation assertions:
 
 - Planning status: `COMPLETE`
-- Architecture review status: `BLOCKED PENDING ADR`
-- Implementation authorization: `BLOCKED`
-- Implementation status: `NOT STARTED`
-- Production source changed: `NO`
-- Tests changed: `NO`
-- Cargo files changed: `NO`
+- ADR status: `ACCEPTED`
+- Architecture review status: `PASSED`
+- Implementation authorization: `AUTHORIZED WITHIN ADR-0002 BOUNDARY`
+- Workspace integration status: `PASSED`
+- Implementation status: `COMPLETE`
+- Native verification status: `PASSED`
+- API status: `FROZEN FOR K14 CONSUMPTION`
+- Production source changed: `YES — ADDITIVE K13 SERVICE CONTRACTS`
+- Tests changed: `YES — K13 SERVICE VERIFICATION`
+- Cargo files changed: `YES — ROOT WORKSPACE REGISTRATION ONLY`
 - Frozen K1-K12 APIs changed: `NO`
 - Runtime, persistence, networking, scheduling, transport, and infrastructure introduced: `NO`
+- Fixture defect correction `service_response_envelope_rejects_request_response_mismatch_k13_010` preserved production semantics and changed only the test fixture in commit `51f6158`

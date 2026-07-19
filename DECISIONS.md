@@ -42,7 +42,7 @@ Repository-local architectural decisions that require human approval are recorde
 
 ## ADR Register
 - `ADR-0001`: `K12 Application Integration Boundary` — `ACCEPTED` on `2026-07-19`; repository-local Kernel ADR numbering is independent of `CES-ADR-*` identifiers in other repositories; K12 implementation is authorized within the accepted ADR boundary.
-- `ADR-0002`: `K13 Service Integration Boundary` — `PROPOSED` on `2026-07-19`; proposes a technology-neutral service coordination boundary above `kernel-application` while preserving K1-K12 APIs and forbidding K12 bypass or direct domain mutation.
+- `ADR-0002`: `K13 Service Integration Boundary` — `ACCEPTED` on `2026-07-19`; authorizes a technology-neutral service coordination boundary above `kernel-application` while preserving K1-K12 APIs and forbidding K12 bypass or direct domain mutation.
 
 ## References
 - [ENGINEERING.md](./ENGINEERING.md)

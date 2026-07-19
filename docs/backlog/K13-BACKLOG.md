@@ -1,93 +1,77 @@
 # K13 Backlog
 
 ## Status
-PLANNING COMPLETE
+CLOSED
 
 ## Milestone State
 - `K13 PLANNING: COMPLETE`
-- `K13 ARCHITECTURE REVIEW: BLOCKED PENDING ADR`
-- `K13 IMPLEMENTATION AUTHORIZATION: BLOCKED`
-- `K13 IMPLEMENTATION: NOT STARTED`
-- `ADR REQUIRED: YES`
+- `K13 ARCHITECTURE REVIEW: PASSED`
+- `K13 IMPLEMENTATION AUTHORIZATION: AUTHORIZED WITHIN ADR-0002 BOUNDARY`
+- `K13 IMPLEMENTATION: COMPLETE`
+- `K13 WORKSPACE INTEGRATION: PASSED`
+- `K13 NATIVE VERIFICATION: PASSED`
+- `K13 API: FROZEN`
+- `K13 STATUS: CLOSED`
 
-## Backlog Items
+## Requirement Closure Ledger
 
 ### K13-001
-- Title: `Official K13 Milestone Definition`
-- Requirement source: `docs/ADR-0001-K12-APPLICATION-INTEGRATION-BOUNDARY.md`, `docs/kernel-architecture/15-roadmap.md`
-- Dependencies: human architecture authority
-- Expected files: future ADR, `docs/plans/K13-IMPLEMENTATION-PLAN.md`, `docs/IMPLEMENTATION-PLAN.md`, `docs/TRACEABILITY.md`
-- Expected result: explicit K13 title and service-boundary role
-- Validation method: architecture review
-- Acceptance criteria: K13 title and role are approved explicitly rather than inferred
-- Status: `BLOCKED PENDING ADR`
+- Title: `ServiceApiVersion`
+- Production evidence: `crates/kernel-service/src/service.rs`
+- Test evidence: `crates/kernel-service/src/service_contract_tests.rs`, `crates/kernel-service/src/service_conformance_tests.rs`
+- Status: `IMPLEMENTED; VERIFIED; CLOSED`
 
 ### K13-002
-- Title: `Frozen K12 Boundary Preservation`
-- Requirement source: `docs/plans/K12-IMPLEMENTATION-PLAN.md`, `docs/kernel-architecture/13-data-flow.md`
-- Dependencies: frozen K12 contracts
-- Expected files: future K13 planning and implementation artifacts
-- Expected result: K13 consumes K12 and never bypasses K12, K11, or K10
-- Validation method: static dependency audit, contract tests
-- Acceptance criteria: no K12 bypass, no K11 bypass, no K10 bypass
-- Status: `PLANNED`
+- Title: `ServiceIdentity`
+- Production evidence: `crates/kernel-service/src/service_identity.rs`
+- Test evidence: `crates/kernel-service/src/service_contract_tests.rs`
+- Status: `IMPLEMENTED; VERIFIED; CLOSED`
 
 ### K13-003
-- Title: `Additive Service Contract Boundary`
-- Requirement source: `README.md`, `ARCHITECTURE.md`, `docs/plans/K13-IMPLEMENTATION-PLAN.md`
-- Dependencies: architecture freeze, frozen K1-K12 APIs
-- Expected files: future K13 crate and implementation evidence if authorized
-- Expected result: additive service contracts above `kernel-application` only
-- Validation method: static architecture audit, compile validation
-- Acceptance criteria: no runtime, persistence, networking, scheduling, or infrastructure
-- Status: `PLANNED`
+- Title: `ServiceCapability`
+- Production evidence: `crates/kernel-service/src/service.rs`, `crates/kernel-service/src/service_capability.rs`
+- Test evidence: `crates/kernel-service/src/service_contract_tests.rs`, `crates/kernel-service/src/service_command_tests.rs`, `crates/kernel-service/src/service_query_tests.rs`
+- Status: `IMPLEMENTED; VERIFIED; CLOSED`
 
 ### K13-004
-- Title: `Traceability And CES Mapping Preservation`
-- Requirement source: `docs/kernel-architecture/16-traceability.md`, `docs/TRACEABILITY.md`
-- Dependencies: inherited repository traceability baseline
-- Expected files: `docs/TRACEABILITY.md`, future K13 planning artifacts
-- Expected result: additive K13 traceability with `PARTIAL / INHERITED` mapping unless stronger authority exists
-- Validation method: documentation review
-- Acceptance criteria: no fabricated CES identifiers
-- Status: `PLANNED`
+- Title: `ServiceCommandIntent`
+- Production evidence: `crates/kernel-service/src/service_command.rs`
+- Test evidence: `crates/kernel-service/src/service_command_tests.rs`
+- Status: `IMPLEMENTED; VERIFIED; CLOSED`
 
 ### K13-005
-- Title: `Service Boundary Semantic Preservation`
-- Requirement source: `docs/kernel-architecture/11-api-gateway-architecture.md`, `docs/kernel-architecture/12-studio-integration-architecture.md`, `docs/ADR-0001-K12-APPLICATION-INTEGRATION-BOUNDARY.md`
-- Dependencies: frozen K10-K12 semantics
-- Expected files: future K13 implementation artifacts if later approved
-- Expected result: service contracts preserve application, Studio, and Gateway meaning without reinterpretation
-- Validation method: contract tests, failure-path tests
-- Acceptance criteria: no second identity, scope, correlation, or audit model
-- Status: `PLANNED`
+- Title: `ServiceQueryIntent`
+- Production evidence: `crates/kernel-service/src/service_query.rs`
+- Test evidence: `crates/kernel-service/src/service_query_tests.rs`
+- Status: `IMPLEMENTED; VERIFIED; CLOSED`
 
 ### K13-006
-- Title: `Approved K13 Crate And Dependency Direction`
-- Requirement source: `ARCHITECTURE.md`, `docs/plans/K13-IMPLEMENTATION-PLAN.md`
-- Dependencies: approved ADR
-- Expected files: future ADR and future K13 planning updates
-- Expected result: explicit crate boundary and dependency direction above `kernel-application`
-- Validation method: architecture review
-- Acceptance criteria: no reverse dependency from frozen lower-layer crates
-- Status: `BLOCKED PENDING ADR`
+- Title: `ServiceRequestContext`
+- Production evidence: `crates/kernel-service/src/service_context.rs`
+- Test evidence: `crates/kernel-service/src/service_context_tests.rs`
+- Status: `IMPLEMENTED; VERIFIED; CLOSED`
 
 ### K13-007
-- Title: `Validation And Static Audit Plan`
-- Requirement source: repository validation conventions
-- Dependencies: future approved K13 architecture
-- Expected files: `docs/plans/K13-IMPLEMENTATION-PLAN.md`, `docs/VALIDATION.md`
-- Expected result: compile, static-audit, and future native-test gates for K13
-- Validation method: documentation review
-- Acceptance criteria: no implementation implied by planning-only validation
-- Status: `PLANNED`
+- Title: `ServiceResponseEnvelope`
+- Production evidence: `crates/kernel-service/src/service_response.rs`
+- Test evidence: `crates/kernel-service/src/service_response_tests.rs`
+- Defect correction evidence: commit `51f6158`
+- Status: `IMPLEMENTED; VERIFIED; CLOSED`
 
 ### K13-008
-- Title: `Transport And Runtime Deferral`
-- Requirement source: architecture freeze and absence of K13 infrastructure authority
-- Dependencies: later ADRs
-- Expected files: future ADRs only when required
-- Expected result: transport, runtime, persistence, scheduler, and networking concerns remain outside K13 planning
-- Validation method: governance review
-- Acceptance criteria: K13 planning remains infrastructure-free
-- Status: `REQUIRES LATER ADR`
+- Title: `ServiceStatusSnapshot`
+- Production evidence: `crates/kernel-service/src/service_status.rs`
+- Test evidence: `crates/kernel-service/src/service_status_tests.rs`
+- Status: `IMPLEMENTED; VERIFIED; CLOSED`
+
+### K13-009
+- Title: `ServiceValidation`
+- Production evidence: `crates/kernel-service/src/service_validation.rs`
+- Test evidence: `crates/kernel-service/src/service_conformance_tests.rs`
+- Status: `IMPLEMENTED; VERIFIED; CLOSED`
+
+### K13-010
+- Title: `Compatibility Verification`
+- Production evidence: `crates/kernel-service/src/lib.rs`, root workspace integration commits `1d76314` and `70b51a6`
+- Test evidence: `crates/kernel-service/src/service_conformance_tests.rs`
+- Status: `IMPLEMENTED; VERIFIED; CLOSED`

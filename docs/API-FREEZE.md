@@ -363,7 +363,7 @@ The additive K11 Studio API currently covers:
 
 ### Status Statement
 
-`NOT YET FROZEN`
+`FROZEN FOR K13 CONSUMPTION`
 
 ### K12 Review State
 
@@ -371,7 +371,7 @@ The additive K11 Studio API currently covers:
 - Architecture review: `PASSED`
 - Implementation status: `COMPLETE`
 - Compile validation status: `PASSED`
-- Native verification status: `PENDING PRIMARY HOST`
+- Native verification status: `PASSED`
 - Public API inventory: `RECORDED`
 - Compatibility status: `K1-K11 PRESERVED; K12 ADDITIVE`
 - Architecture Freeze: `PRESERVED`
@@ -408,45 +408,82 @@ The additive K12 Application Integration API currently covers:
 - `StudioCommandRequest`
 - `StudioCommandResponse`
 
-### K11 Freeze Conditions
+### K12 Freeze Conditions
 
-- K11 implementation is complete in `kernel-studio`.
+- K12 implementation is complete in `kernel-application`.
 - Public API inventory is recorded in `docs/API.md`.
-- Architecture review passed without redesign, dependency-direction change, or ADR requirement.
-- K1-K10 API compatibility is preserved and K11 public API is additive only.
+- Architecture review passed under accepted `ADR-0001`.
+- K1-K11 compatibility is preserved and K12 public API is additive only.
 - Primary-host native verification passed on Sunday, July 19, 2026.
-- `cargo test --workspace --all-targets` result: `877 passed`, `0 failed`, `0 ignored`, `0 measured`, `0 filtered out`, exit code `0`.
+- Current authoritative workspace-native result includes `kernel-application: 23 passed` and `TOTAL: 917 passed`, `FAILED: 0`.
 
-### K11 Change Policy
+### K12 Change Policy
 
-Breaking K11 public API or semantic changes after freeze require:
+Breaking K12 public API or semantic changes after freeze require:
 
 - approved ADR
 - compatibility review
 - explicit human authorization
 
-### K10 Freeze Conditions
+## K13 Service Integration
 
-- K10 implementation is complete in `kernel-gateway`.
+### Status Statement
+
+`FROZEN FOR K14 CONSUMPTION`
+
+### K13 Review State
+
+- Planning status: `COMPLETE`
+- ADR status: `ACCEPTED`
+- Architecture review: `PASSED`
+- Workspace integration status: `PASSED`
+- Implementation status: `COMPLETE`
+- Compile validation status: `PASSED`
+- Native verification status: `PASSED`
+- Public API inventory: `RECORDED`
+- Compatibility status: `K1-K12 PRESERVED; K13 ADDITIVE`
+- Architecture Freeze: `PRESERVED`
+
+### K13 Scope
+
+The additive K13 Service Integration API currently covers:
+
+- `ServiceApiVersion`
+- `ServiceIdentity`
+- `ServiceIdentityKind`
+- `ServiceCapabilityReference`
+- `ServiceCapabilityDeclaration`
+- `ServiceIntentKind`
+- `ServiceRequestId`
+- `ServiceRequestContext`
+- `ServiceCommandIntent`
+- `ServiceQueryIntent`
+- `ServiceResponseKind`
+- `ServiceResponseStatusReference`
+- `ServiceResponseEnvelope`
+- `ServiceError`
+- `ServiceErrorCode`
+- `ServiceResult`
+- `ServiceDependencyCompatibilityReference`
+- `ServiceStatusSnapshot`
+- `ServiceValidationStatus`
+- `SERVICE_COMMAND_CAPABILITY`
+- `SERVICE_QUERY_CAPABILITY`
+
+### K13 Freeze Conditions
+
+- K13 implementation is complete in `kernel-service`.
 - Public API inventory is recorded in `docs/API.md`.
-- Architecture review passed without redesign, dependency-direction change, or ADR requirement.
-- K1-K9 API compatibility is preserved and K10 public API is additive only.
+- Architecture review passed under accepted `ADR-0002`.
+- K1-K12 compatibility is preserved and K13 public API is additive only.
 - Primary-host native verification passed on Sunday, July 19, 2026.
-- `cargo test --workspace --all-targets` result: `861 passed`, `0 failed`, `0 ignored`, `0 measured`, `0 filtered out`, exit code `0`.
+- `cargo test --workspace --all-targets` result: `kernel-domain: 827 passed`, `kernel-gateway: 34 passed`, `kernel-studio: 16 passed`, `kernel-application: 23 passed`, `kernel-service: 17 passed`, `TOTAL: 917 passed`, `FAILED: 0`.
+- Root workspace is the single workspace authority; `crates/kernel-service` no longer declares a crate-local `[workspace]` and no crate-local `Cargo.lock` remains.
 
-### K10 Change Policy
+### K13 Change Policy
 
-Breaking K10 public API or semantic changes after freeze require:
+Breaking K13 public API or semantic changes after freeze require:
 
 - approved ADR
 - compatibility review
 - explicit human authorization
-
-### K10 Non-Features
-
-- No HTTP, REST, WebSocket, gRPC, or IPC transport implementation
-- No authentication-provider integration
-- No session persistence
-- No network, filesystem, or database access
-- No scheduler, worker dispatch, queue, or runtime orchestration
-- No frontend, dashboard, or Studio implementation
