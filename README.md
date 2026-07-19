@@ -1,7 +1,7 @@
 # CHELA-X Kernel
 
 ## Status
-Implementation (K8 Closed, K9 Closed, K10 Closed, K11 Closed, K12 ADR Accepted)
+Implementation (K8 Closed, K9 Closed, K10 Closed, K11 Closed, K12 Implemented)
 
 ## Version
 0.5.0
@@ -58,6 +58,7 @@ AI Engineering OS -> CHELA-X CES -> CHELA-X Kernel -> CHELA-X Runtime -> CHELA-X
 | K9 Enterprise Memory | PASS / COMPLETE |
 | K10 API Gateway | PASS / COMPLETE |
 | K11 Studio Integration | PASS / COMPLETE |
+| K12 Application Integration | PASS / COMPLETE |
 
 Canonical host validation:
 
@@ -65,7 +66,7 @@ Canonical host validation:
 - **0 failed**
 
 ## Current Status
-`K8 Execution Engine Closed And Frozen; K9 Enterprise Memory Closed And Frozen; K10 API Gateway Closed And Frozen For K11 Consumption; K11 Studio Integration Closed And Frozen For K12 Consumption; K12 Planning Complete, ADR Accepted, And Bounded Implementation Authorized`
+`K8 Execution Engine Closed And Frozen; K9 Enterprise Memory Closed And Frozen; K10 API Gateway Closed And Frozen For K11 Consumption; K11 Studio Integration Closed And Frozen For K12 Consumption; K12 Application Integration Implemented, Compile-Verified, Native Verification Pending Primary Host`
 
 ## Constraints
 - Architecture is frozen.
@@ -94,7 +95,13 @@ Canonical host validation:
 - K12 ADR is accepted.
 - K12 architecture review passed on July 19, 2026.
 - K12 implementation is authorized within the ADR-0001 boundary only.
-- K12 implementation is not started.
+- K12 implementation is complete.
+- K12 compile validation passed in the repository workspace.
+- K12 native verification is pending the primary host because local `cargo test -p kernel-application --all-targets` is blocked by missing linker `cc`.
+- K12 public API is not yet frozen.
+- K12 introduces additive application-integration contracts in `crates/kernel-application`.
+- K12 primarily depends on frozen `kernel-studio`.
+- Direct `kernel-gateway` and `kernel-domain` dependencies are exceptional and are limited to frozen K10 authentication and authorization references plus frozen correlation, time, audit, and ownership value types that are not re-exported by `kernel-studio`.
 - K6 preserves the architecture freeze.
 - K8 preserves the architecture freeze.
 - Runtime execution is not implemented.

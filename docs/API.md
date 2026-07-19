@@ -1341,3 +1341,38 @@ Freeze guarantees:
 
 - K11 public API is frozen for K12 consumption.
 - Breaking changes after K11 freeze require approved ADR, compatibility review, and explicit human authorization.
+
+## K12 Application Integration Implementation Review
+
+Review status:
+
+- `K12-001 K12-002 K12-003 K12-004 K12-006 K12-007 K12-009 K12-010 IMPLEMENTED`
+- `K12 IMPLEMENTATION COMPLETE`
+- `K12 COMPILE VALIDATION PASSED`
+- `K12 NATIVE VERIFICATION PENDING PRIMARY HOST`
+- `K12 API NOT YET FROZEN`
+
+Public inventory groups:
+
+- Identity and Version: `ApplicationApiVersion`, `ApplicationIdentity`, `ApplicationIdentityKind`
+- Capability and Admission: `ApplicationCapabilityReference`, `ApplicationCapabilityDeclaration`
+- Context and Session: `ApplicationRequestId`, `ApplicationAuditReference`, `ApplicationRequestContext`, `ApplicationSessionReference`, `ApplicationSessionStatusReference`
+- Navigation and Intent: `ApplicationIntentKind`, `ApplicationViewIntent`, `ApplicationCommandIntent`, `ApplicationQueryIntent`, `ApplicationRequestEnvelope`
+- Response and Error: `ApplicationResponseKind`, `ApplicationResponseStatusReference`, `ApplicationResponsePayload`, `ApplicationResponseEnvelope`, `ApplicationError`, `ApplicationErrorCode`, `ApplicationResult`
+- Status and Compatibility: `ApplicationDependencyCompatibilityReference`, `ApplicationStatusSnapshot`, `ApplicationValidationStatus`
+
+Conformance guarantees:
+
+- K12 public API matches additive `kernel-application` re-exports from `crates/kernel-application/src/lib.rs`.
+- K1-K11 compatibility is preserved.
+- K12 public API is additive only.
+- Application contracts remain technology-neutral, transport-neutral, runtime-free, infrastructure-free, immutable, and side-effect free.
+- K12 command and query intent remains coordinated through frozen K11 Studio requests and frozen K10 gateway evidence only.
+- `kernel-application -> kernel-studio` remains the primary dependency direction.
+- Direct `kernel-gateway` and `kernel-domain` dependencies are exceptional and are limited to frozen K10 authentication and authorization references plus frozen value types that are unavailable through `kernel-studio`.
+- No HTTP server, WebSocket, REST routing, IPC hosting, async runtime, persistence, session storage, cache, scheduler, worker runtime, authentication provider, browser runtime, or desktop runtime is exposed.
+
+Freeze guarantees:
+
+- K12 public API is not yet frozen.
+- Breaking changes before K12 freeze remain governed by `ADR-0001` and explicit human authorization.

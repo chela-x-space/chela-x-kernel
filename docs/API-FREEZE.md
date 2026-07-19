@@ -358,6 +358,53 @@ The additive K11 Studio API currently covers:
 - `StudioMemoryProjection`
 - `StudioAuditProjection`
 - `StudioRevenueReferenceProjection`
+
+## K12 Application Integration
+
+### Status Statement
+
+`NOT YET FROZEN`
+
+### K12 Review State
+
+- Planning status: `COMPLETE`
+- Architecture review: `PASSED`
+- Implementation status: `COMPLETE`
+- Compile validation status: `PASSED`
+- Native verification status: `PENDING PRIMARY HOST`
+- Public API inventory: `RECORDED`
+- Compatibility status: `K1-K11 PRESERVED; K12 ADDITIVE`
+- Architecture Freeze: `PRESERVED`
+
+### K12 Scope
+
+The additive K12 Application Integration API currently covers:
+
+- `ApplicationApiVersion`
+- `ApplicationIdentity`
+- `ApplicationIdentityKind`
+- `ApplicationCapabilityReference`
+- `ApplicationCapabilityDeclaration`
+- `ApplicationRequestId`
+- `ApplicationAuditReference`
+- `ApplicationRequestContext`
+- `ApplicationSessionReference`
+- `ApplicationSessionStatusReference`
+- `ApplicationViewIntent`
+- `ApplicationCommandIntent`
+- `ApplicationQueryIntent`
+- `ApplicationIntentKind`
+- `ApplicationRequestEnvelope`
+- `ApplicationResponseKind`
+- `ApplicationResponseStatusReference`
+- `ApplicationResponsePayload`
+- `ApplicationResponseEnvelope`
+- `ApplicationError`
+- `ApplicationErrorCode`
+- `ApplicationResult`
+- `ApplicationDependencyCompatibilityReference`
+- `ApplicationStatusSnapshot`
+- `ApplicationValidationStatus`
 - `StudioCommandRequest`
 - `StudioCommandResponse`
 

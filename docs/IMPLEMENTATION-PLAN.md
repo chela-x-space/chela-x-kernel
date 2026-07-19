@@ -202,7 +202,10 @@ K11 implementation constraints preserved:
 - K12 ADR is accepted.
 - K12 architecture review passed on July 19, 2026.
 - K12 implementation is authorized within the ADR-0001 boundary.
-- K12 implementation is not started.
+- K12 implementation is complete.
+- K12 compile validation passed in the repository workspace.
+- K12 native verification is pending the primary host because `cargo test -p kernel-application --all-targets` is blocked locally by missing linker `cc`.
+- K12 API is not yet frozen.
 
 ## K12 Current Milestone State
 
@@ -211,8 +214,11 @@ K11 implementation constraints preserved:
 - ADR status: `ACCEPTED`
 - Architecture review status: `PASSED`
 - Implementation authorization: `AUTHORIZED WITHIN ADR-0001 BOUNDARY`
-- Implementation status: `NOT STARTED`
-- Repository scope: planning and accepted ADR artifacts only
+- Implementation status: `COMPLETE`
+- Compile validation status: `PASSED`
+- Native verification status: `PENDING PRIMARY HOST`
+- API status: `NOT YET FROZEN`
+- Repository scope: additive `kernel-application` crate plus implementation evidence
 - ADR status from current repository evidence: `SATISFIED BY ADR-0001`
 
 K12 planning constraints preserved:

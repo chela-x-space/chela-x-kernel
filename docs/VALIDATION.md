@@ -661,7 +661,7 @@ K11 implementation assertions:
 - Architecture changed: `NO`
 - ADR required: `NO`
 
-## K12 Planning Validation
+## K12 Implementation Validation
 
 Validation date: `2026-07-19`
 
@@ -675,15 +675,19 @@ Validation date: `2026-07-19`
 - `git diff --check`: `PASS`
 - `git status --short`: `CLEAN`
 
-K12 planning assertions:
+K12 implementation assertions:
 
 - Planning status: `COMPLETE`
 - ADR status: `ACCEPTED`
 - Architecture review status: `PASSED`
 - Implementation authorization: `AUTHORIZED WITHIN ADR-0001 BOUNDARY`
-- Implementation status: `NOT STARTED`
-- Production source changed: `NO`
-- Tests changed: `NO`
-- Cargo files changed: `NO`
+- Implementation status: `COMPLETE`
+- Compile validation status: `PASSED`
+- Native verification status: `PENDING PRIMARY HOST`
+- API status: `NOT YET FROZEN`
+- `cargo test -p kernel-application --all-targets`: `BLOCKED - linker cc not found (os error 2)`
+- Production source changed: `YES — ADDITIVE K12 APPLICATION API`
+- Tests changed: `YES — ADDITIVE K12 APPLICATION VERIFICATION`
+- Cargo files changed: `YES — ADDITIVE K12 WORKSPACE MEMBER`
 - Frozen K1-K11 APIs changed: `NO`
-- ADR and documentation files only: `YES`
+- Infrastructure introduced: `NO`

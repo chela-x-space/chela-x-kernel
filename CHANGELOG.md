@@ -130,6 +130,24 @@ INTERNAL
 - Direct `kernel-gateway` or `kernel-domain` dependencies remain exceptional and require implementation evidence
 - No transport, frontend, runtime, persistence, session, provider, or deployment architecture selected
 
+## K12 Application Integration Implementation
+
+### Added
+
+- Additive crate `crates/kernel-application`
+- Additive technology-neutral K12 contracts for application identity, request context, session reference, navigation intent, view intent, command intent, query intent, response envelope, error envelope, capability declaration, status snapshot, and centralized validation
+- Additive K12 tests covering identity, context, navigation, command/query separation, response continuity, status snapshots, conformance, and deterministic behavior
+- Implementation evidence that `kernel-application -> kernel-studio` remains the primary dependency direction
+- Exceptional direct dependencies on `kernel-gateway` and `kernel-domain` only for frozen K10 authentication and authorization evidence plus frozen correlation, time, event-trace, audit, and ownership value types not re-exported by `kernel-studio`
+
+### Boundaries
+
+- K12 implementation status: `COMPLETE`
+- K12 compile validation status: `PASSED`
+- K12 native verification status: `PENDING PRIMARY HOST`
+- K12 API status: `NOT YET FROZEN`
+- No HTTP, REST, WebSocket, SSE, IPC, async runtime, scheduler, worker runtime, persistence, session storage, authentication provider, frontend framework, browser runtime, desktop runtime, or deployment infrastructure introduced
+
 ## K9 Enterprise Memory
 
 ### Added
