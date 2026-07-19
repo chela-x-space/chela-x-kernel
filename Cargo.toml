@@ -1,3 +1,8 @@
 [workspace]
-members = ["crates/kernel-domain", "crates/kernel-gateway", "crates/kernel-studio"]
+members = [
+    "crates/kernel-domain",
+    "crates/kernel-gateway",
+    "crates/kernel-studio",
+    "crates/kernel-application",
+]
 resolver = "2"

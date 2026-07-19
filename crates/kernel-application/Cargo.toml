@@ -1,0 +1,13 @@
+[package]
+name = "kernel-application"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+kernel-domain = { path = "../kernel-domain" }
+kernel-gateway = { path = "../kernel-gateway" }
+kernel-studio = { path = "../kernel-studio" }
