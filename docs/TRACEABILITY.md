@@ -311,3 +311,27 @@ INTERNAL
 | `K12-008` | none | none | none | `docs/plans/K12-IMPLEMENTATION-PLAN.md`, `docs/backlog/K12-BACKLOG.md`, `docs/ADR-0001-K12-APPLICATION-INTEGRATION-BOUNDARY.md` | approved ADR boundary | `PLANNING_ONLY` | `REQUIRES LATER ADR` |
 | `K12-009` | `ApplicationStatusSnapshot`, `ApplicationDependencyCompatibilityReference`, repository-local K12 docs | `ApplicationStatusSnapshot::new`, `ApplicationDependencyCompatibilityReference::new` | `application_status_tests.rs::application_status_snapshot_preserves_validation_status_k12_009` | `docs/plans/K12-IMPLEMENTATION-PLAN.md`, `docs/TRACEABILITY.md`, `docs/VALIDATION.md`, `docs/ADR-0001-K12-APPLICATION-INTEGRATION-BOUNDARY.md` | inherited traceability baseline | `IMPLEMENTED` | `COMPILE-VERIFIED; NATIVE VERIFICATION PENDING` |
 | `K12-010` | `kernel-application` crate boundary, `ApplicationResponseEnvelope`, `ApplicationError` | `ApplicationResponseEnvelope::new`, `ApplicationError::new` | `application_response_tests.rs::application_response_preserves_request_correlation_k12_010`; `application_response_tests.rs::application_response_rejects_request_response_mismatch_k12_010` | `docs/plans/K12-IMPLEMENTATION-PLAN.md`, `docs/IMPLEMENTATION-PLAN.md`, `docs/ADR-0001-K12-APPLICATION-INTEGRATION-BOUNDARY.md` | accepted ADR and frozen K10-K11 dependency direction | `IMPLEMENTED` | `COMPILE-VERIFIED; NATIVE VERIFICATION PENDING` |
+
+## K13 Planning Summary
+
+- Milestone: `K13`
+- Official planned title: `K13 Service Integration`
+- Planning status: `COMPLETE`
+- Architecture review status: `BLOCKED PENDING ADR`
+- Implementation authorization: `BLOCKED`
+- Implementation status: `NOT STARTED`
+- Repository scope: `PROPOSED SERVICE CONTRACT LAYER ONLY`
+- Repository-local CES mapping status: `PARTIAL / INHERITED — DO NOT FABRICATE NEW CES IDS`
+
+## K13 Planning Matrix
+
+| Kernel requirement | Requirement summary | Repository-local source | Supporting CES-traceable source | Proposed contract or behavior | Frozen dependency | Validation method | Classification | Status |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `K13-001` | K13 title and architectural role require explicit authority above frozen K12. | `docs/plans/K13-IMPLEMENTATION-PLAN.md`, `docs/backlog/K13-BACKLOG.md` | `docs/kernel-architecture/15-roadmap.md`, `docs/ADR-0001-K12-APPLICATION-INTEGRATION-BOUNDARY.md` | explicit K13 milestone definition | human architecture authority | architecture review | `PLANNING_ONLY` | `BLOCKED PENDING ADR` |
+| `K13-002` | K13 must consume frozen K12 without bypassing K12, K11, or K10. | `docs/plans/K13-IMPLEMENTATION-PLAN.md` | `docs/kernel-architecture/13-data-flow.md` | service coordination over K12 only | K12 frozen API | static dependency audit | `PLANNING_ONLY` | `PLANNED` |
+| `K13-003` | K13 remains additive, deterministic, technology-neutral, and infrastructure-free. | `docs/plans/K13-IMPLEMENTATION-PLAN.md` | `README.md`, `ARCHITECTURE.md` | additive contract-only boundary | K1-K12 frozen APIs | static architecture audit | `PLANNING_ONLY` | `PLANNED` |
+| `K13-004` | K13 preserves traceability without fabricated CES identifiers. | `docs/plans/K13-IMPLEMENTATION-PLAN.md`, `docs/backlog/K13-BACKLOG.md` | `docs/kernel-architecture/16-traceability.md` | repository-local traceability only | inherited traceability baseline | documentation review | `PLANNING_ONLY` | `PLANNED` |
+| `K13-005` | K13 preserves K10, K11, and K12 semantics by coordination only. | `docs/plans/K13-IMPLEMENTATION-PLAN.md` | `docs/kernel-architecture/11-api-gateway-architecture.md`, `docs/kernel-architecture/12-studio-integration-architecture.md`, `docs/ADR-0001-K12-APPLICATION-INTEGRATION-BOUNDARY.md` | service request and response continuity over existing boundaries | K10-K12 frozen semantics | failure-path and contract planning | `PLANNING_ONLY` | `PLANNED` |
+| `K13-006` | K13 crate boundary and dependency direction require approval before implementation. | `docs/plans/K13-IMPLEMENTATION-PLAN.md`, `docs/backlog/K13-BACKLOG.md` | `ARCHITECTURE.md` | proposed `crates/kernel-service` boundary | approved ADR | architecture review | `PLANNING_ONLY` | `BLOCKED PENDING ADR` |
+| `K13-007` | K13 planning defines validation and static audit gates only. | `docs/plans/K13-IMPLEMENTATION-PLAN.md`, `docs/VALIDATION.md` | repository validation baseline | compile, static audit, and future native-test planning | repository validation baseline | documentation review | `PLANNING_ONLY` | `PLANNED` |
+| `K13-008` | Transport, runtime, persistence, and infrastructure remain outside K13 planning. | `docs/plans/K13-IMPLEMENTATION-PLAN.md`, `docs/backlog/K13-BACKLOG.md` | architecture freeze | later ADR gate only | later ADRs | governance review | `PLANNING_ONLY` | `REQUIRES LATER ADR` |

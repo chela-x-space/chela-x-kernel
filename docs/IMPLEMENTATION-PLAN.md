@@ -231,6 +231,24 @@ K12 planning constraints preserved:
 - K12 must not modify `kernel-domain`, `kernel-gateway`, or `kernel-studio` public APIs
 - concrete frontend, transport, runtime, persistence, session, deployment, or authentication-provider choices require approved ADR
 
+## K13 Current Milestone State
+
+- Exact title: `K13 Service Integration`
+- Planning status: `COMPLETE`
+- Architecture review status: `BLOCKED PENDING ADR`
+- Implementation authorization: `BLOCKED`
+- Implementation status: `NOT STARTED`
+- Repository scope: proposed additive `kernel-service` contract layer only
+- ADR status from current repository evidence: `REQUIRED`
+
+K13 planning constraints preserved:
+
+- K13 is planned as the smallest service-facing coordination boundary above frozen K12 only
+- K13 must consume frozen K12 contracts and must not bypass K12, K11, or K10
+- K13 must not modify `kernel-domain`, `kernel-gateway`, `kernel-studio`, or `kernel-application` public APIs
+- K13 planning introduces no runtime, persistence, networking, scheduling, transport, or infrastructure
+- K13 implementation remains blocked until a new ADR explicitly approves the title, crate boundary, and dependency direction
+
 Before future milestone implementation begins that changes repository architecture, the specification package MUST receive an architecture review confirming:
 
 - K7 remains `Task Engine`

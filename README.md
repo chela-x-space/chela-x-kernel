@@ -1,7 +1,7 @@
 # CHELA-X Kernel
 
 ## Status
-Implementation (K8 Closed, K9 Closed, K10 Closed, K11 Closed, K12 Implemented)
+Implementation (K8 Closed, K9 Closed, K10 Closed, K11 Closed, K12 Implemented, K13 Planned)
 
 ## Version
 0.5.0
@@ -66,7 +66,7 @@ Canonical host validation:
 - **0 failed**
 
 ## Current Status
-`K8 Execution Engine Closed And Frozen; K9 Enterprise Memory Closed And Frozen; K10 API Gateway Closed And Frozen For K11 Consumption; K11 Studio Integration Closed And Frozen For K12 Consumption; K12 Application Integration Implemented, Compile-Verified, Native Verification Pending Primary Host`
+`K8 Execution Engine Closed And Frozen; K9 Enterprise Memory Closed And Frozen; K10 API Gateway Closed And Frozen For K11 Consumption; K11 Studio Integration Closed And Frozen For K12 Consumption; K12 Application Integration Implemented, Compile-Verified, Native Verification Pending Primary Host; K13 Service Integration Planning Complete, Architecture Review Blocked Pending ADR`
 
 ## Constraints
 - Architecture is frozen.
@@ -102,6 +102,10 @@ Canonical host validation:
 - K12 introduces additive application-integration contracts in `crates/kernel-application`.
 - K12 primarily depends on frozen `kernel-studio`.
 - Direct `kernel-gateway` and `kernel-domain` dependencies are exceptional and are limited to frozen K10 authentication and authorization references plus frozen correlation, time, audit, and ownership value types that are not re-exported by `kernel-studio`.
+- K13 planning is complete as a documentation-only milestone.
+- K13 currently represents the smallest proposed service-facing coordination boundary above `kernel-application`.
+- K13 implementation is blocked pending a new ADR because the frozen architecture baseline does not define a K13 title, crate boundary, or dependency direction.
+- K13 planning does not introduce runtime, persistence, networking, scheduling, transport, or other infrastructure.
 - K6 preserves the architecture freeze.
 - K8 preserves the architecture freeze.
 - Runtime execution is not implemented.

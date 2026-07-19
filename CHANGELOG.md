@@ -148,6 +148,23 @@ INTERNAL
 - K12 API status: `NOT YET FROZEN`
 - No HTTP, REST, WebSocket, SSE, IPC, async runtime, scheduler, worker runtime, persistence, session storage, authentication provider, frontend framework, browser runtime, desktop runtime, or deployment infrastructure introduced
 
+## K13 Service Integration Planning
+
+### Added
+
+- Repository-backed K13 planning artifacts in `docs/plans/K13-IMPLEMENTATION-PLAN.md` and `docs/backlog/K13-BACKLOG.md`
+- Proposed smallest service-facing coordination boundary above frozen `kernel-application`
+- Repository-backed K13 traceability and governance planning over frozen K10-K12 boundaries
+- Explicit ADR recommendation that K13 requires new architecture authority before implementation
+
+### Boundaries
+
+- K13 planning is complete
+- K13 architecture review is blocked pending ADR
+- K13 implementation is not authorized
+- No Rust production code, tests, or Cargo files changed
+- No runtime, persistence, networking, scheduling, transport, or infrastructure introduced
+
 ## K9 Enterprise Memory
 
 ### Added
