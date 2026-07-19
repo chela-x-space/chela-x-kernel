@@ -11,7 +11,7 @@ fn adapter_query_intent_accepts_valid_service_query_k14_005() {
             .adapter_request_context()
             .adapter_request_id()
             .as_str(),
-        "adapter.request.query"
+        "adapter.request.000002"
     );
 }
 

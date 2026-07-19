@@ -674,6 +674,14 @@ pub fn other_service_request_id() -> ServiceRequestId {
     ServiceRequestId::new("service.request.000002").expect("request")
 }
 
+pub fn adapter_command_request_id() -> AdapterRequestId {
+    AdapterRequestId::new("adapter.request.000001").expect("request")
+}
+
+pub fn adapter_query_request_id() -> AdapterRequestId {
+    AdapterRequestId::new("adapter.request.000002").expect("request")
+}
+
 pub fn service_command_capability() -> ServiceCapabilityReference {
     ServiceCapabilityReference::new(SERVICE_COMMAND_CAPABILITY).expect("capability")
 }
@@ -731,7 +739,7 @@ pub fn alternate_query_service_request_context() -> ServiceRequestContext {
 pub fn command_service_request_context() -> ServiceRequestContext {
     ServiceRequestContext::new(
         service_api_version(),
-        service_request_id(),
+        other_service_request_id(),
         service_identity(),
         service_capability_declaration(),
         command_application_request_context(),
@@ -839,7 +847,7 @@ pub fn adapter_capability_declaration() -> AdapterCapabilityDeclaration {
 pub fn adapter_command_request_context() -> AdapterRequestContext {
     AdapterRequestContext::new(
         adapter_api_version(),
-        AdapterRequestId::new("adapter.request.command").expect("request"),
+        adapter_command_request_id(),
         adapter_identity(),
         adapter_capability_declaration(),
         command_service_request_context(),
@@ -851,7 +859,7 @@ pub fn adapter_command_request_context() -> AdapterRequestContext {
 pub fn adapter_query_request_context() -> AdapterRequestContext {
     AdapterRequestContext::new(
         adapter_api_version(),
-        AdapterRequestId::new("adapter.request.query").expect("request"),
+        adapter_query_request_id(),
         adapter_identity(),
         adapter_capability_declaration(),
         query_service_request_context(),
