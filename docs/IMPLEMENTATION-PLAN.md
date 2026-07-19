@@ -283,6 +283,24 @@ K14 implementation constraints preserved:
 - K14 introduces no runtime, persistence, networking, transport, hosting, deployment, or infrastructure.
 - K14 primary-host native verification passed with `kernel-adapter: 23 passed` and `TOTAL: 940 passed`.
 
+## K15 Current Milestone State
+
+- Proposed title: `K15 External Intake Trust Boundary`
+- Planning status: `COMPLETE`
+- Architecture review status: `PENDING HUMAN REVIEW`
+- Implementation authorization: `NOT AUTHORIZED`
+- Implementation status: `NOT STARTED`
+- Repository scope: planning-only additive trust-boundary assessment around frozen K14
+- ADR status from current repository evidence: `REQUIRED`
+
+K15 planning constraints preserved:
+
+- K15 must not duplicate frozen K8 execution concepts.
+- K15 must not bypass K14, K13, K12, K11, or K10.
+- K15 must not modify `kernel-domain`, `kernel-gateway`, `kernel-studio`, `kernel-application`, `kernel-service`, or `kernel-adapter` public APIs during planning.
+- K15 planning introduces no runtime, persistence, networking, transport, hosting, deployment, or infrastructure.
+- Any future K15 implementation requires approved architecture authority before code changes begin.
+
 ## References
 
 - [TRACEABILITY.md](./TRACEABILITY.md)
@@ -298,6 +316,7 @@ K14 implementation constraints preserved:
 - [plans/K12-IMPLEMENTATION-PLAN.md](./plans/K12-IMPLEMENTATION-PLAN.md)
 - [plans/K13-IMPLEMENTATION-PLAN.md](./plans/K13-IMPLEMENTATION-PLAN.md)
 - [plans/K14-IMPLEMENTATION-PLAN.md](./plans/K14-IMPLEMENTATION-PLAN.md)
+- [plans/K15-IMPLEMENTATION-PLAN.md](./plans/K15-IMPLEMENTATION-PLAN.md)
 - [ADR-0001-K12-APPLICATION-INTEGRATION-BOUNDARY.md](./ADR-0001-K12-APPLICATION-INTEGRATION-BOUNDARY.md)
 - [ADR-0002-K13-SERVICE-INTEGRATION-BOUNDARY.md](./ADR-0002-K13-SERVICE-INTEGRATION-BOUNDARY.md)
 - [ADR-0003-K14-EXTERNAL-ADAPTER-BOUNDARY.md](./ADR-0003-K14-EXTERNAL-ADAPTER-BOUNDARY.md)
@@ -310,3 +329,4 @@ K14 implementation constraints preserved:
 - [backlog/K12-BACKLOG.md](./backlog/K12-BACKLOG.md)
 - [backlog/K13-BACKLOG.md](./backlog/K13-BACKLOG.md)
 - [backlog/K14-BACKLOG.md](./backlog/K14-BACKLOG.md)
+- [backlog/K15-BACKLOG.md](./backlog/K15-BACKLOG.md)

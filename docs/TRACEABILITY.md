@@ -393,3 +393,13 @@ INTERNAL
 - Assertion bug: `YES`
 - Production semantics changed: `NO`
 - Canonical identities after correction: `adapter.request.000001`, `adapter.request.000002`, `service.request.000001`, `service.request.000002`
+
+## K15 Planning Summary
+
+- Milestone: `K15`
+- Proposed official title: `K15 External Intake Trust Boundary`
+- Planning status: `COMPLETE`
+- Architecture review status: `PENDING HUMAN REVIEW`
+- Implementation authorization: `NOT AUTHORIZED`
+- Implementation status: `NOT STARTED`
+- ADR required assessment: `YES`

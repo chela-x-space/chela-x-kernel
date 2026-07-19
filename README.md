@@ -1,7 +1,7 @@
 # CHELA-X Kernel
 
 ## Status
-Implementation (K8 Closed, K9 Closed, K10 Closed, K11 Closed, K12 Closed, K13 Closed, K14 Closed)
+Implementation (K8 Closed, K9 Closed, K10 Closed, K11 Closed, K12 Closed, K13 Closed, K14 Closed, K15 Planned)
 
 ## Version
 0.5.0
@@ -61,6 +61,7 @@ AI Engineering OS -> CHELA-X CES -> CHELA-X Kernel -> CHELA-X Runtime -> CHELA-X
 | K12 Application Integration | PASS / COMPLETE |
 | K13 Service Integration | PASS / COMPLETE |
 | K14 External Adapter Boundary | PASS / CLOSED |
+| K15 External Intake Trust Boundary | PLANNING / COMPLETE |
 
 Canonical host validation:
 
@@ -68,7 +69,7 @@ Canonical host validation:
 - **0 failed**
 
 ## Current Status
-`K8 Execution Engine Closed And Frozen; K9 Enterprise Memory Closed And Frozen; K10 API Gateway Closed And Frozen For K11 Consumption; K11 Studio Integration Closed And Frozen For K12 Consumption; K12 Application Integration Closed And Frozen For K13 Consumption; K13 Service Integration Closed And Frozen For K14 Consumption; K14 External Adapter Boundary Closed And Frozen For K15 Consumption`
+`K8 Execution Engine Closed And Frozen; K9 Enterprise Memory Closed And Frozen; K10 API Gateway Closed And Frozen For K11 Consumption; K11 Studio Integration Closed And Frozen For K12 Consumption; K12 Application Integration Closed And Frozen For K13 Consumption; K13 Service Integration Closed And Frozen For K14 Consumption; K14 External Adapter Boundary Closed And Frozen For K15 Consumption; K15 External Intake Trust Boundary Planning Complete, Architecture Review Pending Human Review, Implementation Not Authorized`
 
 ## Constraints
 - Architecture is frozen.
@@ -125,6 +126,8 @@ Canonical host validation:
 - K14 preserves adapter/service request identity separation with canonical fixture identifiers `adapter.request.000001`, `adapter.request.000002`, `service.request.000001`, and `service.request.000002`.
 - K14 introduces no runtime, Tokio, network transport, HTTP, REST, gRPC, WebSocket, GraphQL, message broker, persistence, database, filesystem behavior, queue, scheduler, cache, plugin loader, dynamic loading, external API client, AI model execution, deployment, hosting, or infrastructure.
 - K1-K13 frozen public APIs remain unchanged, K14 is additive, and K1-K13 compatibility is preserved.
+- K15 planning is complete for the smallest next additive boundary around K14.
+- K15 does not authorize implementation, Cargo changes, new crates, runtime, transport, or infrastructure.
 - K6 preserves the architecture freeze.
 - K8 preserves the architecture freeze.
 - Runtime execution is not implemented.

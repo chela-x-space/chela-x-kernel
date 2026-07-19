@@ -216,6 +216,22 @@ INTERNAL
 - K14 test correction classification: `Production bug: NO`, `Fixture bug: YES`, `Assertion bug: YES`, `Production semantics changed: NO`
 - Corrected canonical fixture identifiers to preserve boundary separation: `AdapterRequestId` = `adapter.request.000001`, `adapter.request.000002`; `ServiceRequestId` = `service.request.000001`, `service.request.000002`
 
+## K15 External Intake Trust Boundary Planning
+
+### Added
+
+- Planning artifacts in `docs/plans/K15-IMPLEMENTATION-PLAN.md` and `docs/backlog/K15-BACKLOG.md`
+- Repository-backed K15 planning over the next additive boundary around frozen K14 without implementation authorization
+- ADR-gated planning for a deterministic external-intake trust boundary above `kernel-adapter`
+
+### Boundaries
+
+- K15 planning is complete
+- K15 architecture review is pending human review
+- K15 implementation authorization is not granted
+- K15 implementation is not started
+- No Rust production code, tests, Cargo files, dependencies, runtime, transport, or infrastructure changed
+
 ## K9 Enterprise Memory
 
 ### Added
