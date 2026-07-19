@@ -343,3 +343,29 @@ INTERNAL
 | `K13-008` | `ServiceDependencyCompatibilityReference`, `ServiceStatusSnapshot`, `ServiceValidationStatus` in `crates/kernel-service/src/service_status.rs`; requirement-aligned coverage in `service_status_tests.rs` | `PASS` | `PASS` | `IMPLEMENTED; VERIFIED; CLOSED` |
 | `K13-009` | centralized validation helpers in `crates/kernel-service/src/service_validation.rs`; cross-cutting enforcement in `service_identity.rs`, `service_context.rs`, `service_command.rs`, `service_query.rs`, `service_response.rs`, and `service_status.rs`; requirement-aligned coverage in `service_conformance_tests.rs` | `PASS` | `PASS` | `IMPLEMENTED; VERIFIED; CLOSED` |
 | `K13-010` | additive `kernel-service` crate boundary, `crates/kernel-service/src/lib.rs` re-exports, `service_conformance_tests.rs`, static dependency audit, and root workspace integration commits `1d76314` and `70b51a6` | `PASS` | `PASS` | `IMPLEMENTED; VERIFIED; CLOSED` |
+
+## K14 Planning Summary
+
+- Milestone: `K14`
+- Proposed title: `K14 Adapter Integration`
+- Planning status: `COMPLETE`
+- Architecture review status: `PENDING HUMAN REVIEW`
+- Implementation authorization: `NOT AUTHORIZED`
+- Implementation status: `NOT STARTED`
+- Repository scope: `PROPOSED ADAPTER CONTRACT LAYER ONLY`
+- Repository-local CES mapping status: `PARTIAL / INHERITED — DO NOT FABRICATE NEW CES IDS`
+
+## K14 Planning Matrix
+
+| Kernel requirement | Requirement summary | Repository-local source | Supporting CES-traceable source | Proposed contract or behavior | Frozen dependency | Validation method | Classification | Status |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `K14-001` | K14 title and architectural role require explicit authority above frozen K13. | `docs/plans/K14-IMPLEMENTATION-PLAN.md`, `docs/backlog/K14-BACKLOG.md` | `docs/ADR-0002-K13-SERVICE-INTEGRATION-BOUNDARY.md` | explicit K14 adapter milestone definition | human architecture authority | architecture review | `PLANNING_ONLY` | `BLOCKED PENDING ADR` |
+| `K14-002` | K14 must consume frozen K13 without bypassing K13, K12, K11, or K10. | `docs/plans/K14-IMPLEMENTATION-PLAN.md` | `docs/kernel-architecture/13-data-flow.md` | adapter coordination over K13 only | K13 frozen API | static dependency audit | `PLANNING_ONLY` | `BLOCKED PENDING ADR` |
+| `K14-003` | K14 remains additive, deterministic, technology-neutral, and infrastructure-free. | `docs/plans/K14-IMPLEMENTATION-PLAN.md` | `README.md`, `ARCHITECTURE.md` | additive contract-only boundary | K1-K13 frozen APIs | static architecture audit | `PLANNING_ONLY` | `BLOCKED PENDING ADR` |
+| `K14-004` | K14 preserves traceability without fabricated CES identifiers. | `docs/plans/K14-IMPLEMENTATION-PLAN.md`, `docs/backlog/K14-BACKLOG.md` | `docs/kernel-architecture/16-traceability.md` | repository-local traceability only | inherited traceability baseline | documentation review | `PLANNING_ONLY` | `PLANNED` |
+| `K14-005` | K14 preserves K13 service identity and capability meaning by coordination only. | `docs/plans/K14-IMPLEMENTATION-PLAN.md` | `docs/API.md`, `docs/API-FREEZE.md` | adapter identity and capability continuity over K13 only | K13 frozen semantics | contract planning | `PLANNING_ONLY` | `BLOCKED PENDING ADR` |
+| `K14-006` | K14 command and query intent remain coordinated through K13 only. | `docs/plans/K14-IMPLEMENTATION-PLAN.md` | `docs/API.md`, `docs/ADR-0002-K13-SERVICE-INTEGRATION-BOUNDARY.md` | adapter command and query continuity | K13 command/query boundary | failure-path planning | `PLANNING_ONLY` | `BLOCKED PENDING ADR` |
+| `K14-007` | K14 request and response continuity preserve service scope, correlation, and audit evidence. | `docs/plans/K14-IMPLEMENTATION-PLAN.md` | `docs/API.md`, `docs/VALIDATION.md` | adapter request and response evidence continuity | K13 request/response boundary | failure-path planning | `PLANNING_ONLY` | `BLOCKED PENDING ADR` |
+| `K14-008` | K14 planning defines compile, documentation, static audit, and future native validation gates only. | `docs/plans/K14-IMPLEMENTATION-PLAN.md`, `docs/VALIDATION.md` | repository validation baseline | compile, documentation, and static-audit planning | repository validation baseline | documentation review | `PLANNING_ONLY` | `PLANNED` |
+| `K14-009` | Transport, runtime, persistence, hosting, and infrastructure remain outside K14 planning. | `docs/plans/K14-IMPLEMENTATION-PLAN.md`, `docs/backlog/K14-BACKLOG.md` | `docs/ADR-0002-K13-SERVICE-INTEGRATION-BOUNDARY.md` | later ADR gate only | later ADRs | governance review | `PLANNING_ONLY` | `PLANNED` |
+| `K14-010` | K14 preserves frozen compatibility and no reverse dependency from lower layers. | `docs/plans/K14-IMPLEMENTATION-PLAN.md` | `README.md`, `docs/IMPLEMENTATION-PLAN.md` | additive crate boundary above K13 only | K1-K13 frozen APIs | static dependency audit | `PLANNING_ONLY` | `BLOCKED PENDING ADR` |
