@@ -253,3 +253,28 @@ INTERNAL
 - Public API changed: `YES — ADDITIVE K10 API ONLY`
 - Architecture changed: `NO`
 - ADR required: `NO`
+
+## K11 Planning Summary
+
+- Milestone: `K11 Studio Integration`
+- Planning status: `COMPLETE`
+- Architecture review status: `PASSED`
+- Implementation status: `NOT STARTED`
+- Implementation authorization: `PENDING HUMAN REVIEW`
+- Repository scope: `PLANNING ARTIFACTS ONLY; NO API OR RUST CHANGES`
+- Repository-local CES mapping status: `PARTIAL / INHERITED — DO NOT FABRICATE NEW CES IDS`
+
+## K11 Planning Matrix
+
+| Kernel requirement | Requirement summary | Repository-local source | Supporting CES-traceable source | Planned contract or behavior | Frozen dependency | Validation method | Classification | Planning status |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `K11-001` | Top View planning preserves enterprise hierarchy over approved read models. | `docs/kernel-architecture/12-studio-integration-architecture.md` §5 | `docs/kernel-architecture/15-roadmap.md` §11 | top-view planning boundary | K4-K10 frozen contracts | architecture review, compile gates | `PLANNED` | `PLANNED` |
+| `K11-002` | Digital Twin planning remains observational over governed Kernel state. | `docs/kernel-architecture/12-studio-integration-architecture.md` §6 | `docs/kernel-architecture/13-data-flow.md` §10 | digital-twin planning boundary | K4-K10 frozen contracts | architecture review, compile gates | `PLANNED` | `PLANNED` |
+| `K11-003` | Runtime view planning reuses K4 runtime facts and K10 status snapshots. | `docs/kernel-architecture/12-studio-integration-architecture.md` §7 | `docs/kernel-architecture/01-kernel-overview.md` §17 | runtime-view planning boundary | K4, K10 frozen contracts | architecture review, compile gates | `PLANNED` | `PLANNED` |
+| `K11-004` | Workflow and task monitor planning preserve K6 and K7 concern separation. | `docs/kernel-architecture/12-studio-integration-architecture.md` §8 | inherited K6-K7 traceability | workflow/task planning boundary | K6, K7 frozen contracts | architecture review, compile gates | `PLANNED` | `PLANNED` |
+| `K11-005` | Event timeline planning preserves canonical K5 ordering and immutability. | `docs/kernel-architecture/12-studio-integration-architecture.md` §9 | `docs/kernel-architecture/13-data-flow.md` §5 | event-timeline planning boundary | K5 frozen contracts | architecture review, compile gates | `PLANNED` | `PLANNED` |
+| `K11-006` | Audit-view planning remains derived from Kernel evidence only. | `docs/kernel-architecture/12-studio-integration-architecture.md` §10 | inherited K3-K10 traceability | audit-view planning boundary | K3-K10 frozen contracts | architecture review, compile gates | `PLANNED` | `PLANNED` |
+| `K11-007` | Revenue-view planning remains derived from governed enterprise facts only. | `docs/kernel-architecture/12-studio-integration-architecture.md` §11 | `docs/kernel-architecture/15-roadmap.md` §11 | revenue-view planning boundary | governed facts only | architecture review, compile gates | `PLANNED` | `PLANNED` |
+| `K11-008` | Command-console planning reuses frozen K10 gateway request and response contracts. | `docs/kernel-architecture/12-studio-integration-architecture.md` §12 | `docs/kernel-architecture/11-api-gateway-architecture.md` §12 | command-console planning boundary | K10 frozen contracts | architecture review, compile gates | `PLANNED` | `PLANNED` |
+| `K11-009` | Studio flow planning never bypasses the API Gateway or modifies Kernel state directly. | `docs/kernel-architecture/13-data-flow.md` §10 | `docs/kernel-architecture/14-sequence-diagrams.md` §6 | Studio flow planning boundary | K10 gateway boundary | architecture review, static audit | `PLANNED` | `PLANNED` |
+| `K11-010` | K11 planning preserves frozen traceability and compatibility boundaries. | `docs/kernel-architecture/16-traceability.md` §4-§7 | inherited repository governance | traceability and compatibility planning | K1-K10 frozen APIs | architecture review, static audit | `PLANNED` | `PLANNED` |

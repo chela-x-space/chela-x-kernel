@@ -68,7 +68,7 @@ This breakdown is an implementation tracking document only. It does not create a
 
 ## Next Approved Milestone
 
-`K10 API Gateway`
+`K11 Studio Integration`
 
 ## K7 Current Milestone State
 
@@ -174,8 +174,25 @@ K10 implementation constraints preserved:
 - K10 must not modify `kernel-domain` public APIs.
 - K10 does not introduce HTTP, WebSocket, gRPC, IPC, or other concrete transport infrastructure.
 - K10 establishes gateway contracts, request validation, response mapping, error translation, protocol references, and status snapshots only.
-- K11 planning is authorized by K10 closure.
+- K11 planning is complete.
 - K11 implementation remains unauthorized by this document.
+
+## K11 Current Milestone State
+
+- Exact title: `K11 Studio Integration`
+- Planning status: `COMPLETE`
+- Architecture review status: `PASSED`
+- Implementation status: `NOT STARTED`
+- Implementation authorization: `PENDING HUMAN REVIEW`
+- Repository scope: planning artifacts only
+- ADR status from current repository evidence: `NOT REQUIRED`
+
+K11 planning constraints preserved:
+
+- K11 planning consumes frozen K10 gateway contracts and frozen K4-K9 read models by reference only.
+- K11 planning must not modify `kernel-domain` or `kernel-gateway` public APIs.
+- K11 planning does not authorize frontend framework selection, browser or desktop implementation, HTTP or WebSocket runtime, persistence, scheduler, database, or authentication-provider integration.
+- K11 planning preserves the API Gateway as the only approved Studio boundary.
 
 Before `K7-001` Rust implementation begins, the K7 specification package MUST receive an architecture review confirming:
 
@@ -200,8 +217,10 @@ Before `K7-001` Rust implementation begins, the K7 specification package MUST re
 - [plans/K8-IMPLEMENTATION-PLAN.md](./plans/K8-IMPLEMENTATION-PLAN.md)
 - [plans/K9-IMPLEMENTATION-PLAN.md](./plans/K9-IMPLEMENTATION-PLAN.md)
 - [plans/K10-IMPLEMENTATION-PLAN.md](./plans/K10-IMPLEMENTATION-PLAN.md)
+- [plans/K11-IMPLEMENTATION-PLAN.md](./plans/K11-IMPLEMENTATION-PLAN.md)
 - [backlog/K6-BACKLOG.md](./backlog/K6-BACKLOG.md)
 - [backlog/K7-BACKLOG.md](./backlog/K7-BACKLOG.md)
 - [backlog/K8-BACKLOG.md](./backlog/K8-BACKLOG.md)
 - [backlog/K9-BACKLOG.md](./backlog/K9-BACKLOG.md)
 - [backlog/K10-BACKLOG.md](./backlog/K10-BACKLOG.md)
+- [backlog/K11-BACKLOG.md](./backlog/K11-BACKLOG.md)

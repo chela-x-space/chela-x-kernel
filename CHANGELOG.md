@@ -60,6 +60,21 @@ INTERNAL
 - No network, database, filesystem, scheduler, worker dispatch, or runtime orchestration introduced
 - No ADR required from current repository evidence
 
+## K11 Studio Integration Planning
+
+### Added
+
+- Repository-backed K11 planning artifacts in `docs/plans/K11-IMPLEMENTATION-PLAN.md` and `docs/backlog/K11-BACKLOG.md`
+- Planning-only scope for Studio integration over frozen K10 gateway contracts and frozen K4-K9 read models
+- Technology-neutral architecture review recording that K11 planning may proceed without selecting a frontend framework, transport runtime, persistence model, or authentication provider
+
+### Boundaries
+
+- K11 implementation is not started
+- K11 implementation authorization remains pending human review
+- No Rust production code, tests, or Cargo files changed
+- No frontend framework, browser app, desktop app, REST runtime, WebSocket runtime, database, persistence, scheduler, or authentication-provider implementation introduced
+
 ## K9 Enterprise Memory
 
 ### Added
