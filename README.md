@@ -1,7 +1,7 @@
 # CHELA-X Kernel
 
 ## Status
-Implementation (K8 Closed, K9 Closed, K10 Closed, K11 Closed, K12 Closed, K13 Closed, K14 Implemented)
+Implementation (K8 Closed, K9 Closed, K10 Closed, K11 Closed, K12 Closed, K13 Closed, K14 Closed)
 
 ## Version
 0.5.0
@@ -60,15 +60,15 @@ AI Engineering OS -> CHELA-X CES -> CHELA-X Kernel -> CHELA-X Runtime -> CHELA-X
 | K11 Studio Integration | PASS / COMPLETE |
 | K12 Application Integration | PASS / COMPLETE |
 | K13 Service Integration | PASS / COMPLETE |
-| K14 External Adapter Boundary | PASS / IMPLEMENTED |
+| K14 External Adapter Boundary | PASS / CLOSED |
 
 Canonical host validation:
 
-- **917 passed**
+- **940 passed**
 - **0 failed**
 
 ## Current Status
-`K8 Execution Engine Closed And Frozen; K9 Enterprise Memory Closed And Frozen; K10 API Gateway Closed And Frozen For K11 Consumption; K11 Studio Integration Closed And Frozen For K12 Consumption; K12 Application Integration Closed And Frozen For K13 Consumption; K13 Service Integration Closed And Frozen For K14 Consumption; K14 External Adapter Boundary Implementation Complete, Compile Validation Passed, Native Verification Blocked In Current Codex Environment, API Not Frozen, Awaiting Human Review`
+`K8 Execution Engine Closed And Frozen; K9 Enterprise Memory Closed And Frozen; K10 API Gateway Closed And Frozen For K11 Consumption; K11 Studio Integration Closed And Frozen For K12 Consumption; K12 Application Integration Closed And Frozen For K13 Consumption; K13 Service Integration Closed And Frozen For K14 Consumption; K14 External Adapter Boundary Closed And Frozen For K15 Consumption`
 
 ## Constraints
 - Architecture is frozen.
@@ -77,7 +77,7 @@ Canonical host validation:
 - K6 workflow implementation is additive in `crates/kernel-domain/src/workflow.rs`, `crates/kernel-domain/src/state.rs`, and existing `kernel-domain` re-exports.
 - K7 task implementation remains frozen for next-milestone consumption.
 - K8 execution implementation is additive in `crates/kernel-domain/src/execution*.rs`, `crates/kernel-domain/src/errors.rs`, and existing `kernel-domain` re-exports.
-- Canonical host validation passed with `917 passed`, `0 failed`, `0 ignored`.
+- Canonical host validation passed with `940 passed`, `0 failed`, `0 ignored`.
 - K6 Workflow Engine domain layer is complete.
 - K6 is deterministic and side-effect free.
 - K6 public API is frozen for downstream consumption.
@@ -112,16 +112,19 @@ Canonical host validation:
 - K13 native verification passed on the primary host with `kernel-service: 17 passed` and `917 passed` total across the workspace.
 - K13 public API is frozen for K14 consumption.
 - K13 preserves a technology-neutral and replaceable service boundary with no runtime, Tokio, networking, transport, persistence, database, scheduler, queue, filesystem behavior, cache, plugin loading, AI model execution, infrastructure, direct `kernel-domain` mutation, `kernel-application` bypass, or reverse dependency from frozen lower crates.
-- K14 planning is complete as a documentation-only milestone.
+- K14 planning is complete and ADR-0003 is accepted.
 - K14 represents the accepted external-adapter contract boundary above `kernel-service`.
-- ADR-0003 is accepted and K14 implementation is authorized within the accepted contract-boundary scope only.
 - K14 introduces additive external-adapter contracts in `crates/kernel-adapter`.
 - `kernel-adapter -> kernel-service` is the primary production dependency direction.
-- Lower-layer `kernel-domain`, `kernel-gateway`, `kernel-studio`, and `kernel-application` dependencies are limited to test-only `dev-dependencies` for adapter fixtures.
+- Lower-layer `kernel-domain`, `kernel-gateway`, `kernel-studio`, and `kernel-application` dependencies remain limited to test-only `dev-dependencies` for adapter fixtures.
+- K14 workspace integration passed in the root workspace.
 - K14 compile validation passed in the repository workspace on Sunday, July 19, 2026.
-- K14 native verification is blocked in the current Codex environment because linker `cc` is unavailable.
-- K14 API is not frozen and K14 status remains awaiting human review.
-- K14 introduces no runtime, transport, networking, persistence, hosting, deployment, or other infrastructure.
+- K14 native verification passed on the primary host on Sunday, July 19, 2026, after correction of a test-layer defect in commit `450f450cb0b71f92035d7d69cb4ad44928bca725`.
+- K14 public API is frozen for K15 consumption.
+- K14 status is closed.
+- K14 preserves adapter/service request identity separation with canonical fixture identifiers `adapter.request.000001`, `adapter.request.000002`, `service.request.000001`, and `service.request.000002`.
+- K14 introduces no runtime, Tokio, network transport, HTTP, REST, gRPC, WebSocket, GraphQL, message broker, persistence, database, filesystem behavior, queue, scheduler, cache, plugin loader, dynamic loading, external API client, AI model execution, deployment, hosting, or infrastructure.
+- K1-K13 frozen public APIs remain unchanged, K14 is additive, and K1-K13 compatibility is preserved.
 - K6 preserves the architecture freeze.
 - K8 preserves the architecture freeze.
 - Runtime execution is not implemented.
@@ -148,6 +151,7 @@ Canonical host validation:
 - Deterministic API Gateway contract identity, authentication context, authorization binding, request validation, response mapping, error translation, status snapshot, and protocol-adaptation primitives
 - Deterministic Studio Integration contract identity, view coordination, projection intent, command-console mapping, validation, and K10 boundary-conformance primitives
 - Deterministic Service Integration contract identity, capability admission, command and query coordination, response continuity, status snapshot, validation, and K12 boundary-conformance primitives
+- Deterministic External Adapter contract identity, request and response continuity, compatibility, validation, and K13 boundary-conformance primitives
 
 ## References
 - [AGENTS.md](./AGENTS.md)

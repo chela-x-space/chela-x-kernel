@@ -299,3 +299,83 @@ APPROVED
 K14 IMPLEMENTATION:
 AUTHORIZED
 ```
+
+## Closure Record
+
+Authoritative human decision on Sunday, July 19, 2026:
+
+```text
+ADR-0003:
+ACCEPTED
+
+K14 IMPLEMENTATION:
+COMPLETE
+
+K14 WORKSPACE INTEGRATION:
+PASSED
+
+K14 COMPILE VALIDATION:
+PASSED
+
+K14 NATIVE VERIFICATION:
+PASSED
+
+K14 ARCHITECTURE CONFORMANCE:
+PASSED
+
+K14 API:
+FROZEN
+
+K14 STATUS:
+CLOSED
+```
+
+Primary-host native verification evidence:
+
+```text
+kernel-adapter:      23 passed
+kernel-application:  23 passed
+kernel-domain:      827 passed
+kernel-gateway:      34 passed
+kernel-service:      17 passed
+kernel-studio:       16 passed
+
+TOTAL:              940 passed
+FAILED:               0
+```
+
+K14 public API is frozen for K15 consumption.
+Any incompatible change requires an approved ADR.
+
+Test correction record after K14 implementation:
+
+```text
+Production bug:
+NO
+
+Fixture bug:
+YES
+
+Assertion bug:
+YES
+
+Production semantics changed:
+NO
+```
+
+Canonical request-identity separation preserved after correction:
+
+```text
+AdapterRequestId:
+adapter.request.000001
+adapter.request.000002
+
+ServiceRequestId:
+service.request.000001
+service.request.000002
+```
+
+Correction commit:
+
+- `450f450cb0b71f92035d7d69cb4ad44928bca725`
+- `test(adapter): separate K14 adapter and service request identities`

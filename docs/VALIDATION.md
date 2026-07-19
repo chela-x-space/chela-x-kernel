@@ -743,25 +743,39 @@ Validation date: `2026-07-19`
 - `cargo clippy --workspace --all-features --all-targets -- -D warnings`: `PASS`
 - `cargo clippy -p kernel-adapter --all-targets -- -D warnings`: `PASS`
 - `cargo tree -p kernel-adapter`: `PASS`
-- `cargo test -p kernel-adapter --all-targets`: `BLOCKED — linker cc not found (os error 2)`
-- `cargo test --workspace --all-targets`: `BLOCKED — linker cc not found (os error 2)`
+- `cargo test -p kernel-adapter --all-targets`: `PASS — primary host`
+- `cargo test --workspace --all-targets`: `PASS — primary host`
 - `cargo doc --workspace --no-deps`: `PASS`
 - `cargo test --doc --workspace`: `PASS`
 - `git diff --check`: `PASS`
 - static architecture grep audit over `crates/kernel-adapter` and root `Cargo.toml`: `PASS`
 
+Primary-host native verification on Sunday, July 19, 2026:
+
+- `kernel-adapter: 23 passed`
+- `kernel-application: 23 passed`
+- `kernel-domain: 827 passed`
+- `kernel-gateway: 34 passed`
+- `kernel-service: 17 passed`
+- `kernel-studio: 16 passed`
+- `TOTAL: 940 passed`
+- `FAILED: 0`
+
 K14 implementation assertions:
 
 - Planning status: `COMPLETE`
 - Architecture review status: `PASSED`
-- Implementation authorization: `APPROVED`
+- Implementation authorization: `AUTHORIZED WITHIN ADR-0003 BOUNDARY`
 - Implementation status: `COMPLETE`
+- Workspace integration status: `PASSED`
 - Compile validation status: `PASSED`
-- Native verification status: `BLOCKED IN CURRENT CODEX ENVIRONMENT`
-- API status: `NOT FROZEN`
-- Milestone status: `AWAITING HUMAN REVIEW`
+- Native verification status: `PASSED`
+- Architecture conformance status: `PASSED`
+- API status: `FROZEN FOR K15 CONSUMPTION`
+- Milestone status: `CLOSED`
 - Production source changed: `YES — ADDITIVE K14 ADAPTER CONTRACTS`
 - Tests changed: `YES — K14 ADAPTER VERIFICATION`
 - Cargo files changed: `YES — ROOT WORKSPACE REGISTRATION ONLY`
 - Frozen K1-K13 APIs changed: `NO`
 - Runtime, transport, persistence, hosting, deployment, and infrastructure introduced: `NO`
+- Test correction classification: `Production bug: NO; Fixture bug: YES; Assertion bug: YES; Production semantics changed: NO`

@@ -492,16 +492,17 @@ Breaking K13 public API or semantic changes after freeze require:
 
 ### Status Statement
 
-`NOT FROZEN`
+`FROZEN FOR K15 CONSUMPTION`
 
 ### K14 Review State
 
 - Planning status: `COMPLETE`
 - ADR status: `ACCEPTED`
 - Architecture review: `PASSED`
+- Workspace integration status: `PASSED`
 - Implementation status: `COMPLETE`
 - Compile validation status: `PASSED`
-- Native verification status: `BLOCKED IN CURRENT CODEX ENVIRONMENT`
+- Native verification status: `PASSED`
 - Public API inventory: `RECORDED`
 - Compatibility status: `K1-K13 PRESERVED; K14 ADDITIVE`
 - Architecture Freeze: `PRESERVED`
@@ -540,5 +541,18 @@ The additive K14 External Adapter Boundary API currently covers:
 - Public API inventory is recorded in `docs/API.md`.
 - Architecture review passed under accepted `ADR-0003`.
 - K1-K13 compatibility is preserved and K14 public API is additive only.
-- Current Codex-environment native verification is blocked because linker `cc` is unavailable.
-- K14 API remains unfrozen and awaits human freeze review after native verification on a capable host.
+- Primary-host native verification passed on Sunday, July 19, 2026.
+- `cargo test --workspace --all-targets` result: `kernel-domain: 827 passed`, `kernel-gateway: 34 passed`, `kernel-studio: 16 passed`, `kernel-application: 23 passed`, `kernel-service: 17 passed`, `kernel-adapter: 23 passed`, `TOTAL: 940 passed`, `FAILED: 0`.
+- K14 test-layer defect correction preserved production semantics and restored canonical request-identity separation before host-native closure.
+
+### K14 Change Policy
+
+Breaking K14 public API or semantic changes after freeze require:
+
+- approved ADR
+- compatibility review
+- explicit human authorization
+
+Freeze statement:
+
+`K14 public API is frozen for K15 consumption. Any incompatible change requires an approved ADR.`

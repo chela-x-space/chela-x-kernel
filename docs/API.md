@@ -1418,10 +1418,12 @@ Review status:
 
 - `K14-001 THROUGH K14-010 IMPLEMENTED`
 - `K14 IMPLEMENTATION COMPLETE`
+- `K14 WORKSPACE INTEGRATION PASSED`
 - `K14 COMPILE VALIDATION PASSED`
-- `K14 NATIVE VERIFICATION BLOCKED IN CURRENT CODEX ENVIRONMENT`
-- `K14 API NOT FROZEN`
-- `K14 STATUS AWAITING HUMAN REVIEW`
+- `K14 NATIVE VERIFICATION PASSED`
+- `K14 ARCHITECTURE CONFORMANCE PASSED`
+- `K14 API FROZEN FOR K15 CONSUMPTION`
+- `K14 STATUS CLOSED`
 
 Public inventory groups:
 
@@ -1442,7 +1444,27 @@ Conformance guarantees:
 - K14 does not bypass `kernel-service`, `kernel-application`, `kernel-studio`, or `kernel-gateway`, and does not mutate `kernel-domain` directly.
 - No runtime, Tokio, networking, transport, persistence, database, scheduler, queue, filesystem behavior, cache, plugin loader, AI model execution, or infrastructure is exposed.
 
-Review guarantees:
+Freeze guarantees:
 
-- K14 public API is not frozen.
-- Any incompatible K14 public API change before freeze still requires human review and must remain within accepted `ADR-0003`.
+- K14 public API is frozen for K15 consumption.
+- Any incompatible K14 public API change requires an approved ADR.
+
+Primary-host native verification on Sunday, July 19, 2026:
+
+- `kernel-adapter: 23 passed`
+- `kernel-application: 23 passed`
+- `kernel-domain: 827 passed`
+- `kernel-gateway: 34 passed`
+- `kernel-service: 17 passed`
+- `kernel-studio: 16 passed`
+- `TOTAL: 940 passed`
+- `FAILED: 0`
+
+Test correction record:
+
+- Production bug: `NO`
+- Fixture bug: `YES`
+- Assertion bug: `YES`
+- Production semantics changed: `NO`
+- Correction commit: `450f450cb0b71f92035d7d69cb4ad44928bca725`
+- Canonical fixture identities: `adapter.request.000001`, `adapter.request.000002`, `service.request.000001`, `service.request.000002`

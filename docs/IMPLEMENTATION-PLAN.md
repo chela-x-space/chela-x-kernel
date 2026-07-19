@@ -257,15 +257,18 @@ K13 implementation constraints preserved:
 
 ## K14 Current Milestone State
 
-- Proposed title: `K14 External Adapter Boundary`
+- Exact title: `K14 External Adapter Boundary`
 - Planning status: `COMPLETE`
+- ADR status: `ACCEPTED`
 - Architecture review status: `PASSED`
-- Implementation authorization: `APPROVED`
+- Implementation authorization: `AUTHORIZED WITHIN ADR-0003 BOUNDARY`
+- Workspace integration status: `PASSED`
 - Implementation status: `COMPLETE`
 - Compile validation status: `PASSED`
-- Native verification status: `BLOCKED IN CURRENT CODEX ENVIRONMENT`
-- API status: `NOT FROZEN`
-- Milestone status: `AWAITING HUMAN REVIEW`
+- Native verification status: `PASSED`
+- Architecture conformance status: `PASSED`
+- API status: `FROZEN FOR K15 CONSUMPTION`
+- Milestone status: `CLOSED`
 - Repository scope: additive `kernel-adapter` contract boundary only
 - ADR status from current repository evidence: `ACCEPTED AS ADR-0003`
 
@@ -278,19 +281,7 @@ K14 implementation constraints preserved:
 - `kernel-adapter -> kernel-service` is the primary production dependency direction.
 - Lower-layer `kernel-domain`, `kernel-gateway`, `kernel-studio`, and `kernel-application` dependencies remain test-only `dev-dependencies` for adapter fixtures.
 - K14 introduces no runtime, persistence, networking, transport, hosting, deployment, or infrastructure.
-- K14 native tests are blocked in the current Codex environment because linker `cc` is unavailable.
-
-Before future milestone implementation begins that changes repository architecture, the specification package MUST receive an architecture review confirming:
-
-- K7 remains `Task Engine`
-- task semantics align with `docs/kernel-architecture/08-task-architecture.md`
-- dependency direction remains `Workflow → Task → Execution`
-- K6 workflow API remains unchanged
-- K7 does not execute tasks
-- K7 does not introduce infrastructure
-- K7 can reuse frozen K1-K6 domain primitives
-- no ADR is required for the planned additive domain work
-- missing CES IDs are tracked without fabrication
+- K14 primary-host native verification passed with `kernel-adapter: 23 passed` and `TOTAL: 940 passed`.
 
 ## References
 
@@ -305,7 +296,11 @@ Before future milestone implementation begins that changes repository architectu
 - [plans/K10-IMPLEMENTATION-PLAN.md](./plans/K10-IMPLEMENTATION-PLAN.md)
 - [plans/K11-IMPLEMENTATION-PLAN.md](./plans/K11-IMPLEMENTATION-PLAN.md)
 - [plans/K12-IMPLEMENTATION-PLAN.md](./plans/K12-IMPLEMENTATION-PLAN.md)
+- [plans/K13-IMPLEMENTATION-PLAN.md](./plans/K13-IMPLEMENTATION-PLAN.md)
+- [plans/K14-IMPLEMENTATION-PLAN.md](./plans/K14-IMPLEMENTATION-PLAN.md)
 - [ADR-0001-K12-APPLICATION-INTEGRATION-BOUNDARY.md](./ADR-0001-K12-APPLICATION-INTEGRATION-BOUNDARY.md)
+- [ADR-0002-K13-SERVICE-INTEGRATION-BOUNDARY.md](./ADR-0002-K13-SERVICE-INTEGRATION-BOUNDARY.md)
+- [ADR-0003-K14-EXTERNAL-ADAPTER-BOUNDARY.md](./ADR-0003-K14-EXTERNAL-ADAPTER-BOUNDARY.md)
 - [backlog/K6-BACKLOG.md](./backlog/K6-BACKLOG.md)
 - [backlog/K7-BACKLOG.md](./backlog/K7-BACKLOG.md)
 - [backlog/K8-BACKLOG.md](./backlog/K8-BACKLOG.md)
@@ -313,3 +308,5 @@ Before future milestone implementation begins that changes repository architectu
 - [backlog/K10-BACKLOG.md](./backlog/K10-BACKLOG.md)
 - [backlog/K11-BACKLOG.md](./backlog/K11-BACKLOG.md)
 - [backlog/K12-BACKLOG.md](./backlog/K12-BACKLOG.md)
+- [backlog/K13-BACKLOG.md](./backlog/K13-BACKLOG.md)
+- [backlog/K14-BACKLOG.md](./backlog/K14-BACKLOG.md)

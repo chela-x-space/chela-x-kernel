@@ -179,7 +179,7 @@ INTERNAL
 - Preserved production validation semantics while changing the fixture to mismatch only `application_request_id`
 - Recorded root workspace authority through commits `1d76314` and `70b51a6`
 
-## K14 External Adapter Boundary
+## K14 External Adapter Boundary Closure
 
 ### Added
 
@@ -189,6 +189,8 @@ INTERNAL
 - Repository-backed K14 traceability and governance planning over frozen K10-K13 boundaries
 - Accepted ADR-0003 governance alignment for K14 implementation
 - Additive adapter contracts covering API version, identity, capability admission, command intent, query intent, request context, request envelope, response envelope, compatibility references, status snapshots, and centralized validation
+- Authoritative K14 closure documentation, API freeze inventory, native-verification evidence, and test-correction record for K15 consumption
+- Deterministic adapter and service request fixture namespaces after commit `450f450cb0b71f92035d7d69cb4ad44928bca725`
 
 ### Boundaries
 
@@ -196,11 +198,23 @@ INTERNAL
 - ADR-0003 is accepted
 - K14 architecture review passed
 - K14 implementation is complete
+- K14 workspace integration passed
 - K14 compile validation passed
-- K14 native verification is blocked in the current Codex environment by missing linker `cc`
-- K14 API is not frozen
-- K14 status is awaiting human review
+- K14 native verification passed on the primary host
+- K14 architecture conformance passed
+- K14 API is frozen for K15 consumption
+- K14 status is closed
 - No runtime, transport, persistence, hosting, deployment, or infrastructure introduced
+
+### Validation
+
+- Authoritative primary-host `cargo test --workspace --all-targets` passed on Sunday, July 19, 2026 with `kernel-domain: 827 passed`, `kernel-gateway: 34 passed`, `kernel-studio: 16 passed`, `kernel-application: 23 passed`, `kernel-service: 17 passed`, `kernel-adapter: 23 passed`, `TOTAL: 940 passed`, `FAILED: 0`
+- Native verification occurred after correction of the K14 test-layer defect recorded in commit `450f450cb0b71f92035d7d69cb4ad44928bca725`
+
+### Fixes
+
+- K14 test correction classification: `Production bug: NO`, `Fixture bug: YES`, `Assertion bug: YES`, `Production semantics changed: NO`
+- Corrected canonical fixture identifiers to preserve boundary separation: `AdapterRequestId` = `adapter.request.000001`, `adapter.request.000002`; `ServiceRequestId` = `service.request.000001`, `service.request.000002`
 
 ## K9 Enterprise Memory
 

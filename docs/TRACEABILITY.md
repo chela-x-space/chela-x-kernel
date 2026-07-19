@@ -347,14 +347,18 @@ INTERNAL
 ## K14 Implementation Summary
 
 - Milestone: `K14`
-- Proposed title: `K14 External Adapter Boundary`
+- Official title: `K14 External Adapter Boundary`
 - Planning status: `COMPLETE`
+- ADR identifier: `ADR-0003`
+- ADR status: `ACCEPTED`
 - Architecture review status: `PASSED`
-- Implementation authorization: `APPROVED`
+- Implementation authorization: `AUTHORIZED WITHIN ADR-0003 BOUNDARY`
 - Implementation status: `COMPLETE`
+- Workspace integration status: `PASSED`
 - Compile validation status: `PASSED`
-- Native verification status: `BLOCKED IN CURRENT CODEX ENVIRONMENT`
-- API status: `NOT FROZEN`
+- Native verification status: `PASSED`
+- Architecture conformance status: `PASSED`
+- API status: `FROZEN FOR K15 CONSUMPTION`
 - Repository scope: `ADDITIVE ADAPTER CONTRACT LAYER`
 - Repository-local CES mapping status: `PARTIAL / INHERITED — DO NOT FABRICATE NEW CES IDS`
 
@@ -362,13 +366,30 @@ INTERNAL
 
 | Kernel requirement | Requirement summary | Repository-local source | Supporting CES-traceable source | Production and test evidence | Frozen dependency | Validation method | Classification | Status |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `K14-001` | Adapter contract and API version | `crates/kernel-adapter/src/adapter.rs`, `adapter_contract_tests.rs` | `docs/ADR-0003-K14-EXTERNAL-ADAPTER-BOUNDARY.md` | `AdapterApiVersion`, `AdapterIntentKind`, `AdapterResponseKind`, canonical version tests | K13 frozen API | compile validation, contract tests | `IMPLEMENTED` | `IMPLEMENTED; COMPILE VERIFIED; NATIVE VERIFICATION BLOCKED` |
-| `K14-002` | Adapter identity | `crates/kernel-adapter/src/adapter_identity.rs`, `adapter_contract_tests.rs` | `docs/ADR-0003-K14-EXTERNAL-ADAPTER-BOUNDARY.md` | `AdapterIdentity`, `AdapterIdentityKind`, `AdapterKind`, identity validation tests | K13 frozen semantics | compile validation, contract tests | `IMPLEMENTED` | `IMPLEMENTED; COMPILE VERIFIED; NATIVE VERIFICATION BLOCKED` |
-| `K14-003` | Adapter capability | `crates/kernel-adapter/src/adapter_capability.rs`, `adapter_contract_tests.rs` | `docs/ADR-0003-K14-EXTERNAL-ADAPTER-BOUNDARY.md` | `AdapterCapabilityReference`, `AdapterCapabilityDeclaration`, canonical capability admission tests | K13 frozen semantics | compile validation, contract tests | `IMPLEMENTED` | `IMPLEMENTED; COMPILE VERIFIED; NATIVE VERIFICATION BLOCKED` |
-| `K14-004` | Adapter command intent | `crates/kernel-adapter/src/adapter_command.rs`, `adapter_command_tests.rs` | `docs/ADR-0003-K14-EXTERNAL-ADAPTER-BOUNDARY.md` | `AdapterCommandIntent`, positive and negative command intent tests | K13 command boundary | compile validation, contract tests | `IMPLEMENTED` | `IMPLEMENTED; COMPILE VERIFIED; NATIVE VERIFICATION BLOCKED` |
-| `K14-005` | Adapter query intent | `crates/kernel-adapter/src/adapter_query.rs`, `adapter_query_tests.rs` | `docs/ADR-0003-K14-EXTERNAL-ADAPTER-BOUNDARY.md` | `AdapterQueryIntent`, positive and negative query intent tests | K13 query boundary | compile validation, contract tests | `IMPLEMENTED` | `IMPLEMENTED; COMPILE VERIFIED; NATIVE VERIFICATION BLOCKED` |
-| `K14-006` | Adapter request context | `crates/kernel-adapter/src/adapter_context.rs`, `crates/kernel-adapter/src/adapter_request.rs`, `adapter_context_tests.rs` | `docs/API.md`, `docs/ADR-0003-K14-EXTERNAL-ADAPTER-BOUNDARY.md` | `AdapterRequestId`, `AdapterRequestContext`, `AdapterRequestEnvelope`, continuity tests | K13 request boundary | compile validation, contract tests | `IMPLEMENTED` | `IMPLEMENTED; COMPILE VERIFIED; NATIVE VERIFICATION BLOCKED` |
-| `K14-007` | Adapter response envelope | `crates/kernel-adapter/src/adapter_response.rs`, `adapter_response_tests.rs` | `docs/API.md`, `docs/VALIDATION.md` | `AdapterResponseStatusReference`, `AdapterResponseEnvelope`, request/response mismatch tests | K13 response boundary | compile validation, contract tests | `IMPLEMENTED` | `IMPLEMENTED; COMPILE VERIFIED; NATIVE VERIFICATION BLOCKED` |
-| `K14-008` | Adapter status and validation | `crates/kernel-adapter/src/adapter_status.rs`, `crates/kernel-adapter/src/adapter_validation.rs`, `adapter_status_tests.rs` | repository validation baseline | `AdapterCompatibilityReference`, `AdapterStatusSnapshot`, `AdapterValidationStatus`, validation tests | K13 status boundary | compile validation, contract tests | `IMPLEMENTED` | `IMPLEMENTED; COMPILE VERIFIED; NATIVE VERIFICATION BLOCKED` |
-| `K14-009` | Deterministic validation and side-effect separation | `crates/kernel-adapter/src/adapter_validation.rs`, `adapter_conformance_tests.rs`, `adapter_separation_tests.rs` | `docs/ADR-0003-K14-EXTERNAL-ADAPTER-BOUNDARY.md` | equivalent-input and side-effect-free coverage, transport-neutral separation coverage | accepted ADR-0003 boundary | compile validation, conformance tests, architecture audit | `IMPLEMENTED` | `IMPLEMENTED; COMPILE VERIFIED; NATIVE VERIFICATION BLOCKED` |
-| `K14-010` | Compatibility and architectural conformance | `crates/kernel-adapter/src/lib.rs`, `Cargo.toml`, `adapter_separation_tests.rs` | `README.md`, `docs/IMPLEMENTATION-PLAN.md` | additive crate boundary, root workspace registration, dependency audit, no-bypass conformance | K1-K13 frozen APIs | compile validation, static dependency audit | `IMPLEMENTED` | `IMPLEMENTED; COMPILE VERIFIED; NATIVE VERIFICATION BLOCKED` |
+| `K14-001` | Adapter contract and API version | `crates/kernel-adapter/src/adapter.rs`, `adapter_contract_tests.rs` | `docs/ADR-0003-K14-EXTERNAL-ADAPTER-BOUNDARY.md` | `AdapterApiVersion`, `AdapterIntentKind`, `AdapterResponseKind`, canonical version tests | K13 frozen API | compile validation, host-native validation, contract tests | `IMPLEMENTED` | `IMPLEMENTED; VERIFIED; CLOSED` |
+| `K14-002` | Adapter identity | `crates/kernel-adapter/src/adapter_identity.rs`, `adapter_contract_tests.rs` | `docs/ADR-0003-K14-EXTERNAL-ADAPTER-BOUNDARY.md` | `AdapterIdentity`, `AdapterIdentityKind`, `AdapterKind`, identity validation tests | K13 frozen semantics | compile validation, host-native validation, contract tests | `IMPLEMENTED` | `IMPLEMENTED; VERIFIED; CLOSED` |
+| `K14-003` | Adapter capability | `crates/kernel-adapter/src/adapter_capability.rs`, `adapter_contract_tests.rs` | `docs/ADR-0003-K14-EXTERNAL-ADAPTER-BOUNDARY.md` | `AdapterCapabilityReference`, `AdapterCapabilityDeclaration`, canonical capability admission tests | K13 frozen semantics | compile validation, host-native validation, contract tests | `IMPLEMENTED` | `IMPLEMENTED; VERIFIED; CLOSED` |
+| `K14-004` | Adapter command intent | `crates/kernel-adapter/src/adapter_command.rs`, `adapter_command_tests.rs` | `docs/ADR-0003-K14-EXTERNAL-ADAPTER-BOUNDARY.md` | `AdapterCommandIntent`, positive and negative command intent tests | K13 command boundary | compile validation, host-native validation, contract tests | `IMPLEMENTED` | `IMPLEMENTED; VERIFIED; CLOSED` |
+| `K14-005` | Adapter query intent | `crates/kernel-adapter/src/adapter_query.rs`, `adapter_query_tests.rs` | `docs/ADR-0003-K14-EXTERNAL-ADAPTER-BOUNDARY.md` | `AdapterQueryIntent`, positive and negative query intent tests | K13 query boundary | compile validation, host-native validation, contract tests | `IMPLEMENTED` | `IMPLEMENTED; VERIFIED; CLOSED` |
+| `K14-006` | Adapter request context | `crates/kernel-adapter/src/adapter_context.rs`, `crates/kernel-adapter/src/adapter_request.rs`, `adapter_context_tests.rs` | `docs/API.md`, `docs/ADR-0003-K14-EXTERNAL-ADAPTER-BOUNDARY.md` | `AdapterRequestId`, `AdapterRequestContext`, `AdapterRequestEnvelope`, continuity tests; canonical identity correction in commit `450f450cb0b71f92035d7d69cb4ad44928bca725` | K13 request boundary | compile validation, host-native validation, contract tests | `IMPLEMENTED` | `IMPLEMENTED; VERIFIED; CLOSED` |
+| `K14-007` | Adapter response envelope | `crates/kernel-adapter/src/adapter_response.rs`, `adapter_response_tests.rs` | `docs/API.md`, `docs/VALIDATION.md` | `AdapterResponseStatusReference`, `AdapterResponseEnvelope`, request/response mismatch tests | K13 response boundary | compile validation, host-native validation, contract tests | `IMPLEMENTED` | `IMPLEMENTED; VERIFIED; CLOSED` |
+| `K14-008` | Adapter status and validation | `crates/kernel-adapter/src/adapter_status.rs`, `crates/kernel-adapter/src/adapter_validation.rs`, `adapter_status_tests.rs` | repository validation baseline | `AdapterCompatibilityReference`, `AdapterStatusSnapshot`, `AdapterValidationStatus`, validation tests | K13 status boundary | compile validation, host-native validation, contract tests | `IMPLEMENTED` | `IMPLEMENTED; VERIFIED; CLOSED` |
+| `K14-009` | Deterministic validation and side-effect separation | `crates/kernel-adapter/src/adapter_validation.rs`, `adapter_conformance_tests.rs`, `adapter_separation_tests.rs` | `docs/ADR-0003-K14-EXTERNAL-ADAPTER-BOUNDARY.md` | equivalent-input and side-effect-free coverage, transport-neutral separation coverage, fixture/assertion correction in commit `450f450cb0b71f92035d7d69cb4ad44928bca725` | accepted ADR-0003 boundary | compile validation, host-native validation, conformance tests, architecture audit | `IMPLEMENTED` | `IMPLEMENTED; VERIFIED; CLOSED` |
+| `K14-010` | Compatibility and architectural conformance | `crates/kernel-adapter/src/lib.rs`, `Cargo.toml`, `adapter_separation_tests.rs` | `README.md`, `docs/IMPLEMENTATION-PLAN.md` | additive crate boundary, root workspace registration, dependency audit, no-bypass conformance | K1-K13 frozen APIs | compile validation, host-native validation, static dependency audit | `IMPLEMENTED` | `IMPLEMENTED; VERIFIED; CLOSED` |
+
+## K14 Native Verification And Test Correction Record
+
+- Primary-host native verification passed on Sunday, July 19, 2026.
+- `kernel-adapter: 23 passed`
+- `kernel-application: 23 passed`
+- `kernel-domain: 827 passed`
+- `kernel-gateway: 34 passed`
+- `kernel-service: 17 passed`
+- `kernel-studio: 16 passed`
+- `TOTAL: 940 passed`
+- `FAILED: 0`
+- Production bug: `NO`
+- Fixture bug: `YES`
+- Assertion bug: `YES`
+- Production semantics changed: `NO`
+- Canonical identities after correction: `adapter.request.000001`, `adapter.request.000002`, `service.request.000001`, `service.request.000002`
