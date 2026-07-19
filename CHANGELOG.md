@@ -10,7 +10,7 @@ Draft
 Kernel Platform Team
 
 ## Last Updated
-2026-07-18
+2026-07-19
 
 ## Applies To
 CHELA-X Kernel repository history.
@@ -40,13 +40,22 @@ INTERNAL
 
 ### Validation
 
-- Codex implementation gates passed for `cargo fmt --all -- --check`, `cargo check --workspace --all-targets`, `cargo check --workspace --all-features --all-targets`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo clippy --workspace --all-features --all-targets -- -D warnings`, `cargo doc --workspace --no-deps`, `cargo test --doc`, and `git diff --check`
-- Native `cargo test --workspace --all-targets` remains pending the primary host because the Codex environment does not provide linker `cc`
-- Authoritative frozen K9 host-native baseline remains `827 passed`, `0 failed`, `0 ignored`, `0 measured`, `0 filtered out`, exit code `0`
+- `cargo fmt --all -- --check`: `PASS`
+- `cargo check --workspace --all-targets`: `PASS`
+- `cargo clippy --workspace --all-targets -- -D warnings`: `PASS`
+- `cargo doc --workspace --no-deps`: `PASS`
+- `cargo test --doc --workspace`: `PASS`
+- `cargo test --workspace --all-targets`: `PASS`
+- `kernel-domain`: `827 passed`, `0 failed`
+- `kernel-gateway`: `34 passed`, `0 failed`
+- `TOTAL`: `861 passed`, `0 failed`
+- `FULL_EXIT_CODE=0`
+- `git diff --check`: `PASS`
 
 ### Boundaries
 
 - K10 public API is additive only
+- K10 public API is frozen for K11 consumption
 - No HTTP, WebSocket, gRPC, IPC, persistence, authentication-provider integration, or frontend implementation introduced
 - No network, database, filesystem, scheduler, worker dispatch, or runtime orchestration introduced
 - No ADR required from current repository evidence

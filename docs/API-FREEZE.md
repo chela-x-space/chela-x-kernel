@@ -10,7 +10,7 @@ Current
 Kernel Platform Team
 
 ## Last Updated
-2026-07-18
+2026-07-19
 
 ## Applies To
 Frozen public API governance for `kernel-domain`, including the K6 workflow-engine surface.
@@ -269,7 +269,7 @@ Breaking K9 public API or semantic changes after freeze require:
 
 ### Status Statement
 
-`NOT YET FROZEN`
+`FROZEN FOR K11 CONSUMPTION`
 
 ### K10 Review State
 
@@ -277,7 +277,7 @@ Breaking K9 public API or semantic changes after freeze require:
 - Architecture review: `PASSED`
 - Implementation status: `COMPLETE`
 - Compile validation status: `PASSED`
-- Native verification status: `PENDING PRIMARY HOST`
+- Native verification status: `PASSED`
 - Public API inventory: `RECORDED`
 - Compatibility status: `K1-K9 PRESERVED; K10 ADDITIVE`
 - Architecture Freeze: `PRESERVED`
@@ -308,20 +308,22 @@ The additive K10 gateway API currently covers:
 - `GatewayStatusSnapshot`
 - `GatewayAuditReference`
 
-### K10 Freeze Preconditions
+### K10 Freeze Conditions
 
 - K10 implementation is complete in `kernel-gateway`.
 - Public API inventory is recorded in `docs/API.md`.
 - Architecture review passed without redesign, dependency-direction change, or ADR requirement.
 - K1-K9 API compatibility is preserved and K10 public API is additive only.
-- Primary-host native verification must pass before K10 API freeze may be declared.
+- Primary-host native verification passed on Sunday, July 19, 2026.
+- `cargo test --workspace --all-targets` result: `861 passed`, `0 failed`, `0 ignored`, `0 measured`, `0 filtered out`, exit code `0`.
 
-### K10 Interim Change Policy
+### K10 Change Policy
 
-Breaking K10 public API or semantic changes before freeze still require:
+Breaking K10 public API or semantic changes after freeze require:
 
-- explicit compatibility review
-- architecture conformance to the approved K10 plan
+- approved ADR
+- compatibility review
+- explicit human authorization
 
 ### K10 Non-Features
 

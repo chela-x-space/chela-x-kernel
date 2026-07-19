@@ -10,10 +10,10 @@ Current
 Kernel Platform Team
 
 ## Last Updated
-2026-07-18
+2026-07-19
 
 ## Applies To
-Public API review and consumption guidance for `kernel-domain`, including the frozen K6 workflow API.
+Public API review and consumption guidance for `kernel-domain` and `kernel-gateway`, including the frozen K10 API Gateway surface.
 
 ## Review Cycle
 Quarterly
@@ -29,7 +29,7 @@ INTERNAL
 
 ## Purpose And Scope
 
-This document records the current public K6 workflow API, the frozen K7 task-domain API, and the additive frozen K8 execution-domain API exposed from `crates/kernel-domain/src/lib.rs`. K6 and K7 remain frozen. K8 native verification passed on the primary host and the additive K8 execution-domain API is now frozen for next-milestone consumption.
+This document records the current public K6 workflow API, the frozen K7 task-domain API, the additive frozen K8 execution-domain API exposed from `crates/kernel-domain/src/lib.rs`, and the frozen K10 gateway API exposed from `crates/kernel-gateway/src/lib.rs`.
 
 ## K6 Public API Surface
 
@@ -1273,11 +1273,11 @@ Freeze guarantees:
 
 Review status:
 
-- `K10-001 THROUGH K10-010 IMPLEMENTED`
+- `K10-001 THROUGH K10-010 VERIFIED`
 - `K10 IMPLEMENTATION COMPLETE`
 - `K10 COMPILE VALIDATION PASSED`
-- `K10 NATIVE VERIFICATION PENDING PRIMARY HOST`
-- `K10 API NOT YET FROZEN`
+- `K10 NATIVE VERIFICATION PASSED`
+- `K10 API FROZEN FOR K11 CONSUMPTION`
 
 Public inventory groups:
 
@@ -1302,3 +1302,8 @@ Conformance guarantees:
 - Request and response envelopes remain explicit, immutable, and correlation-preserving.
 - Query and command contracts remain transport-neutral and side-effect free.
 - No HTTP server, WebSocket, gRPC, IPC, persistence, network transport, scheduler, worker dispatch, or background runtime is exposed.
+
+Freeze guarantees:
+
+- K10 public API is frozen for K11 consumption.
+- Breaking changes after K10 freeze require approved ADR, compatibility review, and explicit human authorization.

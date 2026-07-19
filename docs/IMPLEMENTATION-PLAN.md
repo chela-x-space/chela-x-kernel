@@ -10,7 +10,7 @@ Current
 Kernel Platform Team
 
 ## Last Updated
-2026-07-18
+2026-07-19
 
 ## Applies To
 Working implementation breakdown for CHELA-X Kernel under the frozen architecture.
@@ -154,7 +154,7 @@ K9 implementation constraints preserved:
 - K9 does not create runtime orchestration, storage, transport, dashboard UI, or API Gateway behavior.
 - K10 planning is complete.
 - K10 architecture review passed.
-- K10 implementation and compile validation are complete; native verification remains pending the primary host.
+- K10 implementation, compile validation, and native verification are complete; K10 API is frozen for K11 consumption.
 
 ## K10 Current Milestone State
 
@@ -163,8 +163,8 @@ K9 implementation constraints preserved:
 - Architecture review status: `PASSED`
 - Implementation status: `COMPLETE`
 - Compile validation status: `PASSED`
-- Native verification status: `PENDING PRIMARY HOST`
-- API status: `NOT YET FROZEN`
+- Native verification status: `PASSED`
+- API status: `FROZEN FOR K11 CONSUMPTION`
 - Repository scope: new additive `kernel-gateway` crate plus implementation evidence
 - ADR status from current repository evidence: `NOT REQUIRED`
 
@@ -174,7 +174,8 @@ K10 implementation constraints preserved:
 - K10 must not modify `kernel-domain` public APIs.
 - K10 does not introduce HTTP, WebSocket, gRPC, IPC, or other concrete transport infrastructure.
 - K10 establishes gateway contracts, request validation, response mapping, error translation, protocol references, and status snapshots only.
-- K11 planning remains unauthorized by this document.
+- K11 planning is authorized by K10 closure.
+- K11 implementation remains unauthorized by this document.
 
 Before `K7-001` Rust implementation begins, the K7 specification package MUST receive an architecture review confirming:
 

@@ -1,15 +1,15 @@
 # K10 API Gateway Backlog
 
 ## Status
-PLANNING COMPLETE
+CLOSED
 
 ## Milestone State
 - `K10 PLANNING: COMPLETE`
 - `K10 ARCHITECTURE REVIEW: PASSED`
 - `K10 IMPLEMENTATION: COMPLETE`
 - `K10 COMPILE VALIDATION: PASSED`
-- `K10 NATIVE VERIFICATION: PENDING PRIMARY HOST`
-- `K10 API: NOT YET FROZEN`
+- `K10 NATIVE VERIFICATION: PASSED`
+- `K10 API: FROZEN FOR K11 CONSUMPTION`
 
 ## Backlog Items
 
@@ -21,7 +21,7 @@ PLANNING COMPLETE
 - Expected result: versioned canonical gateway contract identity
 - Validation method: native tests, compile gates
 - Acceptance criteria: version required, identity deterministic, no transport binding
-- Status: `COMPLETE`
+- Status: `VERIFIED`
 
 ### K10-002
 - Title: `Authentication Context Contracts`
@@ -31,7 +31,7 @@ PLANNING COMPLETE
 - Expected result: explicit authenticated caller context contracts
 - Validation method: native tests, compile gates
 - Acceptance criteria: authentication distinct from authorization, no provider integration
-- Status: `COMPLETE`
+- Status: `VERIFIED`
 
 ### K10-003
 - Title: `Authorization Integration Contracts`
@@ -41,7 +41,7 @@ PLANNING COMPLETE
 - Expected result: gateway-to-kernel authorization binding contracts
 - Validation method: native tests, compile gates
 - Acceptance criteria: gateway delegates authority to Kernel outcomes without reinterpretation
-- Status: `COMPLETE`
+- Status: `VERIFIED`
 
 ### K10-004
 - Title: `Request Envelope And Context Validation`
@@ -51,7 +51,7 @@ PLANNING COMPLETE
 - Expected result: canonical request envelope and validation contracts
 - Validation method: native tests, compile gates
 - Acceptance criteria: invalid requests terminate before lower-layer invocation, schema version and context explicit
-- Status: `COMPLETE`
+- Status: `VERIFIED`
 
 ### K10-005
 - Title: `Command Contracts`
@@ -61,7 +61,7 @@ PLANNING COMPLETE
 - Expected result: explicit command request and response contracts
 - Validation method: native tests, compile gates
 - Acceptance criteria: commands remain requests only, no handler runtime or dispatch introduced
-- Status: `COMPLETE`
+- Status: `VERIFIED`
 
 ### K10-006
 - Title: `Query And Read-Model Contracts`
@@ -71,7 +71,7 @@ PLANNING COMPLETE
 - Expected result: deterministic query and read-only response contracts
 - Validation method: native tests, compile gates
 - Acceptance criteria: query results remain deterministic, read-only, and dashboard-ready without UI coupling
-- Status: `COMPLETE`
+- Status: `VERIFIED`
 
 ### K10-007
 - Title: `Response Mapping Contracts`
@@ -81,7 +81,7 @@ PLANNING COMPLETE
 - Expected result: stable canonical response envelopes
 - Validation method: native tests, compile gates
 - Acceptance criteria: canonical meaning preserved, no internal implementation leakage
-- Status: `COMPLETE`
+- Status: `VERIFIED`
 
 ### K10-008
 - Title: `Error Translation Contracts`
@@ -91,7 +91,7 @@ PLANNING COMPLETE
 - Expected result: deterministic gateway error translation contracts
 - Validation method: native tests, compile gates
 - Acceptance criteria: equivalent Kernel failures map to equivalent gateway errors without semantic drift
-- Status: `COMPLETE`
+- Status: `VERIFIED`
 
 ### K10-009
 - Title: `Rate Governance And Protocol Adaptation Contracts`
@@ -101,7 +101,7 @@ PLANNING COMPLETE
 - Expected result: transport-agnostic protocol and rate-governance references
 - Validation method: compile gates, static audits
 - Acceptance criteria: no concrete HTTP, WebSocket, gRPC, or IPC adapter is implemented
-- Status: `COMPLETE`
+- Status: `VERIFIED`
 
 ### K10-010
 - Title: `Boundary And Compatibility Conformance`
@@ -111,7 +111,7 @@ PLANNING COMPLETE
 - Expected result: gateway contracts remain additive and do not bypass lower-layer governance
 - Validation method: native tests, compile gates, static audits
 - Acceptance criteria: no K1-K9 breakage, no transport runtime, no cross-layer dependency inversion
-- Status: `COMPLETE`
+- Status: `VERIFIED`
 
 ### K10-011
 - Title: `Concrete Transport Adapters`

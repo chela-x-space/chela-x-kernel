@@ -10,7 +10,7 @@ Current
 Kernel Platform Team
 
 ## Last Updated
-2026-07-18
+2026-07-19
 
 ## Applies To
 Requirement traceability from CES and Program sources into CHELA-X Kernel, including K6 workflow-engine closure.
@@ -218,24 +218,25 @@ INTERNAL
 - Architecture review status: `PASSED`
 - Implementation status: `COMPLETE`
 - Compile validation status: `PASSED`
-- Native verification status: `PENDING PRIMARY HOST`
+- Native verification status: `PASSED`
+- API status: `FROZEN FOR K11 CONSUMPTION`
 - Repository scope: `NEW GATEWAY CRATE; NO K1-K9 DOMAIN API CHANGE`
 - Repository-local CES mapping status: `PARTIAL / INHERITED — DO NOT FABRICATE NEW CES IDS`
 
-## K10 Implementation Matrix
+## K10 Requirement Closure
 
-| Kernel requirement | Requirement summary | Repository-local source | Supporting CES-traceable source | Implemented contract or behavior | Frozen dependency | Validation method | Test category | Classification | Final status |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `K10-001` | Gateway contracts remain versioned, canonical, and transport-independent. | `docs/kernel-architecture/11-api-gateway-architecture.md` §5, §11 | `docs/kernel-architecture/16-traceability.md` §4 | `GatewayApiVersion`, `GatewayOperationKind`, `GatewayOperationReference` | K1 identifiers | native tests, compile gates | construction and versioning | `NATIVE_TESTED` | `IMPLEMENTED` |
-| `K10-002` | Authentication context remains explicit and separate from authorization. | `docs/kernel-architecture/11-api-gateway-architecture.md` §6 | `docs/kernel-architecture/01-kernel-overview.md` §16 | `GatewayAuthenticationContext` | K1 identity rules, K3 vocabulary | native tests, compile gates | context validation | `NATIVE_TESTED` | `IMPLEMENTED` |
-| `K10-003` | Gateway authorization remains integrated with Kernel outcomes rather than reimplemented. | `docs/kernel-architecture/11-api-gateway-architecture.md` §7 | inherited K3 traceability | `GatewayAuthorizationBinding` | K3 authorization decisions | native tests, compile gates | delegation and enforcement | `NATIVE_TESTED` | `IMPLEMENTED` |
-| `K10-004` | Requests remain validated before any lower-layer invocation. | `docs/kernel-architecture/11-api-gateway-architecture.md` §8 | `docs/kernel-architecture/13-data-flow.md` §3-§4 | `GatewayRequestContext`, `GatewayRequestEnvelope` | K1 identifiers, K3 classification, K9 memory retrieval rules | native tests, compile gates | request validation | `NATIVE_TESTED` | `IMPLEMENTED` |
-| `K10-005` | Commands remain explicit requests over approved Kernel operations only. | `docs/kernel-architecture/01-kernel-overview.md` §16 | `docs/kernel-architecture/13-data-flow.md` §4 | `GatewayCommandPayload`, `GatewayCommandRequest`, `GatewayCommandResponse` | K6-K9 public APIs | native tests, compile gates | command validation | `NATIVE_TESTED` | `IMPLEMENTED` |
-| `K10-006` | Queries expose deterministic read-only Kernel views for later Studio use. | `docs/kernel-architecture/12-studio-integration-architecture.md` §7-§12 | `docs/kernel-architecture/10-memory-architecture.md` §12 | `GatewayQueryPayload`, `GatewayQueryRequest`, `GatewayQueryResponse`, `GatewayStatusSnapshot` | K4-K9 public APIs | native tests, compile gates | query and read models | `NATIVE_TESTED` | `IMPLEMENTED` |
-| `K10-007` | Response mapping preserves canonical Kernel meaning. | `docs/kernel-architecture/11-api-gateway-architecture.md` §9 | `docs/kernel-architecture/13-data-flow.md` §11 | `GatewayResponseEnvelope` | K1-K9 canonical outcomes | native tests, compile gates | response determinism | `NATIVE_TESTED` | `IMPLEMENTED` |
-| `K10-008` | Error translation preserves semantic meaning without leaking internal details. | `docs/kernel-architecture/11-api-gateway-architecture.md` §10 | inherited K1-K9 rejection semantics | `GatewayError`, `GatewayErrorCode`, `GatewayResult` | `DomainError`, K3-K9 rejection enums | native tests, compile gates | error mapping | `NATIVE_TESTED` | `IMPLEMENTED` |
-| `K10-009` | Rate governance and protocol adaptation remain explicit and transport-neutral. | `docs/kernel-architecture/11-api-gateway-architecture.md` §3, §13 | `docs/kernel-architecture/01-kernel-overview.md` §16 | `GatewayProtocol`, `GatewayRateGovernanceReference`, `GatewayAuditReference` | K1 identifiers, K3 governance vocabulary | compile gates, static audits | protocol neutrality | `COMPILE_GATED` | `IMPLEMENTED` |
-| `K10-010` | K10 preserves frozen boundaries and remains infrastructure-free in the Kernel repository. | `docs/kernel-architecture/16-traceability.md` §4-§7 | inherited repository governance | conformance coverage only | K1-K9 frozen APIs | static audits, compile gates, native tests | no infrastructure leakage | `STATIC_AUDIT` | `IMPLEMENTED` |
+| Requirement | Implementation evidence | Compile validation | Native validation | Status |
+| --- | --- | --- | --- | --- |
+| `K10-001` | `GatewayApiVersion`, `GatewayOperationKind`, `GatewayOperationReference` in `crates/kernel-gateway/src/gateway_contract.rs`; requirement-aligned coverage in `gateway_contract_tests.rs` | `PASS` | `PASS` | `VERIFIED` |
+| `K10-002` | `GatewayAuthenticationContext` in `crates/kernel-gateway/src/gateway_authentication.rs`; requirement-aligned coverage in `gateway_authentication_tests.rs` | `PASS` | `PASS` | `VERIFIED` |
+| `K10-003` | `GatewayAuthorizationBinding` in `crates/kernel-gateway/src/gateway_authorization.rs`; requirement-aligned coverage in `gateway_authorization_tests.rs` | `PASS` | `PASS` | `VERIFIED` |
+| `K10-004` | `GatewayRequestContext`, `GatewayRequestEnvelope`, and gateway validation helpers in `gateway_request.rs` and `gateway_validation.rs`; requirement-aligned coverage in `gateway_request_tests.rs` | `PASS` | `PASS` | `VERIFIED` |
+| `K10-005` | `GatewayCommandPayload`, `GatewayCommandRequest`, `GatewayCommandResponse` in `gateway_command.rs`; requirement-aligned coverage in `gateway_command_tests.rs` | `PASS` | `PASS` | `VERIFIED` |
+| `K10-006` | `GatewayQueryPayload`, `GatewayQueryRequest`, `GatewayQueryResponse`, and `GatewayStatusSnapshot` in `gateway_query.rs` and `gateway.rs`; requirement-aligned coverage in `gateway_query_tests.rs` | `PASS` | `PASS` | `VERIFIED` |
+| `K10-007` | `GatewayResponseEnvelope` in `gateway_response.rs`; requirement-aligned coverage in `gateway_response_tests.rs` | `PASS` | `PASS` | `VERIFIED` |
+| `K10-008` | `GatewayError`, `GatewayErrorCode`, `GatewayResult` in `gateway_error.rs`; rejection-path coverage across gateway test modules | `PASS` | `PASS` | `VERIFIED` |
+| `K10-009` | `GatewayProtocol`, `GatewayRateGovernanceReference`, `GatewayAuditReference` in `gateway_protocol.rs` and `gateway.rs`; protocol-neutrality coverage in `gateway_separation_tests.rs` and conformance coverage in `gateway_conformance_tests.rs` | `PASS` | `PASS` | `VERIFIED` |
+| `K10-010` | additive `kernel-gateway` crate, `gateway_conformance_tests.rs`, `gateway_separation_tests.rs`, and repository documentation evidence | `PASS` | `PASS` | `VERIFIED` |
 
 ## K10 Deferred Work
 
