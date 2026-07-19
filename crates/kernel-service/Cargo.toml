@@ -1,0 +1,21 @@
+[package]
+name = "kernel-service"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+kernel-application = { path = "../kernel-application" }
+
+# Test-only lower-layer fixtures are required because kernel-service stays
+# outside the root workspace by instruction and cannot reuse kernel-application's
+# private test support. Production code depends on kernel-application only.
+[dev-dependencies]
+kernel-domain = { path = "../kernel-domain" }
+kernel-gateway = { path = "../kernel-gateway" }
+kernel-studio = { path = "../kernel-studio" }
+
+[workspace]
