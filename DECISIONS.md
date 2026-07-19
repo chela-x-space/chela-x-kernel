@@ -41,7 +41,7 @@ Repository-local architectural decisions that require human approval are recorde
 - `K1-003`: Implement only strongly typed identifiers, ownership paths, immutable identity primitives, lifecycle types, request records, decision records, and authorization/delegation references.
 
 ## ADR Register
-- `ADR-0001`: `K12 Application Integration Boundary` — `PROPOSED`; human approval required before K12 implementation authorization changes.
+- `ADR-0001`: `K12 Application Integration Boundary` — `ACCEPTED` on `2026-07-19`; repository-local Kernel ADR numbering is independent of `CES-ADR-*` identifiers in other repositories; K12 implementation is authorized within the accepted ADR boundary.
 
 ## References
 - [ENGINEERING.md](./ENGINEERING.md)

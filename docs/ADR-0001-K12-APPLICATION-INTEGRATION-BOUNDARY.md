@@ -1,7 +1,7 @@
 # ADR-0001: K12 Application Integration Boundary
 
 ## Status
-PROPOSED
+ACCEPTED
 
 ## Date
 2026-07-19
@@ -31,15 +31,15 @@ The architecture freeze remains active.
 The repository needs an architectural decision that defines what K12 is without selecting infrastructure, runtime ownership, transport protocol, frontend framework, persistence engine, authentication provider, deployment topology, or hosting platform.
 
 ## Decision
-For architectural planning purposes, the proposed official K12 title is:
+The official K12 title is:
 
 `K12 Application Integration`
 
-The proposed architectural role is:
+The architectural role is:
 
 `Technology-neutral application coordination and integration boundary above K11 Studio Integration`
 
-The proposed architectural position is:
+The accepted architectural position is:
 
 ```text
 External Application or Adapter
@@ -55,7 +55,7 @@ kernel-gateway
 kernel-domain
 ```
 
-The proposed first K12 implementation phase is constrained to:
+The first K12 implementation phase is constrained to:
 
 - deterministic behavior
 - contract-oriented behavior
@@ -66,9 +66,9 @@ The proposed first K12 implementation phase is constrained to:
 - side-effect-free behavior
 
 ## Architectural Meaning
-K12 is proposed as an application-facing coordination layer.
+K12 is an application-facing coordination layer.
 
-K12 is not proposed as:
+K12 is not:
 
 - a transport layer
 - a runtime host
@@ -80,18 +80,18 @@ K12 is not proposed as:
 K12 coordinates application-facing intent and continuity semantics while preserving the frozen K10 and K11 boundaries.
 
 ## Layer Placement
-K12 is proposed above `kernel-studio` and below any concrete external application or adapter.
+K12 is placed above `kernel-studio` and below any concrete external application or adapter.
 
 K12 must not be referenced by frozen lower layers.
 
-## Proposed Workspace Boundary
-The proposed additive workspace crate name is:
+## Approved Workspace Boundary
+The approved additive workspace crate name is:
 
 `crates/kernel-application`
 
-This name is proposed, not yet implemented.
+This name is approved for later implementation, not yet implemented.
 
-The proposed dependency direction is:
+The approved dependency direction is:
 
 ```text
 kernel-application
@@ -100,11 +100,33 @@ kernel-application
     -> kernel-domain
 ```
 
+Primary dependency:
+
+- `kernel-studio`
+
+Exceptional direct dependencies:
+
+- `kernel-gateway`
+- `kernel-domain` only when required by frozen value or reference types that are not available through `kernel-studio`
+
+Dependency clarification:
+
+- implementation must consume frozen K11 contracts through `kernel-studio`
+- direct dependencies from `kernel-application` to `kernel-gateway` or `kernel-domain` are exceptions, not the normal architecture
+- before adding either direct dependency, implementation evidence must show:
+  1. the required frozen value or reference type is not available through `kernel-studio`
+  2. adding the dependency does not bypass K11 Studio coordination
+  3. adding the dependency does not bypass K10 Gateway governance
+  4. no direct domain mutation is introduced
+  5. no duplicate application identity, authorization, scope, correlation, or audit model is created
+  6. the dependency is documented in the K12 implementation report
+- implementations must prefer frozen types re-exported by `kernel-studio`
+
 Allowed dependencies:
 
 - `kernel-studio`
-- `kernel-gateway`
-- `kernel-domain` only when required by frozen value or reference types already exposed through K10 or K11 coordination
+- `kernel-gateway` by exception only
+- `kernel-domain` by exception only when required by frozen value or reference types not available through `kernel-studio`
 
 Forbidden reverse dependencies:
 
@@ -118,13 +140,16 @@ Forbidden bypasses:
 
 ```text
 kernel-application -> direct kernel-domain mutation
+kernel-application -> lower-layer behavior that bypasses K10 or K11
+kernel-application -> parallel command semantics
+kernel-application -> parallel query semantics
 external application -> direct kernel-domain access
 external application -> bypass K10
 external application -> bypass K11
 ```
 
 ## Authorized Responsibilities After ADR Acceptance
-If this ADR is accepted, K12 may define additive, technology-neutral coordination contracts for:
+After acceptance, K12 may define additive, technology-neutral coordination contracts for:
 
 - application identity
 - application request context
@@ -195,7 +220,7 @@ Deployment ownership: `NONE`
 Side-effect ownership: `NONE`
 
 ## Security And Trust Boundary
-K12 is proposed as an application-facing trust boundary even when no concrete transport is implemented.
+K12 is an application-facing trust boundary even when no concrete transport is implemented.
 
 K12 must preserve and validate continuity for:
 
@@ -310,8 +335,13 @@ Negative:
 - additional adapter/runtime ADRs will still be required
 - some contracts may remain abstract until a concrete host is approved
 
+## Repository-Local ADR Numbering
+`ADR-0001` is valid as the first repository-local CHELA-X Kernel ADR.
+
+Repository-local ADR numbering is independent of `CES-ADR-*` identifiers used by CHELA-X CES or other repositories.
+
 ## Implementation Authorization Effect
-If accepted by human architecture authority, this ADR would authorize only:
+With human architecture approval recorded on `2026-07-19`, this ADR authorizes only:
 
 - additive K12 application-coordination contracts
 - additive K12 validation rules
@@ -327,14 +357,15 @@ Even after acceptance, this ADR does not authorize:
 - authentication-provider integration
 - deployment or hosting implementation
 
-## Approval Requirement
-Human architecture approval remains required.
+## Human Approval Record
+Human architecture approval was granted on `2026-07-19`.
 
-Until accepted:
+Current governance:
 
-- `K12 ADR: PROPOSED`
-- `K12 ARCHITECTURE REVIEW: PENDING HUMAN APPROVAL`
-- `K12 IMPLEMENTATION AUTHORIZATION: BLOCKED`
+- `ADR-0001: ACCEPTED`
+- `K12 ARCHITECTURE REVIEW: PASSED`
+- `ADR REQUIRED: SATISFIED BY ADR-0001`
+- `K12 IMPLEMENTATION AUTHORIZATION: AUTHORIZED WITHIN ADR-0001 BOUNDARY`
 - `K12 IMPLEMENTATION: NOT STARTED`
 
 ## References

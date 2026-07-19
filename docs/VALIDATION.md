@@ -678,9 +678,9 @@ Validation date: `2026-07-19`
 K12 planning assertions:
 
 - Planning status: `COMPLETE`
-- ADR status: `PROPOSED`
-- Architecture review status: `PENDING HUMAN APPROVAL`
-- Implementation authorization: `BLOCKED`
+- ADR status: `ACCEPTED`
+- Architecture review status: `PASSED`
+- Implementation authorization: `AUTHORIZED WITHIN ADR-0001 BOUNDARY`
 - Implementation status: `NOT STARTED`
 - Production source changed: `NO`
 - Tests changed: `NO`

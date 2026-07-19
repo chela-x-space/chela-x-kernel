@@ -5,11 +5,11 @@ PLANNING COMPLETE
 
 ## Milestone State
 - `K12 PLANNING: COMPLETE`
-- `K12 ADR: PROPOSED`
-- `K12 ARCHITECTURE REVIEW: PENDING HUMAN APPROVAL`
-- `K12 IMPLEMENTATION AUTHORIZATION: BLOCKED`
+- `K12 ADR: ACCEPTED`
+- `K12 ARCHITECTURE REVIEW: PASSED`
+- `K12 IMPLEMENTATION AUTHORIZATION: AUTHORIZED WITHIN ADR-0001 BOUNDARY`
 - `K12 IMPLEMENTATION: NOT STARTED`
-- `ADR REQUIRED: YES`
+- `ADR REQUIRED: SATISFIED BY ADR-0001`
 
 ## Backlog Items
 
@@ -21,7 +21,7 @@ PLANNING COMPLETE
 - Expected result: repository-authoritative K12 title and architectural role
 - Validation method: architecture review
 - Acceptance criteria: title is approved explicitly rather than inferred
-- Status: `AUTHORIZED AFTER ADR ACCEPTANCE`
+- Status: `AUTHORIZED FOR IMPLEMENTATION`
 
 ### K12-002
 - Title: `Frozen Studio Boundary Preservation`
@@ -31,7 +31,7 @@ PLANNING COMPLETE
 - Expected result: K12 consumes K11 and never mutates or redefines K11 semantics
 - Validation method: static dependency audit, contract tests
 - Acceptance criteria: no K11 bypass, no K11 API redesign
-- Status: `AUTHORIZED AFTER ADR ACCEPTANCE`
+- Status: `AUTHORIZED FOR IMPLEMENTATION`
 
 ### K12-003
 - Title: `Gateway Boundary Preservation`
@@ -41,7 +41,7 @@ PLANNING COMPLETE
 - Expected result: every command and query path preserves the K10 API Gateway boundary
 - Validation method: architecture conformance audit, contract tests
 - Acceptance criteria: no direct Kernel invocation from K12
-- Status: `AUTHORIZED AFTER ADR ACCEPTANCE`
+- Status: `AUTHORIZED FOR IMPLEMENTATION`
 
 ### K12-004
 - Title: `Concrete Runtime And Transport Decision`
@@ -71,7 +71,7 @@ PLANNING COMPLETE
 - Expected result: preserved authentication, authorization, correlation, audit, error, and rate-governance continuity
 - Validation method: security tests, contract tests
 - Acceptance criteria: no second identity, scope, audit, or permission model
-- Status: `AUTHORIZED AFTER ADR ACCEPTANCE`
+- Status: `AUTHORIZED FOR IMPLEMENTATION`
 
 ### K12-007
 - Title: `Traceability And CES Mapping Preservation`
@@ -81,7 +81,7 @@ PLANNING COMPLETE
 - Expected result: additive K12 traceability with `PARTIAL / INHERITED` mapping unless stronger authority exists
 - Validation method: documentation review
 - Acceptance criteria: no fabricated CES identifiers
-- Status: `AUTHORIZED AFTER ADR ACCEPTANCE`
+- Status: `AUTHORIZED FOR IMPLEMENTATION`
 
 ### K12-008
 - Title: `Approved Crate And Dependency Boundary`
@@ -101,17 +101,17 @@ PLANNING COMPLETE
 - Expected result: compile, native, security, transport, and failure-path validation gates
 - Validation method: documentation review
 - Acceptance criteria: startup, shutdown, bind failure, malformed input, duplicate request, replay, denial, scope mismatch, correlation continuity, and audit continuity are planned when relevant
-- Status: `AUTHORIZED AFTER ADR ACCEPTANCE`
+- Status: `AUTHORIZED FOR IMPLEMENTATION`
 
 ### K12-010
 - Title: `Implementation Authorization Decision`
 - Requirement source: architecture freeze and missing K12 architectural baseline
 - Dependencies: approved ADR and human review
 - Expected files: future ADR, future planning updates
-- Expected result: explicit go/no-go decision for K12 implementation
+- Expected result: explicit bounded implementation authority for K12
 - Validation method: governance review
-- Acceptance criteria: implementation remains blocked until architecture is approved
-- Status: `AUTHORIZED AFTER ADR ACCEPTANCE`
+- Acceptance criteria: implementation remains within ADR-0001 and preserves frozen K1-K11 APIs
+- Status: `AUTHORIZED FOR IMPLEMENTATION`
 
 ### K12-011
 - Title: `Session, Persistence, And Cache Architecture`

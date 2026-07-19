@@ -116,16 +116,18 @@ INTERNAL
 
 ### Added
 
-- Proposed local ADR [docs/ADR-0001-K12-APPLICATION-INTEGRATION-BOUNDARY.md](./docs/ADR-0001-K12-APPLICATION-INTEGRATION-BOUNDARY.md)
-- Proposed K12 title `K12 Application Integration`
-- Proposed technology-neutral application coordination boundary above frozen K11 Studio Integration
-- Proposed crate name `crates/kernel-application` without creating or implementing the crate
+- Local ADR [docs/ADR-0001-K12-APPLICATION-INTEGRATION-BOUNDARY.md](./docs/ADR-0001-K12-APPLICATION-INTEGRATION-BOUNDARY.md) accepted by human architecture authority on July 19, 2026
+- Official K12 title `K12 Application Integration`
+- Accepted technology-neutral application coordination boundary above frozen K11 Studio Integration
+- Approved future crate name `crates/kernel-application` without creating or implementing the crate
 
 ### Boundaries
 
-- ADR status: `PROPOSED`
-- K12 architecture review: `PENDING HUMAN APPROVAL`
-- K12 implementation authorization: `BLOCKED`
+- ADR status: `ACCEPTED`
+- K12 architecture review: `PASSED`
+- K12 implementation authorization: `AUTHORIZED WITHIN ADR-0001 BOUNDARY`
+- Primary dependency: `kernel-application -> kernel-studio`
+- Direct `kernel-gateway` or `kernel-domain` dependencies remain exceptional and require implementation evidence
 - No transport, frontend, runtime, persistence, session, provider, or deployment architecture selected
 
 ## K9 Enterprise Memory
