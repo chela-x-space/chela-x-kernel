@@ -19,5 +19,5 @@ fn gateway_authentication_context_rejects_missing_method_reference_k10_002() {
         None,
     )
     .expect_err("empty authentication method must fail");
-    assert_eq!(error.code(), crate::GatewayErrorCode::DomainRejection);
+    assert_eq!(error.code(), crate::GatewayErrorCode::InvalidRequest);
 }
