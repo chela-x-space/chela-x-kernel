@@ -176,8 +176,8 @@ K10 implementation constraints preserved:
 - K10 establishes gateway contracts, request validation, response mapping, error translation, protocol references, and status snapshots only.
 - K11 planning is complete and architecture review passed.
 - K11 implementation is complete and compile validation passed.
-- K11 native verification remains pending primary-host execution.
-- K11 API is not yet frozen.
+- K11 native verification passed on the primary host.
+- K11 API is frozen for K12 consumption.
 
 ## K11 Current Milestone State
 
@@ -187,8 +187,8 @@ K10 implementation constraints preserved:
 - Implementation status: `COMPLETE`
 - Implementation authorization: `AUTHORIZED`
 - Compile validation status: `PASSED`
-- Native verification status: `PENDING PRIMARY HOST`
-- API status: `NOT YET FROZEN`
+- Native verification status: `PASSED`
+- API status: `FROZEN FOR K12 CONSUMPTION`
 - Repository scope: additive Studio contract layer only
 - ADR status from current repository evidence: `NOT REQUIRED`
 
@@ -198,6 +198,8 @@ K11 implementation constraints preserved:
 - K11 does not modify `kernel-domain` or `kernel-gateway` public APIs.
 - K11 does not introduce frontend framework selection, browser or desktop implementation, HTTP or WebSocket runtime, persistence, scheduler, database, or authentication-provider integration.
 - K11 preserves the API Gateway as the only approved Studio boundary.
+- K12 planning is authorized.
+- K12 implementation is not started.
 
 Before future milestone implementation begins that changes repository architecture, the specification package MUST receive an architecture review confirming:
 

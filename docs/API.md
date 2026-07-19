@@ -1315,8 +1315,8 @@ Review status:
 - `K11-001 THROUGH K11-010 IMPLEMENTED`
 - `K11 IMPLEMENTATION COMPLETE`
 - `K11 COMPILE VALIDATION PASSED`
-- `K11 NATIVE VERIFICATION PENDING PRIMARY HOST`
-- `K11 API NOT YET FROZEN`
+- `K11 NATIVE VERIFICATION PASSED`
+- `K11 API FROZEN FOR K12 CONSUMPTION`
 
 Public inventory groups:
 
@@ -1339,6 +1339,5 @@ Conformance guarantees:
 
 Freeze guarantees:
 
-- K11 public API is not yet frozen.
-- Breaking changes before K11 freeze still require compatibility review and explicit human authorization.
-- Breaking changes after future K11 freeze require approved ADR, compatibility review, and explicit human authorization.
+- K11 public API is frozen for K12 consumption.
+- Breaking changes after K11 freeze require approved ADR, compatibility review, and explicit human authorization.

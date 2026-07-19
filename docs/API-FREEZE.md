@@ -312,7 +312,7 @@ The additive K10 gateway API currently covers:
 
 ### Status Statement
 
-`NOT YET FROZEN`
+`FROZEN FOR K12 CONSUMPTION`
 
 ### K11 Review State
 
@@ -320,7 +320,7 @@ The additive K10 gateway API currently covers:
 - Architecture review: `PASSED`
 - Implementation status: `COMPLETE`
 - Compile validation status: `PASSED`
-- Native verification status: `PENDING PRIMARY HOST`
+- Native verification status: `PASSED`
 - Public API inventory: `RECORDED`
 - Compatibility status: `K1-K10 PRESERVED; K11 ADDITIVE`
 - Architecture Freeze: `PRESERVED`
@@ -360,6 +360,23 @@ The additive K11 Studio API currently covers:
 - `StudioRevenueReferenceProjection`
 - `StudioCommandRequest`
 - `StudioCommandResponse`
+
+### K11 Freeze Conditions
+
+- K11 implementation is complete in `kernel-studio`.
+- Public API inventory is recorded in `docs/API.md`.
+- Architecture review passed without redesign, dependency-direction change, or ADR requirement.
+- K1-K10 API compatibility is preserved and K11 public API is additive only.
+- Primary-host native verification passed on Sunday, July 19, 2026.
+- `cargo test --workspace --all-targets` result: `877 passed`, `0 failed`, `0 ignored`, `0 measured`, `0 filtered out`, exit code `0`.
+
+### K11 Change Policy
+
+Breaking K11 public API or semantic changes after freeze require:
+
+- approved ADR
+- compatibility review
+- explicit human authorization
 
 ### K10 Freeze Conditions
 

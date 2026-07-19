@@ -15,8 +15,8 @@ Implementation Complete Pending Primary-Host Verification
 - `K11 ARCHITECTURE REVIEW: PASSED`
 - `K11 IMPLEMENTATION: COMPLETE`
 - `K11 COMPILE VALIDATION: PASSED`
-- `K11 NATIVE VERIFICATION: PENDING PRIMARY HOST`
-- `K11 API: NOT YET FROZEN`
+- `K11 NATIVE VERIFICATION: PASSED`
+- `K11 API: FROZEN FOR K12 CONSUMPTION`
 
 ## Purpose
 Record the bounded K11 Studio Integration milestone that follows the frozen K10 API Gateway baseline by implementing governed Studio-facing contracts over approved Kernel contracts without selecting a frontend stack, transport runtime, or persistence model.
@@ -170,16 +170,16 @@ Implementation caution:
 ## Requirements Matrix
 | Requirement ID | Source | Planned contract or behavior | Validation method | Status |
 | --- | --- | --- | --- | --- |
-| `K11-001` | `12-studio-integration-architecture.md` §5 | Top View contracts over approved enterprise hierarchy | compile gates, tests | `IMPLEMENTED` |
-| `K11-002` | `12-studio-integration-architecture.md` §6 | Digital Twin contracts over governed Kernel state | compile gates, tests | `IMPLEMENTED` |
-| `K11-003` | `12-studio-integration-architecture.md` §7 | Runtime view contracts over frozen K4 facts and K10 status contracts | compile gates, tests | `IMPLEMENTED` |
-| `K11-004` | `12-studio-integration-architecture.md` §8 | Workflow and task monitor contracts over frozen K6 and K7 contracts | compile gates, tests | `IMPLEMENTED` |
-| `K11-005` | `12-studio-integration-architecture.md` §9 | Event timeline contracts over canonical K5 event ordering | compile gates, tests | `IMPLEMENTED` |
-| `K11-006` | `12-studio-integration-architecture.md` §10 | Audit-view contracts over Kernel evidence references | compile gates, tests | `IMPLEMENTED` |
-| `K11-007` | `12-studio-integration-architecture.md` §11 | Revenue-view reference contracts over governed enterprise facts | compile gates, tests | `IMPLEMENTED` |
-| `K11-008` | `12-studio-integration-architecture.md` §12 | Command-console contracts over frozen K10 gateway contracts | compile gates, tests | `IMPLEMENTED` |
-| `K11-009` | `13-data-flow.md` §10 | Studio request and response flow that never modifies Kernel state directly | compile gates, static audit, tests | `IMPLEMENTED` |
-| `K11-010` | `16-traceability.md` §4-§7 | K11 traceability and frozen-boundary conformance | compile gates, static audit, tests | `IMPLEMENTED` |
+| `K11-001` | `12-studio-integration-architecture.md` §5 | Top View contracts over approved enterprise hierarchy | compile validation, native validation, tests | `VERIFIED` |
+| `K11-002` | `12-studio-integration-architecture.md` §6 | Digital Twin contracts over governed Kernel state | compile validation, native validation, tests | `VERIFIED` |
+| `K11-003` | `12-studio-integration-architecture.md` §7 | Runtime view contracts over frozen K4 facts and K10 status contracts | compile validation, native validation, tests | `VERIFIED` |
+| `K11-004` | `12-studio-integration-architecture.md` §8 | Workflow and task monitor contracts over frozen K6 and K7 contracts | compile validation, native validation, tests | `VERIFIED` |
+| `K11-005` | `12-studio-integration-architecture.md` §9 | Event timeline contracts over canonical K5 event ordering | compile validation, native validation, tests | `VERIFIED` |
+| `K11-006` | `12-studio-integration-architecture.md` §10 | Audit-view contracts over Kernel evidence references | compile validation, native validation, tests | `VERIFIED` |
+| `K11-007` | `12-studio-integration-architecture.md` §11 | Revenue-view reference contracts over governed enterprise facts | compile validation, native validation, tests | `VERIFIED` |
+| `K11-008` | `12-studio-integration-architecture.md` §12 | Command-console contracts over frozen K10 gateway contracts | compile validation, native validation, tests | `VERIFIED` |
+| `K11-009` | `13-data-flow.md` §10 | Studio request and response flow that never modifies Kernel state directly | compile validation, native validation, static audit, tests | `VERIFIED` |
+| `K11-010` | `16-traceability.md` §4-§7 | K11 traceability and frozen-boundary conformance | compile validation, native validation, static audit, tests | `VERIFIED` |
 
 ## Definition Of Done
 - K11 implementation artifacts exist in the repository
@@ -187,5 +187,5 @@ Implementation caution:
 - K1-K10 compatibility constraints are documented
 - ADR assessment is recorded
 - implementation is complete
-- native verification remains pending primary-host execution
-- API remains unfrozen until authoritative native verification passes
+- native verification passed on the authoritative primary host
+- API is frozen for K12 consumption

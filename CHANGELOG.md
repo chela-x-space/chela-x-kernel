@@ -88,14 +88,14 @@ INTERNAL
 ### Validation
 
 - Codex validation gates passed for `cargo fmt --all -- --check`, `cargo check --workspace --all-targets`, `cargo check --workspace --all-features --all-targets`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo clippy --workspace --all-features --all-targets -- -D warnings`, `cargo doc --workspace --no-deps`, `cargo test --doc --workspace`, and `git diff --check`
-- Local `cargo test --workspace --all-targets` remains blocked in the Codex environment by missing native linker `cc`; K11 native verification is pending primary-host execution
+- Authoritative primary-host `cargo test --workspace --all-targets` passed with `kernel-domain: 827 passed`, `kernel-gateway: 34 passed`, `kernel-studio: 16 passed`, `TOTAL: 877 passed`, `0 failed`, exit code `0`
 
 ### Boundaries
 
 - K11 implementation is additive only
 - K11 preserves frozen K1-K10 public APIs and consumes Studio traffic through K10 gateway contracts only
 - No frontend framework, browser runtime, desktop runtime, HTTP, REST, WebSocket, gRPC, IPC, persistence, scheduler, worker runtime, or authentication-provider integration introduced
-- K11 API is not yet frozen pending authoritative primary-host native verification
+- K11 API is frozen for K12 consumption
 
 ## K9 Enterprise Memory
 
