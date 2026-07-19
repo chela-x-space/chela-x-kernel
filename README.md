@@ -60,7 +60,7 @@ AI Engineering OS -> CHELA-X CES -> CHELA-X Kernel -> CHELA-X Runtime -> CHELA-X
 | K11 Studio Integration | PASS / COMPLETE |
 | K12 Application Integration | PASS / COMPLETE |
 | K13 Service Integration | PASS / COMPLETE |
-| K14 Adapter Integration | PLANNING / PENDING REVIEW |
+| K14 External Adapter Boundary | PLANNING / PENDING ADR ACCEPTANCE |
 
 Canonical host validation:
 
@@ -68,7 +68,7 @@ Canonical host validation:
 - **0 failed**
 
 ## Current Status
-`K8 Execution Engine Closed And Frozen; K9 Enterprise Memory Closed And Frozen; K10 API Gateway Closed And Frozen For K11 Consumption; K11 Studio Integration Closed And Frozen For K12 Consumption; K12 Application Integration Closed And Frozen For K13 Consumption; K13 Service Integration Closed And Frozen For K14 Consumption; K14 Adapter Integration Planning Complete, Architecture Review Pending Human Review`
+`K8 Execution Engine Closed And Frozen; K9 Enterprise Memory Closed And Frozen; K10 API Gateway Closed And Frozen For K11 Consumption; K11 Studio Integration Closed And Frozen For K12 Consumption; K12 Application Integration Closed And Frozen For K13 Consumption; K13 Service Integration Closed And Frozen For K14 Consumption; K14 External Adapter Boundary Planning Complete, Architecture Review Pending ADR Acceptance`
 
 ## Constraints
 - Architecture is frozen.
@@ -113,8 +113,8 @@ Canonical host validation:
 - K13 public API is frozen for K14 consumption.
 - K13 preserves a technology-neutral and replaceable service boundary with no runtime, Tokio, networking, transport, persistence, database, scheduler, queue, filesystem behavior, cache, plugin loading, AI model execution, infrastructure, direct `kernel-domain` mutation, `kernel-application` bypass, or reverse dependency from frozen lower crates.
 - K14 planning is complete as a documentation-only milestone.
-- K14 currently represents the smallest proposed adapter-facing coordination boundary above `kernel-service`.
-- K14 implementation is not authorized because a new post-K13 layer still requires human architecture review and a dedicated ADR.
+- K14 currently represents the smallest proposed external-adapter contract boundary above `kernel-service`.
+- K14 implementation is not authorized because ADR-0003 remains proposed and pending human acceptance.
 - K14 planning does not introduce runtime, transport, networking, persistence, hosting, deployment, or other infrastructure.
 - K6 preserves the architecture freeze.
 - K8 preserves the architecture freeze.

@@ -179,19 +179,19 @@ INTERNAL
 - Preserved production validation semantics while changing the fixture to mismatch only `application_request_id`
 - Recorded root workspace authority through commits `1d76314` and `70b51a6`
 
-## K14 Adapter Integration Planning
+## K14 External Adapter Boundary Planning
 
 ### Added
 
 - Repository-backed K14 planning artifacts in `docs/plans/K14-IMPLEMENTATION-PLAN.md` and `docs/backlog/K14-BACKLOG.md`
-- Proposed smallest adapter-facing coordination boundary above frozen `kernel-service`
+- Proposed smallest external-adapter contract boundary above frozen `kernel-service`
 - Repository-backed K14 traceability and governance planning over frozen K10-K13 boundaries
 - Explicit ADR assessment that K14 requires architecture authority before implementation
 
 ### Boundaries
 
 - K14 planning is complete
-- K14 architecture review is pending human review
+- K14 architecture review is pending ADR acceptance
 - K14 implementation is not authorized
 - No Rust production code, tests, or Cargo files changed
 - No runtime, transport, persistence, hosting, deployment, or infrastructure introduced

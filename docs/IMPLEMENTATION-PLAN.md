@@ -257,21 +257,21 @@ K13 implementation constraints preserved:
 
 ## K14 Current Milestone State
 
-- Proposed title: `K14 Adapter Integration`
+- Proposed title: `K14 External Adapter Boundary`
 - Planning status: `COMPLETE`
-- Architecture review status: `PENDING HUMAN REVIEW`
+- Architecture review status: `PENDING ADR ACCEPTANCE`
 - Implementation authorization: `NOT AUTHORIZED`
 - Implementation status: `NOT STARTED`
-- Repository scope: proposed additive `kernel-adapter` contract layer only
-- ADR status from current repository evidence: `REQUIRED`
+- Repository scope: proposed additive `kernel-adapter` contract boundary only
+- ADR status from current repository evidence: `PROPOSED AS ADR-0003`
 
 K14 planning constraints preserved:
 
-- K14 is proposed as the smallest adapter-facing coordination boundary above frozen K13 only.
+- K14 is proposed as the smallest external-adapter contract boundary above frozen K13 only.
 - K14 must consume frozen K13 contracts and must not bypass K13, K12, K11, or K10.
 - K14 must not modify `kernel-domain`, `kernel-gateway`, `kernel-studio`, `kernel-application`, or `kernel-service` public APIs.
 - K14 planning introduces no runtime, persistence, networking, transport, hosting, deployment, or infrastructure.
-- K14 implementation remains blocked until a new ADR explicitly approves the title, crate boundary, and dependency direction.
+- K14 implementation remains blocked until ADR-0003 is accepted.
 
 Before future milestone implementation begins that changes repository architecture, the specification package MUST receive an architecture review confirming:
 

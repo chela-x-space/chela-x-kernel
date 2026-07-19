@@ -5,7 +5,7 @@ PLANNING COMPLETE
 
 ## Milestone State
 - `K14 PLANNING: COMPLETE`
-- `K14 ARCHITECTURE REVIEW: PENDING HUMAN REVIEW`
+- `K14 ARCHITECTURE REVIEW: PENDING ADR ACCEPTANCE`
 - `K14 IMPLEMENTATION AUTHORIZATION: NOT AUTHORIZED`
 - `K14 IMPLEMENTATION: NOT STARTED`
 - `ADR REQUIRED: YES`
@@ -13,7 +13,7 @@ PLANNING COMPLETE
 ## Backlog Items
 
 ### K14-001
-- Title: `Official K14 Adapter Milestone Definition`
+- Title: `Official K14 External Adapter Milestone Definition`
 - Requirement source: `docs/ADR-0002-K13-SERVICE-INTEGRATION-BOUNDARY.md`
 - Dependencies: human architecture authority
 - Expected files: future ADR, `docs/plans/K14-IMPLEMENTATION-PLAN.md`, `docs/IMPLEMENTATION-PLAN.md`, `docs/TRACEABILITY.md`
