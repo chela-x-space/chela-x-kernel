@@ -191,8 +191,9 @@ INTERNAL
 ### Boundaries
 
 - K14 planning is complete
-- K14 architecture review is pending ADR acceptance
-- K14 implementation is not authorized
+- ADR-0003 is accepted
+- K14 architecture review passed
+- K14 implementation is authorized
 - No Rust production code, tests, or Cargo files changed
 - No runtime, transport, persistence, hosting, deployment, or infrastructure introduced
 

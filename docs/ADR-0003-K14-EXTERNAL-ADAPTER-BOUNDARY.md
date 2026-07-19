@@ -1,7 +1,7 @@
 # ADR-0003: K14 External Adapter Boundary
 
 ## Status
-PROPOSED
+ACCEPTED
 
 ## Date
 2026-07-19
@@ -20,7 +20,7 @@ runtime, persistence, hosting, deployment, or infrastructure.
 
 This ADR defines the K14 boundary only. It does not authorize transport
 implementation, framework selection, runtime ownership, or crate
-creation until human acceptance is recorded.
+creation beyond the accepted contract-boundary scope recorded here.
 
 ## Context
 `K13 Service Integration` is closed and frozen under `ADR-0002`.
@@ -291,8 +291,11 @@ Trade-offs:
 ## ADR Status And Authorization
 ```text
 ADR STATUS:
-PROPOSED
+ACCEPTED
 
 K14 IMPLEMENTATION AUTHORIZATION:
-BLOCKED PENDING HUMAN ACCEPTANCE
+APPROVED
+
+K14 IMPLEMENTATION:
+AUTHORIZED
 ```

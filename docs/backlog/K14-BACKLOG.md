@@ -5,9 +5,9 @@ PLANNING COMPLETE
 
 ## Milestone State
 - `K14 PLANNING: COMPLETE`
-- `K14 ARCHITECTURE REVIEW: PENDING ADR ACCEPTANCE`
-- `K14 IMPLEMENTATION AUTHORIZATION: NOT AUTHORIZED`
-- `K14 IMPLEMENTATION: NOT STARTED`
+- `K14 ARCHITECTURE REVIEW: PASSED`
+- `K14 IMPLEMENTATION AUTHORIZATION: APPROVED`
+- `K14 IMPLEMENTATION: AUTHORIZED`
 - `ADR REQUIRED: YES`
 
 ## Backlog Items
@@ -20,7 +20,7 @@ PLANNING COMPLETE
 - Expected result: explicit K14 title and adapter-boundary role above K13
 - Validation method: architecture review
 - Acceptance criteria: K14 title and role are approved explicitly rather than inferred
-- Status: `BLOCKED PENDING ADR`
+- Status: `AUTHORIZED FOR IMPLEMENTATION`
 
 ### K14-002
 - Title: `Frozen K13 Boundary Preservation`
@@ -30,7 +30,7 @@ PLANNING COMPLETE
 - Expected result: K14 consumes K13 and never bypasses K13, K12, K11, or K10
 - Validation method: static dependency audit, contract tests
 - Acceptance criteria: no K13 bypass, no K12 bypass, no K11 bypass, no K10 bypass
-- Status: `BLOCKED PENDING ADR`
+- Status: `AUTHORIZED FOR IMPLEMENTATION`
 
 ### K14-003
 - Title: `Additive Adapter Contract Boundary`
@@ -40,7 +40,7 @@ PLANNING COMPLETE
 - Expected result: additive adapter contracts above `kernel-service` only
 - Validation method: static architecture audit, compile validation
 - Acceptance criteria: no runtime, persistence, networking, transport, hosting, scheduling, or infrastructure
-- Status: `BLOCKED PENDING ADR`
+- Status: `AUTHORIZED FOR IMPLEMENTATION`
 
 ### K14-004
 - Title: `Traceability And CES Mapping Preservation`
@@ -60,7 +60,7 @@ PLANNING COMPLETE
 - Expected result: adapter identity and capability contracts preserve K13 meaning without replacement
 - Validation method: contract tests, failure-path tests
 - Acceptance criteria: no second identity or capability model
-- Status: `BLOCKED PENDING ADR`
+- Status: `AUTHORIZED FOR IMPLEMENTATION`
 
 ### K14-006
 - Title: `Adapter Command And Query Coordination`
@@ -70,7 +70,7 @@ PLANNING COMPLETE
 - Expected result: adapter commands and queries are coordinated only through K13
 - Validation method: contract tests, failure-path tests
 - Acceptance criteria: no parallel command or query semantics
-- Status: `BLOCKED PENDING ADR`
+- Status: `AUTHORIZED FOR IMPLEMENTATION`
 
 ### K14-007
 - Title: `Response Continuity And Safe Error Boundaries`
@@ -80,7 +80,7 @@ PLANNING COMPLETE
 - Expected result: K14 preserves service request identity, scope, correlation, audit continuity, and safe error disclosure
 - Validation method: contract tests, failure-path tests
 - Acceptance criteria: no service evidence loss and no unsafe disclosure
-- Status: `BLOCKED PENDING ADR`
+- Status: `AUTHORIZED FOR IMPLEMENTATION`
 
 ### K14-008
 - Title: `Validation And Static Audit Plan`
@@ -110,4 +110,4 @@ PLANNING COMPLETE
 - Expected result: no frozen lower-layer public API change and no reverse dependency into `kernel-service` or lower crates
 - Validation method: static dependency audit, compatibility review
 - Acceptance criteria: K1-K13 compatibility preserved
-- Status: `BLOCKED PENDING ADR`
+- Status: `AUTHORIZED FOR IMPLEMENTATION`

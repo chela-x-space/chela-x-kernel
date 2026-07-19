@@ -747,9 +747,9 @@ Validation date: `2026-07-19`
 K14 planning assertions:
 
 - Planning status: `COMPLETE`
-- Architecture review status: `PENDING ADR ACCEPTANCE`
-- Implementation authorization: `NOT AUTHORIZED`
-- Implementation status: `NOT STARTED`
+- Architecture review status: `PASSED`
+- Implementation authorization: `APPROVED`
+- Implementation status: `AUTHORIZED`
 - Production source changed: `NO`
 - Tests changed: `NO`
 - Cargo files changed: `NO`
