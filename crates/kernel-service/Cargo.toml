@@ -17,5 +17,3 @@ kernel-application = { path = "../kernel-application" }
 kernel-domain = { path = "../kernel-domain" }
 kernel-gateway = { path = "../kernel-gateway" }
 kernel-studio = { path = "../kernel-studio" }
-
-[workspace]

@@ -23,6 +23,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "kernel-service"
+version = "0.1.0"
+dependencies = [
+ "kernel-application",
+ "kernel-domain",
+ "kernel-gateway",
+ "kernel-studio",
+]
+
+[[package]]
 name = "kernel-studio"
 version = "0.1.0"
 dependencies = [

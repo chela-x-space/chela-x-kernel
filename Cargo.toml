@@ -4,5 +4,6 @@ members = [
     "crates/kernel-gateway",
     "crates/kernel-studio",
     "crates/kernel-application",
+    "crates/kernel-service",
 ]
 resolver = "2"
