@@ -678,11 +678,12 @@ Validation date: `2026-07-19`
 K12 planning assertions:
 
 - Planning status: `COMPLETE`
-- Architecture review status: `BLOCKED PENDING ADR`
+- ADR status: `PROPOSED`
+- Architecture review status: `PENDING HUMAN APPROVAL`
 - Implementation authorization: `BLOCKED`
 - Implementation status: `NOT STARTED`
 - Production source changed: `NO`
 - Tests changed: `NO`
 - Cargo files changed: `NO`
 - Frozen K1-K11 APIs changed: `NO`
-- Planning and documentation files only: `YES`
+- ADR and documentation files only: `YES`

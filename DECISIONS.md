@@ -10,7 +10,7 @@ Draft
 Kernel Platform Team
 
 ## Last Updated
-2026-07-14
+2026-07-19
 
 ## Applies To
 Non-trivial implementation decisions recorded during CHELA-X Kernel bootstrap.
@@ -30,6 +30,8 @@ INTERNAL
 ## Purpose
 Record implementation-level decisions made during K0 without creating architectural authority.
 
+Repository-local architectural decisions that require human approval are recorded as ADR documents under `docs/ADR-*` when introduced.
+
 ## Decision Log
 - `K0-001`: Initialize Kernel as a Rust workspace only; no business logic or runtime components are introduced in bootstrap.
 - `K0-002`: Preserve CES requirements through source references and traceability tables instead of duplicating specification text.
@@ -37,6 +39,9 @@ Record implementation-level decisions made during K0 without creating architectu
 - `K1-001`: Replace `kernel-bootstrap` with a neutral `kernel-domain` crate to host value objects without creating runtime architecture.
 - `K1-002`: Keep K1 std-only and avoid external dependencies because the current scope does not require serialization, async runtime, persistence, or networking.
 - `K1-003`: Implement only strongly typed identifiers, ownership paths, immutable identity primitives, lifecycle types, request records, decision records, and authorization/delegation references.
+
+## ADR Register
+- `ADR-0001`: `K12 Application Integration Boundary` — `PROPOSED`; human approval required before K12 implementation authorization changes.
 
 ## References
 - [ENGINEERING.md](./ENGINEERING.md)

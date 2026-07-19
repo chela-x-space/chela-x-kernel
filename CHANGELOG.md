@@ -112,6 +112,22 @@ INTERNAL
 - No Rust production code, tests, or Cargo files changed
 - No frontend framework, browser runtime, desktop runtime, HTTP, REST, WebSocket, SSE, IPC, persistence, session management, scheduler, worker runtime, cache, or authentication-provider implementation introduced
 
+## K12 Application Integration ADR
+
+### Added
+
+- Proposed local ADR [docs/ADR-0001-K12-APPLICATION-INTEGRATION-BOUNDARY.md](./docs/ADR-0001-K12-APPLICATION-INTEGRATION-BOUNDARY.md)
+- Proposed K12 title `K12 Application Integration`
+- Proposed technology-neutral application coordination boundary above frozen K11 Studio Integration
+- Proposed crate name `crates/kernel-application` without creating or implementing the crate
+
+### Boundaries
+
+- ADR status: `PROPOSED`
+- K12 architecture review: `PENDING HUMAN APPROVAL`
+- K12 implementation authorization: `BLOCKED`
+- No transport, frontend, runtime, persistence, session, provider, or deployment architecture selected
+
 ## K9 Enterprise Memory
 
 ### Added

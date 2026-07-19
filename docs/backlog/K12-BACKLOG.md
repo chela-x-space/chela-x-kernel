@@ -5,7 +5,8 @@ PLANNING COMPLETE
 
 ## Milestone State
 - `K12 PLANNING: COMPLETE`
-- `K12 ARCHITECTURE REVIEW: BLOCKED PENDING ADR`
+- `K12 ADR: PROPOSED`
+- `K12 ARCHITECTURE REVIEW: PENDING HUMAN APPROVAL`
 - `K12 IMPLEMENTATION AUTHORIZATION: BLOCKED`
 - `K12 IMPLEMENTATION: NOT STARTED`
 - `ADR REQUIRED: YES`
@@ -20,7 +21,7 @@ PLANNING COMPLETE
 - Expected result: repository-authoritative K12 title and architectural role
 - Validation method: architecture review
 - Acceptance criteria: title is approved explicitly rather than inferred
-- Status: `BLOCKED PENDING ADR`
+- Status: `AUTHORIZED AFTER ADR ACCEPTANCE`
 
 ### K12-002
 - Title: `Frozen Studio Boundary Preservation`
@@ -30,7 +31,7 @@ PLANNING COMPLETE
 - Expected result: K12 consumes K11 and never mutates or redefines K11 semantics
 - Validation method: static dependency audit, contract tests
 - Acceptance criteria: no K11 bypass, no K11 API redesign
-- Status: `PLANNED`
+- Status: `AUTHORIZED AFTER ADR ACCEPTANCE`
 
 ### K12-003
 - Title: `Gateway Boundary Preservation`
@@ -40,7 +41,7 @@ PLANNING COMPLETE
 - Expected result: every command and query path preserves the K10 API Gateway boundary
 - Validation method: architecture conformance audit, contract tests
 - Acceptance criteria: no direct Kernel invocation from K12
-- Status: `PLANNED`
+- Status: `AUTHORIZED AFTER ADR ACCEPTANCE`
 
 ### K12-004
 - Title: `Concrete Runtime And Transport Decision`
@@ -50,7 +51,7 @@ PLANNING COMPLETE
 - Expected result: approved runtime and transport ownership model if K12 needs one
 - Validation method: architecture review
 - Acceptance criteria: no runtime listener, async owner, or hosting process is introduced without ADR
-- Status: `BLOCKED PENDING ADR`
+- Status: `REQUIRES LATER ADR`
 
 ### K12-005
 - Title: `Concrete Frontend Or Presentation Technology`
@@ -60,7 +61,7 @@ PLANNING COMPLETE
 - Expected result: explicit approval or rejection of frontend or desktop technology
 - Validation method: architecture review
 - Acceptance criteria: no React, Next.js, Vue, Electron, Tauri, browser runtime, or desktop runtime is selected without ADR
-- Status: `BLOCKED PENDING ADR`
+- Status: `REQUIRES LATER ADR`
 
 ### K12-006
 - Title: `Security And Trust Boundary Preservation`
@@ -70,7 +71,7 @@ PLANNING COMPLETE
 - Expected result: preserved authentication, authorization, correlation, audit, error, and rate-governance continuity
 - Validation method: security tests, contract tests
 - Acceptance criteria: no second identity, scope, audit, or permission model
-- Status: `PLANNED`
+- Status: `AUTHORIZED AFTER ADR ACCEPTANCE`
 
 ### K12-007
 - Title: `Traceability And CES Mapping Preservation`
@@ -80,7 +81,7 @@ PLANNING COMPLETE
 - Expected result: additive K12 traceability with `PARTIAL / INHERITED` mapping unless stronger authority exists
 - Validation method: documentation review
 - Acceptance criteria: no fabricated CES identifiers
-- Status: `PLANNED`
+- Status: `AUTHORIZED AFTER ADR ACCEPTANCE`
 
 ### K12-008
 - Title: `Approved Crate And Dependency Boundary`
@@ -90,7 +91,7 @@ PLANNING COMPLETE
 - Expected result: explicit crate boundary and allowed dependency direction
 - Validation method: architecture review
 - Acceptance criteria: no reverse dependency from frozen lower-layer crates
-- Status: `BLOCKED PENDING ADR`
+- Status: `REQUIRES LATER ADR`
 
 ### K12-009
 - Title: `Validation And Failure-Path Plan`
@@ -100,7 +101,7 @@ PLANNING COMPLETE
 - Expected result: compile, native, security, transport, and failure-path validation gates
 - Validation method: documentation review
 - Acceptance criteria: startup, shutdown, bind failure, malformed input, duplicate request, replay, denial, scope mismatch, correlation continuity, and audit continuity are planned when relevant
-- Status: `PLANNED`
+- Status: `AUTHORIZED AFTER ADR ACCEPTANCE`
 
 ### K12-010
 - Title: `Implementation Authorization Decision`
@@ -110,7 +111,7 @@ PLANNING COMPLETE
 - Expected result: explicit go/no-go decision for K12 implementation
 - Validation method: governance review
 - Acceptance criteria: implementation remains blocked until architecture is approved
-- Status: `BLOCKED PENDING ADR`
+- Status: `AUTHORIZED AFTER ADR ACCEPTANCE`
 
 ### K12-011
 - Title: `Session, Persistence, And Cache Architecture`

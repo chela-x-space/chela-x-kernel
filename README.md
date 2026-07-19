@@ -1,7 +1,7 @@
 # CHELA-X Kernel
 
 ## Status
-Implementation (K8 Closed, K9 Closed, K10 Closed, K11 Closed, K12 Planned)
+Implementation (K8 Closed, K9 Closed, K10 Closed, K11 Closed, K12 ADR Proposed)
 
 ## Version
 0.5.0
@@ -65,7 +65,7 @@ Canonical host validation:
 - **0 failed**
 
 ## Current Status
-`K8 Execution Engine Closed And Frozen; K9 Enterprise Memory Closed And Frozen; K10 API Gateway Closed And Frozen For K11 Consumption; K11 Studio Integration Closed And Frozen For K12 Consumption; K12 Planning Complete And Architecture Review Blocked Pending ADR`
+`K8 Execution Engine Closed And Frozen; K9 Enterprise Memory Closed And Frozen; K10 API Gateway Closed And Frozen For K11 Consumption; K11 Studio Integration Closed And Frozen For K12 Consumption; K12 Planning Complete And ADR Proposed Pending Human Approval`
 
 ## Constraints
 - Architecture is frozen.
@@ -91,8 +91,9 @@ Canonical host validation:
 - K11 native verification passed on the primary host.
 - K11 public API is frozen for K12 consumption.
 - K12 planning is complete.
-- K12 architecture review is blocked pending ADR.
-- ADR is required before K12 implementation authority exists.
+- K12 ADR is proposed.
+- K12 architecture review is pending human approval.
+- ADR acceptance is required before K12 implementation authority exists.
 - K12 implementation is not started.
 - K6 preserves the architecture freeze.
 - K8 preserves the architecture freeze.

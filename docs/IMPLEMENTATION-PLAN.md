@@ -199,23 +199,25 @@ K11 implementation constraints preserved:
 - K11 does not introduce frontend framework selection, browser or desktop implementation, HTTP or WebSocket runtime, persistence, scheduler, database, or authentication-provider integration.
 - K11 preserves the API Gateway as the only approved Studio boundary.
 - K12 planning is complete.
-- K12 architecture review is blocked pending ADR.
+- K12 ADR is proposed.
+- K12 architecture review is pending human approval.
 - K12 implementation authorization is blocked.
 - K12 implementation is not started.
 
 ## K12 Current Milestone State
 
-- Exact title: `UNRESOLVED IN CURRENT REPOSITORY BASELINE`
+- Exact title: `K12 Application Integration` `PROPOSED BY ADR-0001`
 - Planning status: `COMPLETE`
-- Architecture review status: `BLOCKED PENDING ADR`
+- ADR status: `PROPOSED`
+- Architecture review status: `PENDING HUMAN APPROVAL`
 - Implementation authorization: `BLOCKED`
 - Implementation status: `NOT STARTED`
-- Repository scope: planning artifacts only
+- Repository scope: planning and ADR artifacts only
 - ADR status from current repository evidence: `REQUIRED`
 
 K12 planning constraints preserved:
 
-- no official K12 title exists in the frozen repository baseline
+- K12 title is proposed by `ADR-0001` and is not accepted yet
 - K12 must consume frozen K11 Studio contracts without modifying them
 - K12 must preserve the frozen K10 API Gateway boundary
 - K12 must not modify `kernel-domain`, `kernel-gateway`, or `kernel-studio` public APIs
@@ -246,6 +248,7 @@ Before future milestone implementation begins that changes repository architectu
 - [plans/K10-IMPLEMENTATION-PLAN.md](./plans/K10-IMPLEMENTATION-PLAN.md)
 - [plans/K11-IMPLEMENTATION-PLAN.md](./plans/K11-IMPLEMENTATION-PLAN.md)
 - [plans/K12-IMPLEMENTATION-PLAN.md](./plans/K12-IMPLEMENTATION-PLAN.md)
+- [ADR-0001-K12-APPLICATION-INTEGRATION-BOUNDARY.md](./ADR-0001-K12-APPLICATION-INTEGRATION-BOUNDARY.md)
 - [backlog/K6-BACKLOG.md](./backlog/K6-BACKLOG.md)
 - [backlog/K7-BACKLOG.md](./backlog/K7-BACKLOG.md)
 - [backlog/K8-BACKLOG.md](./backlog/K8-BACKLOG.md)
