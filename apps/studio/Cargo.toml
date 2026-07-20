@@ -1,0 +1,20 @@
+[package]
+name = "chela-x-studio"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[[bin]]
+name = "chela-x-studio"
+path = "src/main.rs"
+
+[dependencies]
+axum = "0.8"
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "net"] }
+serde = { version = "1", features = ["derive"] }
+
+kernel-domain = { path = "../../crates/kernel-domain" }
+kernel-gateway = { path = "../../crates/kernel-gateway" }
+kernel-studio = { path = "../../crates/kernel-studio" }
+kernel-application = { path = "../../crates/kernel-application" }
+kernel-service = { path = "../../crates/kernel-service" }

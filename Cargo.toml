@@ -6,5 +6,6 @@ members = [
     "crates/kernel-application",
     "crates/kernel-service",
     "crates/kernel-adapter",
+    "apps/studio",
 ]
 resolver = "2"
