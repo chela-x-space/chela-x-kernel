@@ -1,6 +1,7 @@
 #![forbid(unsafe_code)]
 
 mod dto;
+mod mapper;
 mod projection_factory;
 mod routes;
 

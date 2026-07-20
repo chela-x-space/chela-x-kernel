@@ -1,6 +1,7 @@
 use crate::dto::{HealthResponse, TopViewResponse};
-use crate::projection_factory::host_local_top_view;
-use axum::{routing::get, Json, Router};
+use crate::mapper::top_view_response;
+use crate::projection_factory::host_local_top_view_projection;
+use axum::{http::StatusCode, routing::get, Json, Router};
 
 pub fn router() -> Router {
     Router::new()
@@ -15,6 +16,13 @@ async fn health() -> Json<HealthResponse> {
     })
 }
 
-async fn top_view() -> Json<TopViewResponse> {
-    Json(host_local_top_view())
+async fn top_view() -> Result<Json<TopViewResponse>, (StatusCode, String)> {
+    let projection = host_local_top_view_projection().map_err(|detail| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("failed to build top-view projection: {detail}"),
+        )
+    })?;
+
+    Ok(Json(top_view_response(&projection)))
 }
