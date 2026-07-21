@@ -285,21 +285,26 @@ K14 implementation constraints preserved:
 
 ## K15 Current Milestone State
 
-- Proposed title: `K15 External Intake Trust Boundary`
+- Exact title: `K15 External Intake Trust Boundary`
 - Planning status: `COMPLETE`
-- Architecture review status: `PENDING HUMAN REVIEW`
+- ADR status: `ACCEPTED`
+- Architecture review status: `PASSED`
+- Architecture approval status: `APPROVED`
 - Implementation authorization: `NOT AUTHORIZED`
 - Implementation status: `NOT STARTED`
-- Repository scope: planning-only additive trust-boundary assessment around frozen K14
-- ADR status from current repository evidence: `REQUIRED`
+- Repository scope: planning and accepted architecture definition around frozen K14
+- ADR status from current repository evidence: `ACCEPTED AS ADR-0004`
 
-K15 planning constraints preserved:
+K15 architecture constraints preserved:
 
+- K15 must implement only the External Intake Trust Boundary accepted by ADR-0004.
+- K15 must remain transport-neutral and technology-neutral.
+- K15 must preserve separation between untrusted external intake and trusted K14 adapter interaction.
 - K15 must not duplicate frozen K8 execution concepts.
 - K15 must not bypass K14, K13, K12, K11, or K10.
-- K15 must not modify `kernel-domain`, `kernel-gateway`, `kernel-studio`, `kernel-application`, `kernel-service`, or `kernel-adapter` public APIs during planning.
-- K15 planning introduces no runtime, persistence, networking, transport, hosting, deployment, or infrastructure.
-- Any future K15 implementation requires approved architecture authority before code changes begin.
+- K15 must not modify frozen public APIs without separate accepted architecture authority.
+- K15 introduces no implementation until explicit Human Implementation Authorization is granted.
+- Planning and architecture approval introduce no runtime, persistence, networking, transport, hosting, deployment, or infrastructure.
 
 ## References
 
@@ -320,6 +325,7 @@ K15 planning constraints preserved:
 - [ADR-0001-K12-APPLICATION-INTEGRATION-BOUNDARY.md](./ADR-0001-K12-APPLICATION-INTEGRATION-BOUNDARY.md)
 - [ADR-0002-K13-SERVICE-INTEGRATION-BOUNDARY.md](./ADR-0002-K13-SERVICE-INTEGRATION-BOUNDARY.md)
 - [ADR-0003-K14-EXTERNAL-ADAPTER-BOUNDARY.md](./ADR-0003-K14-EXTERNAL-ADAPTER-BOUNDARY.md)
+- [ADR-0004-K15-EXTERNAL-INTAKE-TRUST-BOUNDARY.md](./ADR-0004-K15-EXTERNAL-INTAKE-TRUST-BOUNDARY.md)
 - [backlog/K6-BACKLOG.md](./backlog/K6-BACKLOG.md)
 - [backlog/K7-BACKLOG.md](./backlog/K7-BACKLOG.md)
 - [backlog/K8-BACKLOG.md](./backlog/K8-BACKLOG.md)
