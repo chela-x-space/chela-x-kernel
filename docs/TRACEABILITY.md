@@ -394,12 +394,19 @@ INTERNAL
 - Production semantics changed: `NO`
 - Canonical identities after correction: `adapter.request.000001`, `adapter.request.000002`, `service.request.000001`, `service.request.000002`
 
-## K15 Planning Summary
+## K15 Architecture Traceability Summary
 
 - Milestone: `K15`
-- Proposed official title: `K15 External Intake Trust Boundary`
+- Official title: `K15 External Intake Trust Boundary`
 - Planning status: `COMPLETE`
-- Architecture review status: `PENDING HUMAN REVIEW`
+- ADR identifier: `ADR-0004`
+- ADR status: `ACCEPTED`
+- Architecture review status: `PASSED`
+- Architecture approval status: `APPROVED`
 - Implementation authorization: `NOT AUTHORIZED`
 - Implementation status: `NOT STARTED`
-- ADR required assessment: `YES`
+- Production implementation evidence: `NONE`
+- Native verification status: `NOT APPLICABLE`
+- Architecture authority: `docs/ADR-0004-K15-EXTERNAL-INTAKE-TRUST-BOUNDARY.md`
+- Frozen dependency boundary: `K14 External Adapter Boundary`
+- Traceability classification: `ARCHITECTURE APPROVED; IMPLEMENTATION PENDING`
