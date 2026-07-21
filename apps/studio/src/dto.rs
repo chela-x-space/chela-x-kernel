@@ -18,3 +18,20 @@ pub struct TopViewResponse {
     pub execution_sessions: Vec<String>,
     pub attention_state: String,
 }
+
+#[derive(Debug, Serialize)]
+pub struct RuntimeSnapshotResponse {
+    pub runtime_id: String,
+    pub agent_id: String,
+    pub presence: String,
+    pub health: String,
+    pub heartbeat_freshness: String,
+    pub lease_assessment: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct RuntimeResponse {
+    pub selected_runtime_id: String,
+    pub snapshots: Vec<RuntimeSnapshotResponse>,
+    pub current_execution_session_ids: Vec<String>,
+}

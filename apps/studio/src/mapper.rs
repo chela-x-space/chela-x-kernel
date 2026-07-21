@@ -1,5 +1,5 @@
-use crate::dto::TopViewResponse;
-use kernel_studio::StudioTopViewProjection;
+use crate::dto::{RuntimeResponse, RuntimeSnapshotResponse, TopViewResponse};
+use kernel_studio::{StudioRuntimeProjection, StudioTopViewProjection};
 
 pub fn top_view_response(projection: &StudioTopViewProjection) -> TopViewResponse {
     let ownership_path = projection.ownership_path();
@@ -41,10 +41,34 @@ pub fn top_view_response(projection: &StudioTopViewProjection) -> TopViewRespons
     }
 }
 
+pub fn runtime_response(projection: &StudioRuntimeProjection) -> RuntimeResponse {
+    RuntimeResponse {
+        selected_runtime_id: projection.selected_runtime_id().as_str().to_owned(),
+        snapshots: projection
+            .runtime_state_snapshots()
+            .iter()
+            .map(|snapshot| RuntimeSnapshotResponse {
+                runtime_id: snapshot.runtime_id().as_str().to_owned(),
+                agent_id: snapshot.agent_id().as_str().to_owned(),
+                presence: format!("{:?}", snapshot.presence()),
+                health: format!("{:?}", snapshot.health()),
+                heartbeat_freshness: format!("{:?}", snapshot.heartbeat_freshness()),
+                lease_assessment: format!("{:?}", snapshot.lease_assessment()),
+            })
+            .collect(),
+        current_execution_session_ids: projection
+            .current_execution_session_ids()
+            .iter()
+            .map(|id| id.as_str().to_owned())
+            .collect(),
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::top_view_response;
+    use super::{runtime_response, top_view_response};
     use crate::projection_factory::host_local_top_view_projection;
+    use crate::runtime_projection_factory::host_local_runtime_projection;
 
     #[test]
     fn maps_studio_top_view_projection_to_http_response() {
@@ -60,5 +84,22 @@ mod tests {
         assert_eq!(response.tasks, ["CX-TASK-000001"]);
         assert_eq!(response.execution_sessions, ["execution.session-0001"]);
         assert_eq!(response.attention_state, "NeedsAttention");
+    }
+
+    #[test]
+    fn maps_studio_runtime_projection_to_http_response() {
+        let projection = host_local_runtime_projection().expect("projection");
+        let response = runtime_response(&projection);
+
+        assert_eq!(response.selected_runtime_id, "CX-RUN-000001");
+        assert_eq!(response.snapshots.len(), 1);
+        assert_eq!(response.snapshots[0].runtime_id, "CX-RUN-000001");
+        assert_eq!(response.snapshots[0].agent_id, "CX-AGT-000001");
+        assert_eq!(response.snapshots[0].presence, "Registered");
+        assert_eq!(response.snapshots[0].health, "Critical");
+        assert_eq!(
+            response.current_execution_session_ids,
+            ["execution.session-0001"]
+        );
     }
 }

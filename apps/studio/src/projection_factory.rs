@@ -6,6 +6,33 @@ use kernel_domain::{
 use kernel_gateway::GatewayAuditReference;
 use kernel_studio::{StudioAttentionState, StudioAuditReference, StudioTopViewProjection};
 
+pub fn host_local_studio_audit_reference() -> Result<StudioAuditReference, String> {
+    let gateway_audit_reference = GatewayAuditReference::new(
+        EventTraceReference::new("gateway.audit.trace.000001")
+            .map_err(|error| format!("invalid gateway trace: {error:?}"))?,
+        Some(
+            CorrelationId::new("CX-COR-000001")
+                .map_err(|error| format!("invalid correlation id: {error:?}"))?,
+        ),
+        vec![AuditEvidenceId::new("CX-AUD-000001")
+            .map_err(|error| format!("invalid audit evidence id: {error:?}"))?],
+    )
+    .map_err(|error| format!("invalid gateway audit reference: {error:?}"))?;
+
+    StudioAuditReference::new(
+        EventTraceReference::new("studio.audit.trace.000001")
+            .map_err(|error| format!("invalid studio trace: {error:?}"))?,
+        Some(
+            CorrelationId::new("CX-COR-000001")
+                .map_err(|error| format!("invalid correlation id: {error:?}"))?,
+        ),
+        vec![AuditEvidenceId::new("CX-AUD-000001")
+            .map_err(|error| format!("invalid audit evidence id: {error:?}"))?],
+        Some(gateway_audit_reference),
+    )
+    .map_err(|error| format!("invalid studio audit reference: {error:?}"))
+}
+
 pub fn host_local_top_view_projection() -> Result<StudioTopViewProjection, String> {
     let ownership_path = OwnershipPath::new(
         EnterpriseId::new("CX-ENT-000001")
@@ -22,30 +49,7 @@ pub fn host_local_top_view_projection() -> Result<StudioTopViewProjection, Strin
     )
     .map_err(|error| format!("invalid ownership path: {error:?}"))?;
 
-    let gateway_audit_reference = GatewayAuditReference::new(
-        EventTraceReference::new("gateway.audit.trace.000001")
-            .map_err(|error| format!("invalid gateway trace: {error:?}"))?,
-        Some(
-            CorrelationId::new("CX-COR-000001")
-                .map_err(|error| format!("invalid correlation id: {error:?}"))?,
-        ),
-        vec![AuditEvidenceId::new("CX-AUD-000001")
-            .map_err(|error| format!("invalid audit evidence id: {error:?}"))?],
-    )
-    .map_err(|error| format!("invalid gateway audit reference: {error:?}"))?;
-
-    let studio_audit_reference = StudioAuditReference::new(
-        EventTraceReference::new("studio.audit.trace.000001")
-            .map_err(|error| format!("invalid studio trace: {error:?}"))?,
-        Some(
-            CorrelationId::new("CX-COR-000001")
-                .map_err(|error| format!("invalid correlation id: {error:?}"))?,
-        ),
-        vec![AuditEvidenceId::new("CX-AUD-000001")
-            .map_err(|error| format!("invalid audit evidence id: {error:?}"))?],
-        Some(gateway_audit_reference),
-    )
-    .map_err(|error| format!("invalid studio audit reference: {error:?}"))?;
+    let studio_audit_reference = host_local_studio_audit_reference()?;
 
     StudioTopViewProjection::new(
         ownership_path,
