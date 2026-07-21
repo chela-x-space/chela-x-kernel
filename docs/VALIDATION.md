@@ -780,9 +780,9 @@ K14 implementation assertions:
 - Runtime, transport, persistence, hosting, deployment, and infrastructure introduced: `NO`
 - Test correction classification: `Production bug: NO; Fixture bug: YES; Assertion bug: YES; Production semantics changed: NO`
 
-## K15 Planning Validation
+## K15 Planning And Architecture Validation
 
-Validation date: `2026-07-19`
+Planning validation date: `2026-07-19`
 
 - `cargo fmt --all -- --check`: `PASS`
 - `cargo check --workspace --all-targets`: `PASS`
@@ -792,12 +792,22 @@ Validation date: `2026-07-19`
 - `git diff --check`: `PASS`
 - `git status --short`: `DOCS-ONLY CHANGES PRESENT BEFORE COMMIT`
 
-K15 planning assertions:
+Architecture approval date: `2026-07-22`
+
+K15 architecture validation assertions:
 
 - Planning status: `COMPLETE`
-- Architecture review status: `PENDING HUMAN REVIEW`
+- ADR identifier: `ADR-0004`
+- ADR status: `ACCEPTED`
+- Architecture review status: `PASSED`
+- Architecture approval status: `APPROVED`
+- Architecture authority: `docs/ADR-0004-K15-EXTERNAL-INTAKE-TRUST-BOUNDARY.md`
 - Implementation authorization: `NOT AUTHORIZED`
 - Implementation status: `NOT STARTED`
+- Implementation validation status: `NOT APPLICABLE`
+- Native implementation verification status: `NOT APPLICABLE`
+- Production implementation evidence: `NONE`
 - Source files changed under `crates/**/src/**`: `NO`
 - Cargo files changed: `NO`
+- Frozen K1-K14 APIs changed: `NO`
 - Runtime, transport, persistence, hosting, deployment, and infrastructure introduced: `NO`
