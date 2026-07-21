@@ -1,5 +1,7 @@
 # ADR-0004: K15 External Intake Trust Boundary
 
+<!-- markdownlint-disable MD013 -->
+
 - Status: PROPOSED
 - Date: 2026-07-20
 - Authors: CHELA-X Architecture
@@ -8,7 +10,7 @@
 
 ---
 
-# Context
+## Context
 
 K14 establishes the External Adapter Boundary and freezes the public adapter contract exposed to external systems.
 
@@ -24,111 +26,11 @@ No implementation is authorized.
 
 ---
 
-# Problem Statement
+## Problem
 
-Without an intake trust boundary:
+External requests arrive from environments that cannot be assumed to be trusted.
 
-- External requests reach adapter contracts without architectural intake validation.
-- Claimed identities can be confused with verified identities.
-- Trust classification becomes inconsistent.
-- Audit continuity cannot be guaranteed.
-- External transport details risk leaking into downstream layers.
-
-The architecture requires a dedicated trust boundary before K14.
-
----
-
-# Decision
-
-Introduce a new architectural boundary named:
-
-**External Intake Trust Boundary (K15)**
-
-This boundary SHALL exist conceptually before K14.
-
-```
-External System
-        │
-        ▼
-External Intake Trust Boundary (K15)
-        │
-        ▼
-External Adapter Boundary (K14)
-        │
-        ▼
-Kernel Services
-```
-
-This ADR defines architectural contracts only.
-
-Implementation remains prohibited.
-
----
-
-# Boundary Responsibilities
-
-K15 SHALL be responsible for:
-
-- Intake validation
-- Claimed identity capture
-- Observed source capture
-- Trust classification
-- Correlation continuity
-- Audit continuity
-- Request acceptance or rejection
-
-K15 SHALL NOT perform:
-
-- Authentication
-- Authorization
-- Business validation
-- Service execution
-- Adapter execution
-- Domain logic
-
----
-
-# Mandatory Rules
-
-The following rules are mandatory.
-
-## Identity
-
-ClaimedIdentity SHALL NOT become VerifiedIdentityReference.
-
-Verification SHALL occur outside K15.
-
----
-
-## Trust
-
-Trust classification SHALL NOT imply authorization.
-
-Accepted intake SHALL NOT imply authenticated identity.
-
----
-
-## Audit
-
-All intake decisions SHALL preserve audit continuity.
-
-Correlation identifiers SHALL remain stable across downstream boundaries.
-
----
-
-## Security
-
-Raw credentials SHALL NOT appear in public contracts.
-
-Secrets SHALL NOT cross architectural boundaries.
-
----
-
-## Transport
-
-K15 SHALL remain transport neutral.
-
-The architecture SHALL NOT depend on:
+Examples include:
 
 - HTTP
 - HTTPS
@@ -137,88 +39,259 @@ The architecture SHALL NOT depend on:
 - Message Queue
 - CLI
 - SDK
+- Third-party Integration
+- Future Protocols
+
+These transports are intentionally outside Kernel trust.
+
+The Kernel must never assume that an external request is valid merely because it reached an Adapter.
+
+Therefore an architectural trust boundary is required before the K14 External Adapter Boundary.
 
 ---
 
-## Dependency
+## Decision
 
-K15 SHALL forward accepted requests only to K14.
+The CHELA-X Kernel SHALL define a new architectural boundary named:
 
-K15 SHALL NOT bypass K14.
+### External Intake Trust Boundary
 
----
+This boundary SHALL exist immediately before the External Adapter Boundary defined by K14.
 
-# Non-Goals
+All externally originated requests SHALL cross this boundary before they become eligible for adapter processing.
 
-This ADR does not introduce:
+This boundary is responsible only for architectural trust evaluation.
 
-- Authentication providers
-- Authorization engines
-- OAuth
-- JWT
-- OIDC
-- API Gateway implementation
-- Network stack
-- Runtime services
-- Persistence
-- Message broker
+It SHALL NOT perform business logic.
 
----
+It SHALL NOT execute application behavior.
 
-# Compatibility
+It SHALL NOT dispatch commands.
 
-This ADR is additive.
+It SHALL NOT execute workflows.
 
-No changes are made to:
-
-- K1
-- K2
-- K3
-- K4
-- K5
-- K6
-- K7
-- K8
-- K9
-- K10
-- K11
-- K12
-- K13
-- K14
-
-Existing public APIs remain unchanged.
+It SHALL NOT mutate Kernel state.
 
 ---
 
-# Verification Requirements
+## Architectural Responsibilities
 
-Human Architecture Review SHALL confirm:
+The External Intake Trust Boundary is responsible for determining whether an incoming request is eligible to proceed toward the trusted architecture.
 
-- Architecture consistency
-- Dependency direction
-- Trust separation
-- API compatibility
-- Transport neutrality
-- Audit continuity
-- Architecture Freeze compliance
+The boundary MAY evaluate architectural concerns including, but not limited to:
 
-Implementation SHALL NOT begin until:
+- Origin
+- Transport
+- Identity
+- Authentication status
+- Authorization context
+- Request integrity
+- Protocol validity
+- Message structure
+- Version compatibility
+- Trust evidence
 
-- ADR status becomes ACCEPTED.
-- Human implementation authorization is granted.
+The architectural decision produced by this boundary SHALL be limited to one of the following outcomes:
+
+- Accept
+- Reject
+
+No additional architectural behavior is defined by this ADR.
 
 ---
 
-# Approval
+## Architectural Constraints
 
-Status:
+The External Intake Trust Boundary SHALL remain transport independent.
+
+The External Intake Trust Boundary SHALL remain protocol independent.
+
+The External Intake Trust Boundary SHALL remain identity-provider independent.
+
+The External Intake Trust Boundary SHALL remain implementation independent.
+
+This ADR intentionally defines only architectural responsibilities.
+
+No implementation strategy is approved.
+
+---
+
+## Relationship to K14
+
+The K14 External Adapter Boundary remains unchanged.
+
+The External Intake Trust Boundary is positioned immediately before K14.
+
+The processing sequence is therefore defined as:
+
+Untrusted External Environment
+→ External Intake Trust Boundary (K15)
+→ External Adapter Boundary (K14)
+→ Kernel Service Layer
+→ Kernel Domain
+
+K15 does not replace K14.
+
+K15 establishes the architectural trust boundary.
+
+K14 establishes the architectural adapter boundary.
+
+These responsibilities are intentionally separated.
+
+---
+
+## Consequences
+
+Positive consequences include:
+
+- Explicit architectural separation between trusted and untrusted environments.
+- Deterministic trust evaluation before adapter interaction.
+- Reduced architectural coupling between transport technologies and Kernel services.
+- Stable foundation for future authentication and authorization architecture.
+- Clear trust model for all future external integrations.
+
+Negative consequences include:
+
+- An additional architectural boundary must be maintained.
+- Future implementation work will require explicit trust evaluation before adapter processing.
+
+---
+
+## Alternatives Considered
+
+## Alternative 1 — Trust Evaluation Inside Adapters
+
+Rejected.
+
+Embedding trust evaluation inside individual adapters would duplicate responsibilities across transports and violate architectural separation of concerns.
+
+---
+
+## Alternative 2 — Trust Evaluation Inside Kernel Services
+
+Rejected.
+
+Kernel Services are part of the trusted architecture and therefore SHALL NOT be responsible for determining whether an external request is trustworthy.
+
+---
+
+## Alternative 3 — No Explicit Trust Boundary
+
+Rejected.
+
+Without an explicit architectural trust boundary, the transition between untrusted environments and trusted Kernel components becomes ambiguous and difficult to govern consistently.
+
+---
+
+## Compatibility
+
+This ADR introduces a new architectural boundary only.
+
+No existing public API is modified.
+
+No K14 interface is changed.
+
+No Adapter contract is changed.
+
+No Service contract is changed.
+
+No Domain contract is changed.
+
+Backward compatibility with K14 is fully preserved.
+
+---
+
+## Scope
+
+This ADR defines architecture only.
+
+This ADR does not define:
+
+- Authentication implementation
+- Authorization implementation
+- Identity providers
+- Access control mechanisms
+- Cryptographic algorithms
+- Network security configuration
+- API Gateway behavior
+- Adapter implementation
+- Service implementation
+- Runtime enforcement
+- Operational policies
+
+These concerns MAY be defined by future ADRs.
+
+---
+
+## Status
 
 PROPOSED
 
-Implementation Authorization:
+This ADR becomes authoritative only after Human Architecture Approval.
 
-NOT GRANTED
+Until approved, K15 remains in planning status.
 
-Architecture Freeze:
+---
 
-ACTIVE
+## References
+
+This ADR builds upon the following architectural decisions:
+
+- ADR-0001 — Kernel Architecture Baseline
+- ADR-0002 — Kernel Service Boundary
+- ADR-0003 — K14 External Adapter Boundary
+
+This ADR does not supersede any previous architectural decision.
+
+Future ADRs defining authentication, authorization, identity, gateway behavior, or transport-specific trust mechanisms SHALL conform to the architectural boundary established by this ADR.
+
+---
+
+## Traceability
+
+| Requirement | Description | Status |
+| --- | --- | --- |
+| K15-001 | Define an explicit External Intake Trust Boundary | Defined |
+| K15-002 | Separate untrusted intake from trusted adapter processing | Defined |
+| K15-003 | Preserve K14 External Adapter Boundary | Preserved |
+| K15-004 | Prohibit business execution within the trust boundary | Defined |
+| K15-005 | Maintain transport-independent architecture | Defined |
+| K15-006 | Maintain implementation independence | Defined |
+
+---
+
+## Decision Record
+
+Decision: Introduce an architectural trust boundary before the K14 External Adapter Boundary.
+
+Decision Type: Architecture
+
+Impact: Additive
+
+Breaking Change: No
+
+Implementation Authorized: No
+
+Architecture Status: Proposed
+
+---
+
+## Approval
+
+| Role | Status |
+| --- | --- |
+| Chief Enterprise Architect | Pending |
+| Human Architecture Review | Pending |
+| Kernel Architecture Board | Pending |
+
+---
+
+## Notes
+
+This Architectural Decision Record defines the existence, purpose, and architectural responsibilities of the External Intake Trust Boundary.
+
+No runtime behavior, implementation detail, technology selection, protocol specification, authentication mechanism, authorization mechanism, or security product is approved by this document.
+
+Any future implementation SHALL require explicit approval through subsequent Architectural Decision Records.
+
+---
