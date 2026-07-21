@@ -35,3 +35,22 @@ pub struct RuntimeResponse {
     pub snapshots: Vec<RuntimeSnapshotResponse>,
     pub current_execution_session_ids: Vec<String>,
 }
+
+#[derive(Debug, Serialize)]
+pub struct WorkflowSnapshotResponse {
+    pub workflow_id: String,
+    pub lifecycle: String,
+    pub definition_version: String,
+    pub sequence: String,
+    pub current_step: Option<String>,
+    pub completed_steps: Vec<String>,
+    pub blocked_steps: Vec<String>,
+    pub task_instances: Vec<String>,
+    pub execution_sessions: Vec<String>,
+    pub workflow_failure_code: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct WorkflowResponse {
+    pub snapshot: WorkflowSnapshotResponse,
+}

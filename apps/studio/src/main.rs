@@ -5,6 +5,7 @@ mod mapper;
 mod projection_factory;
 mod routes;
 mod runtime_projection_factory;
+mod workflow_projection_factory;
 
 use axum::Router;
 use std::net::SocketAddr;
