@@ -200,6 +200,91 @@ No Domain contract is changed.
 Backward compatibility with K14 is fully preserved.
 
 ---
+---
+
+## Decision Drivers
+
+The architectural decision defined by this ADR is driven by the following
+enterprise architecture objectives:
+
+- Establish a deterministic trust boundary between external environments and
+  trusted Kernel components.
+- Separate trust evaluation from adapter execution.
+- Preserve the K14 External Adapter Boundary without modification.
+- Minimize coupling between transport technologies and Kernel architecture.
+- Provide a stable architectural foundation for future authentication,
+  authorization, gateway, and identity capabilities.
+- Ensure all future external integrations follow a consistent trust model.
+
+This ADR intentionally defines architectural direction only.
+
+---
+
+## Architecture Invariants
+
+The following architectural properties SHALL remain invariant unless superseded
+by a future Accepted ADR.
+
+The External Intake Trust Boundary:
+
+- SHALL remain stateless.
+- SHALL execute before every External Adapter interaction.
+- SHALL NOT become part of the Kernel Domain.
+- SHALL NOT perform business processing.
+- SHALL NOT execute workflows.
+- SHALL NOT dispatch commands.
+- SHALL NOT mutate Kernel state.
+- SHALL NOT establish business ownership.
+- SHALL NOT bypass the External Adapter Boundary.
+- SHALL remain independent from transport technologies.
+- SHALL remain independent from implementation technologies.
+- SHALL remain independent from identity-provider implementations.
+
+Violation of these invariants constitutes an architectural violation.
+
+---
+
+## Compliance Rules
+
+Future architectural components SHALL comply with the following rules.
+
+External integrations:
+
+- SHALL terminate at the External Intake Trust Boundary.
+- SHALL NOT communicate directly with Kernel Services.
+- SHALL NOT communicate directly with the Kernel Domain.
+- SHALL pass through the K15 Trust Boundary before reaching K14.
+
+Future Adapter implementations:
+
+- SHALL assume trust evaluation has already completed.
+- SHALL NOT repeat architectural trust-boundary responsibilities.
+- SHALL remain focused on adapter responsibilities defined by ADR-0003.
+
+Future architectural changes SHALL preserve this separation of concerns unless
+explicitly superseded by a future Accepted ADR.
+
+---
+
+## Future Architectural Impact
+
+This ADR establishes the architectural foundation for future Kernel milestones.
+
+Future ADRs MAY extend this boundary to define:
+
+- Authentication architecture.
+- Authorization architecture.
+- Identity architecture.
+- Trust evidence architecture.
+- API Gateway architecture.
+- External Gateway policy.
+- Federation architecture.
+- Zero Trust architectural model.
+
+Such ADRs SHALL extend this architectural boundary without redefining or
+removing the responsibilities established by this ADR.
+
+---
 
 ## Scope
 
