@@ -4,18 +4,19 @@
 Planning Complete
 
 ## Last Updated
-2026-07-19
+2026-07-22
 
-## Proposed Official Title
+## Official Title
 `K15 External Intake Trust Boundary`
 
 ## Current Milestone State
 
 - `K15 PLANNING: COMPLETE`
-- `K15 ARCHITECTURE REVIEW: PENDING HUMAN REVIEW`
+- `ADR-0004: ACCEPTED`
+- `K15 ARCHITECTURE REVIEW: PASSED`
+- `K15 ARCHITECTURE APPROVAL: APPROVED`
 - `K15 IMPLEMENTATION AUTHORIZATION: NOT AUTHORIZED`
 - `K15 IMPLEMENTATION: NOT STARTED`
-- `ADR REQUIRED: YES`
 
 ## Repository Evidence Reviewed
 
@@ -30,6 +31,7 @@ Planning Complete
 - `docs/plans/K14-IMPLEMENTATION-PLAN.md`
 - `docs/backlog/K14-BACKLOG.md`
 - `docs/ADR-0003-K14-EXTERNAL-ADAPTER-BOUNDARY.md`
+- `docs/ADR-0004-K15-EXTERNAL-INTAKE-TRUST-BOUNDARY.md`
 - `docs/kernel-architecture/11-api-gateway-architecture.md`
 - `docs/kernel-architecture/13-data-flow.md`
 - `docs/kernel-architecture/15-roadmap.md`
@@ -49,13 +51,14 @@ The frozen K1-K11 architecture still records the API Gateway as the
 canonical external integration boundary, while accepted `ADR-0003`
 authorizes only the external-adapter contract boundary above
 `kernel-service`. The next smallest additive step therefore is not
-transport or execution. It is planning the trust-intake contract space
-around K14 without implementing it.
+transport or execution. It is the approved trust-intake contract boundary
+around K14, with implementation remaining separately authorization-gated.
 
 ## Objective
 
-Define the smallest additive, deterministic, technology-neutral planning
-baseline for external-caller trust semantics around frozen K14 while:
+Define the smallest additive, deterministic, technology-neutral
+architecture baseline for external-caller trust semantics around frozen K14
+while:
 
 - preserving K1-K14 frozen APIs
 - avoiding transport and runtime selection
@@ -83,19 +86,22 @@ K10 API Gateway
 kernel-domain
 ```
 
-K15 planning is boundary planning only. It does not authorize a new
-crate, source code, runtime, or infrastructure.
+K15 architecture defines the external intake trust boundary only.
+ADR-0004 acceptance does not authorize a new crate, source code, runtime,
+or infrastructure.
 
 ## Dependencies
 
 - frozen K1-K14 public APIs
 - accepted `ADR-0003`
+- accepted `ADR-0004`
 - frozen data-flow and traceability chapters
 - existing `kernel-adapter -> kernel-service` dependency direction
 
 ## Allowed Dependencies
 
-If future implementation is ever authorized, planning assumes:
+If implementation is later explicitly authorized, the approved
+architecture requires:
 
 - primary production dependency remains `kernel-adapter -> kernel-service`
 - K15 concepts, if approved, should compose frozen K14 contracts rather
@@ -118,11 +124,11 @@ If future implementation is ever authorized, planning assumes:
 
 ## Scope
 
-- repository-backed planning only
-- post-K14 trust-intake gap analysis
+- repository-backed architecture definition
+- post-K14 trust-intake boundary definition
 - deterministic contract categories only
-- validation-matrix planning only
-- ADR requirement assessment
+- validation-matrix definition
+- ADR-0004 architecture authority
 - compatibility and architecture-risk recording
 
 ## Non-Goals
@@ -140,7 +146,7 @@ If future implementation is ever authorized, planning assumes:
 - no duplication of K3 authorization authority
 - no duplication of K8 execution authority
 
-## Proposed Contract Categories
+## Approved Contract Categories
 
 - external caller identity reference
 - intake trust classification reference
@@ -153,20 +159,20 @@ If future implementation is ever authorized, planning assumes:
 
 ## Planned Requirements
 
-| Requirement | Planned title | Repository evidence | Status |
+| Requirement | Approved title | Repository evidence | Status |
 | --- | --- | --- | --- |
-| `K15-001` | Official K15 milestone definition | frozen roadmap stops at K11; post-K11 milestones require repository governance and ADR evidence | `PLANNED` |
-| `K15-002` | External-caller trust boundary definition around K14 | K14 closes adapter/service separation but does not define caller trust semantics | `PLANNED` |
-| `K15-003` | Frozen K14 boundary preservation | `kernel-adapter -> kernel-service` is authoritative and must not be bypassed | `PLANNED` |
-| `K15-004` | Deterministic intake identity and trust continuity | K14 already preserves adapter/service continuity and identity separation | `PLANNED` |
-| `K15-005` | Technology-neutral intake admission contracts | frozen architecture forbids transport/framework selection without ADR | `PLANNED` |
-| `K15-006` | Safe rejection and audit continuity | K10-K14 emphasize auditability, traceability, and deterministic rejection paths | `PLANNED` |
-| `K15-007` | Compatibility preservation for K1-K14 | K14 is frozen for K15 consumption and additive compatibility must remain preserved | `PLANNED` |
-| `K15-008` | Static dependency and no-bypass audit | K13 and K14 closure evidence requires dependency-direction preservation | `PLANNED` |
-| `K15-009` | Native-validation planning for future host verification | K14 closure records authoritative host validation as required acceptance evidence | `PLANNED` |
-| `K15-010` | Governance and ADR gate before implementation | new trust-boundary authority requires explicit human approval | `PLANNED` |
+| `K15-001` | Official K15 milestone definition | ADR-0004 establishes K15 architecture authority | `APPROVED` |
+| `K15-002` | External-caller trust boundary definition around K14 | ADR-0004 defines the external intake trust boundary | `APPROVED` |
+| `K15-003` | Frozen K14 boundary preservation | `kernel-adapter -> kernel-service` is authoritative and must not be bypassed | `APPROVED` |
+| `K15-004` | Deterministic intake identity and trust continuity | ADR-0004 requires deterministic identity and trust continuity | `APPROVED` |
+| `K15-005` | Technology-neutral intake admission contracts | ADR-0004 preserves technology neutrality | `APPROVED` |
+| `K15-006` | Safe rejection and audit continuity | ADR-0004 requires deterministic rejection and audit continuity | `APPROVED` |
+| `K15-007` | Compatibility preservation for K1-K14 | K14 is frozen for K15 consumption and additive compatibility must remain preserved | `APPROVED` |
+| `K15-008` | Static dependency and no-bypass audit | ADR-0004 preserves dependency direction and prohibits lower-boundary bypass | `APPROVED` |
+| `K15-009` | Native-validation planning for future host verification | native validation remains required only after implementation authorization | `APPROVED` |
+| `K15-010` | Governance and authorization gate before implementation | ADR-0004 is accepted; separate human implementation authorization remains required | `APPROVED` |
 
-## Planned Test Groups
+## Planned Implementation Test Groups
 
 - intake identity validation tests
 - trust-classification validation tests
@@ -188,7 +194,7 @@ If future implementation is ever authorized, planning assumes:
 
 ## Compatibility Constraints
 
-- K1-K13 frozen public APIs remain unchanged
+- K1-K14 frozen public APIs remain unchanged
 - K14 public API remains frozen for K15 consumption
 - K15 must be additive only
 - no K14 bypass
@@ -225,16 +231,16 @@ K15 planning remains technology-neutral because it does not choose:
 - deployment topology
 - infrastructure provider
 
-## ADR Requirement Assessment
+## ADR Authority
 
-`ADR REQUIRED: YES`
-
-Reason:
-
-- K15 planning proposes a new trust boundary around frozen K14
-- new trust-boundary authority is explicitly listed as ADR-gated
-- frozen K1-K11 architecture does not define post-K14 authority
-- accepted `ADR-0003` does not authorize this next boundary
+- ADR identifier: `ADR-0004`
+- ADR title: `K15 External Intake Trust Boundary`
+- ADR status: `ACCEPTED`
+- Acceptance date: `2026-07-22`
+- Architecture review status: `PASSED`
+- Architecture approval status: `APPROVED`
+- Implementation authority granted by ADR acceptance: `NO`
+- Separate human implementation authorization required: `YES`
 
 ## Implementation Authorization State
 
@@ -242,8 +248,14 @@ Reason:
 K15 PLANNING:
 COMPLETE
 
+ADR-0004:
+ACCEPTED
+
 K15 ARCHITECTURE REVIEW:
-PENDING HUMAN REVIEW
+PASSED
+
+K15 ARCHITECTURE APPROVAL:
+APPROVED
 
 K15 IMPLEMENTATION AUTHORIZATION:
 NOT AUTHORIZED
