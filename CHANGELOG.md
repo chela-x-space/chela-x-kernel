@@ -222,12 +222,15 @@ INTERNAL
 
 - Planning artifacts in `docs/plans/K15-IMPLEMENTATION-PLAN.md` and `docs/backlog/K15-BACKLOG.md`
 - Repository-backed K15 planning over the next additive boundary around frozen K14 without implementation authorization
-- ADR-gated planning for a deterministic external-intake trust boundary above `kernel-adapter`
+- Accepted ADR-0004 defining the deterministic, transport-neutral, and technology-neutral External Intake Trust Boundary before the frozen K14 External Adapter Boundary
+- Architectural separation of untrusted external intake from trusted adapter interaction, including claimed identity, observed source, verified identity references, trust classification, trust evidence references, correlation, audit continuity, and adapter handoff
 
 ### Boundaries
 
 - K15 planning is complete
-- K15 architecture review is pending human review
+- ADR-0004 is accepted
+- K15 human architecture review passed
+- K15 architecture is approved
 - K15 implementation authorization is not granted
 - K15 implementation is not started
 - No Rust production code, tests, Cargo files, dependencies, runtime, transport, or infrastructure changed
