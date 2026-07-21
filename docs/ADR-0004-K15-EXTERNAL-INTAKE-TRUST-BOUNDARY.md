@@ -2,7 +2,7 @@
 
 <!-- markdownlint-disable MD013 -->
 
-- Status: PROPOSED
+- Status: ACCEPTED
 - Date: 2026-07-20
 - Authors: CHELA-X Architecture
 - Supersedes: None
@@ -310,11 +310,14 @@ These concerns MAY be defined by future ADRs.
 
 ## Status
 
-PROPOSED
+ACCEPTED
 
-This ADR becomes authoritative only after Human Architecture Approval.
+This ADR is authoritative following Human Architecture Approval.
 
-Until approved, K15 remains in planning status.
+K15 architecture is approved.
+
+Implementation remains unauthorized until explicit Human Authorization is
+recorded for the K15 implementation milestone.
 
 ---
 
@@ -357,7 +360,7 @@ Breaking Change: No
 
 Implementation Authorized: No
 
-Architecture Status: Proposed
+Architecture Status: Accepted
 
 ---
 
@@ -365,9 +368,9 @@ Architecture Status: Proposed
 
 | Role | Status |
 | --- | --- |
-| Chief Enterprise Architect | Pending |
-| Human Architecture Review | Pending |
-| Kernel Architecture Board | Pending |
+| Chief Enterprise Architect | Approved |
+| Human Architecture Review | Approved |
+| Kernel Architecture Board | Approved |
 
 ---
 
